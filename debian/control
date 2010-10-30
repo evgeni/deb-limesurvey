@@ -3,6 +3,9 @@ Section: web
 Priority: optional
 Maintainer: Nicolas Barcet <nicolas.barcet@ubuntu.com>
 Uploaders: Jan-Pascal van Best <janpascal@vanbest.org>
+DM-Upload-Allowed: yes
+Vcs-Browser: http://www.vanbest.org/websvn/listing.php?repname=limesurvey
+Vcs-Svn: http://www.vanbest.org/svn/limesurvey/
 Standards-Version: 3.8.3
 Build-Depends: debhelper (>= 6.0), quilt (>= 0.46)
 Homepage: http://www.limesurvey.org/

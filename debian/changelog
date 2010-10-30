@@ -1,0 +1,21 @@
+limesurvey (1.90plus-build9343-1~pre1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jan-Pascal van Best <janpascal@vanbest.org>  Thu, 28 Oct 2010 20:21:16 +0200
+
+limesurvey (1.85plus-build7689-2) unstable; urgency=low
+
+  * Fix signature used for the package
+  * Include FCKeditor license in debian/copyright
+
+ -- Nicolas Barcet <nicolas.barcet@ubuntu.com>  Wed, 30 Sep 2009 13:30:29 +0200
+
+limesurvey (1.85plus-build7689-1) unstable; urgency=low
+
+  * Initial upload of stable release 1.85plus
+  * Closes: bug#472802
+  * Closes ubuntu bug LP: #247955
+
+ -- Nicolas Barcet <nicolas.barcet@ubuntu.com>  Fri, 29 Sep 2009 18:22:29 +0200
+

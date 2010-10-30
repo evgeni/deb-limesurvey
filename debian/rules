@@ -1,0 +1,128 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+# 
+# debian/rules makefile for limesurvey
+
+# Uncomment this to turn on verbose mode.
+# export DH_VERBOSE=1
+
+PACKAGE=limesurvey
+
+build:  patch
+
+clean-patched:
+	dh_testdir
+	dh_testroot
+	dh_clean
+
+clean:	clean-patched unpatch
+
+
+install:build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs -X.svn -XCVS
+	dh_install -XCVS -X.svn
+	tar cpf - --exclude=debian --exclude=docs * | tar -C debian/limesurvey/usr/share/limesurvey -xpf -
+	#Remove license files
+	rm debian/limesurvey/usr/share/limesurvey/admin/classes/http/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/LICENSE.TXT
+	rm debian/limesurvey/usr/share/limesurvey/classes/adodb/license.txt
+	rm debian/limesurvey/usr/share/limesurvey/classes/php-gettext/COPYING
+	rm debian/limesurvey/usr/share/limesurvey/classes/phpmailer/LICENSE
+	rm debian/limesurvey/usr/share/limesurvey/admin/scripts/fckeditor.266/license.txt
+	#Remove fonts
+	rm debian/limesurvey/usr/share/limesurvey/fonts/KacstFarsi.ttf
+	rm debian/limesurvey/usr/share/limesurvey/fonts/KacstOffice.ttf
+	rm debian/limesurvey/usr/share/limesurvey/fonts/verabd.ttf
+	rm debian/limesurvey/usr/share/limesurvey/fonts/verait.ttf
+	rm debian/limesurvey/usr/share/limesurvey/fonts/vera.ttf
+	# Remove binary font utilities
+	rm -rf debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/fonts/utils
+	#place symlinks for fonts
+	ln -s /usr/share/fonts/truetype/ttf-bitstream-vera/VeraBd.ttf \
+		debian/limesurvey/usr/share/limesurvey/fonts/verabd.ttf
+	ln -s /usr/share/fonts/truetype/ttf-bitstream-vera/VeraIt.ttf \
+		debian/limesurvey/usr/share/limesurvey/fonts/verait.ttf
+	ln -s /usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf \
+		debian/limesurvey/usr/share/limesurvey/fonts/vera.ttf
+	ln -s /usr/share/fonts/truetype/ttf-kacst/KacstFarsi.ttf \
+		debian/limesurvey/usr/share/limesurvey/fonts/KacstFarsi.ttf
+	ln -s /usr/share/fonts/truetype/ttf-kacst/KacstOffice.ttf \
+		debian/limesurvey/usr/share/limesurvey/fonts/KacstOffice.ttf
+	#move modifiable dirs to var lib
+	cd debian/limesurvey/usr/share/limesurvey && mv templates tmp upload ../../../var/lib/limesurvey
+	cd debian/limesurvey/usr/share/limesurvey && mv config*.php ../../../etc/limesurvey
+	# fix owners
+	chown -R www-data:www-data debian/limesurvey/var/lib/limesurvey
+	chown -R root:www-data debian/limesurvey/usr/share/limesurvey
+	chown -R root:www-data debian/limesurvey/etc/limesurvey 
+	chmod -R 640 debian/limesurvey/etc/limesurvey/*
+	cp debian/binary.lintian-overrides debian/limesurvey/usr/share/lintian/overrides/limesurvey
+
+# Everything else is handled by dh_install
+
+# Build architecture-independent files here.
+binary-indep: build install
+	dh_testdir
+	dh_testroot
+	dh_installdocs -XCVS -X.svn
+	dh_installexamples -X.svn
+	dh_installchangelogs docs/release_notes.txt
+	dh_installdebconf	
+	dh_link
+	dh_compress
+	dh_fixperms
+	# fix owners and permissions
+	chown -R www-data:www-data debian/limesurvey/var/lib/limesurvey
+	chown -R root:www-data debian/limesurvey/usr/share/limesurvey
+	chown -R root:www-data debian/limesurvey/etc/limesurvey
+	chmod -R 640 debian/limesurvey/etc/limesurvey/*
+	find debian/limesurvey/var/lib/limesurvey -type d | xargs chmod 750 
+	find debian/limesurvey/var/lib/limesurvey -type f | xargs chmod 640
+	#find debian/limesurvey/usr/share/limesurvey -type d | xargs chmod 755 
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep
+.PHONY: build clean binary-indep binary install patch unpatch
+
+binary-arch: 
+
+# Apply patches to the package
+patch: patch-stamp
+
+QUILTBIN= /usr/bin/quilt
+QUILTOPT= --quiltrc debian/quiltrc.build
+
+patch-stamp:
+	if [ -e $(QUILTBIN) ] ; then \
+		$(QUILTBIN) $(QUILTOPT) push -a || test $$? = 2; \
+	else  \
+		list= `cat debian/patches/series|sed 's/#.*$$//'|grep -v '^$$'`; \
+		if [ -n "$$list" ] ; then \
+			for patch in `echo $$list` ; do \
+				patch -p1 < debian/patches/$$patch ; \
+			done ; \
+		fi ; \
+	fi
+	touch debian/stamp-patched
+
+unpatch:
+	if [ -e $(QUILTBIN) ] ; then \
+		$(QUILTBIN) $(QUILTOPT) pop -a || test $$? = 2; \
+	else if [ -e debian/stamp-patched ] ; then \
+		list= `cat debian/patches/series|sed 's/#.*$$//'|grep -v '^$$'|tac`; \
+		if [ -n "$$list" ] ; then \
+			for patch in `echo $$list` ; do \
+				patch -p1 -R < debian/patches/$$patch ; \
+			done; \
+		fi;fi; \
+	fi
+	rm -rf .pc
+	rm -f debian/stamp-patch*

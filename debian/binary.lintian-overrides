@@ -1,0 +1,14 @@
+# several files and directories in this package should only be
+# accessible by the webserver
+limesurvey: non-standard-dir-perm
+limesurvey: non-standard-file-perm
+
+#Upstream wants to control embeded libraries files
+limesurvey: embedded-php-library
+limesurvey: embedded-javascript-library
+
+#No need for all scripts to be executable in a web server
+limesurvey: script-not-executable
+
+# upstream provides an empty dir
+limesurvey: package-contains-empty-directory

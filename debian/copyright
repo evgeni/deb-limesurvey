@@ -1,0 +1,193 @@
+This package was debianized by nijaba <nicolas.barcet@ubuntu.com> 
+Sat, 12 Jul 2008 18:24:37 +0200
+
+It was downloaded from: http://www.limesurvey.org/
+
+Upstream Authors: The LimeSurvey Project Team
+ Jason Cleeland, Carsten Schmitz, Thibault Le Meur, Josef Prandstetter,
+ David Olivier, Gustavo San Roman, Sébastien Gaugry, Esteban Adrián Pérez,
+ Gasper Koren, Yeung Kai Sun, Shawn Wales, Ronald Leenes, Mario Marani,
+ Darrel O'Pry, Marco Ermini, Patrick McKnight, Chris Wessells, Johannes Kutsam,
+ Karyl Stein, Arjen Gideonse, Nikolay Tsanov, Thomas Lee, Liang Zhao,
+ Katarina Pavic, Mikkel Skovgaard Sørensen, Rolf Njor Jensen, Johan Geertsma,
+ Ronald Leenes, Peter De Berdt, Patrick Drews, Peter Sereinigg,
+ Artemis Mendrinos, David Selmeczi, Gabriele Carioli, Masaru Ryumae,
+ Odd-Jarle Kristoffersen, Eirik Sunde, Rosaura Gazzola, Job Vieira Lúcio,
+ Bogdan Anastasiei, Alexei G. Tchernov, Alexander Shilov, Gasper Koren,
+ Luis M. Martinez, Juan Rafael Fernández, Jose Luis Ramirez, Björn Mildh,
+ Niklas Andersson, Vinh Ngo and Mitchell Butler.
+
+Copyright:
+    Copyright (C) 2007 The LimeSurvey Project Team / Carsten Schmitz
+	All rights reserved.
+
+License:
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 or later of the License.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License with
+ the Debian GNU/Linux distribution in file /usr/share/common-licenses/GPL;
+ if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth
+ Floor, Boston, MA 02110-1301, USA.
+
+ On Debian systems, the complete text of the GNU General Public
+ License, version 2, can be found in /usr/share/common-licenses/GPL-2.
+
+ LimeSurvey also includes or is derivative of works distributed under the 
+ following copyright notices :
+
+	PHPSurveyor
+	----
+	Copyright:  Jason Cleeland, 2003
+	License:        GNU General Public License (GPL V2 or later)
+    On Debian systems, the complete text of the GNU General Public
+    License, version 2, can be found in /usr/share/common-licenses/GPL-2.
+
+	ADOdb
+	----
+	Copyright:  John Lim, 2004
+	License:        GNU Lesser General Public License (LGPL)
+    On Debian systems, the complete text of the Lesser GNU General Public
+    License, can be found in /usr/share/common-licenses/LGPL.
+
+	PHP-gettext
+	----
+	Copyright:  Danilo Segan, 2003, 2006
+	License:        GNU General Public License (GPL V2 or later)
+    On Debian systems, the complete text of the GNU General Public
+    License, version 2, can be found in /usr/share/common-licenses/GPL-2.
+
+	DHTML Calendar Widget
+	----
+	Copyright:      Mihai Bazon, 2002-2005
+	License:        GNU Lesser General Public License (LGPL)
+    On Debian systems, the complete text of the Lesser GNU General Public
+    License, can be found in /usr/share/common-licenses/LGPL.
+
+	Slider
+	----
+	Copyright:  Erik Arvidsson, 1999 - 2002
+	License:    GNU General Public License
+    Debian systems, the complete text of the GNU General Public
+    License, can be found in /usr/share/common-licenses/GPL.
+
+	SHA256 static class
+	----
+	Copyright:  Developer's Network (2005)
+	Author: feyd _at_ devnetwork .dot. net
+	License:        GNU Lesser General Public License (LGPL)
+    On Debian systems, the complete text of the Lesser GNU General Public
+    License, can be found in /usr/share/common-licenses/LGPL.
+
+	tabPANE
+	----
+	Copyright:  Emil A Eklund (2004) http://webfx.eae.net
+	License:        Apache Software License 2.0
+    Licensed under the Apache License, Version 2.0 (the "License"); 
+    you may not use this file except in compliance with the License. 
+    You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, 
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+    See the License for the specific language governing permissions and limitations 
+    under the License. 
+
+	PEAR
+	----
+	Copyright:      1997-2004 The PHP Group
+	License:        PHP license
+    The complete PHP license can be found at:
+    http://www.php.net/license/
+    This product includes PHP software, freely available from
+     <http://www.php.net/software/>.
+    THIS SOFTWARE IS PROVIDED BY THE PHP DEVELOPMENT TEAM ``AS IS'' AND 
+    ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+    THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+    PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE PHP
+    DEVELOPMENT TEAM OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+    INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+    STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+    OF THE POSSIBILITY OF SUCH DAMAGE.
+
+	phpMailer
+	----
+	Copyright:      2001 - 2003  Brent R. Matzelle
+	License:        GNU Lesser General Public License (LGPL)
+    On Debian systems, the complete text of the Lesser GNU General Public
+    License, can be found in /usr/share/common-licenses/LGPL.
+
+	Sanitize Library
+	---
+	Copyright:  2002,2003 Free Software Foundation
+	License:        GNU General Public License (GPL)
+    On Debian systems, the complete text of the GNU General Public
+    License, can be found in /usr/share/common-licenses/GPL.
+
+	TCPDF Class
+	---
+	Copyright: 2006 Nicola Asuni
+	License: GNU Lesser General Public License (LGPL)
+    On Debian systems, the complete text of the Lesser GNU General Public
+    License, can be found in /usr/share/common-licenses/LGPL.
+
+    FCKeditor - http://www.fckeditor.net
+    ----
+    Copyright: 2003-2009 Frederico Caldeira Knabben
+    License: Licensed under the terms of any of the following licenses at your
+    choice:
+      - GNU General Public License Version 2 or later (the "GPL")
+        On Debian systems, the complete text of the GNU General Public
+        License, can be found in /usr/share/common-licenses/GPL.
+      - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
+        On Debian systems, the complete text of the Lesser GNU General Public
+        License, can be found in /usr/share/common-licenses/LGPL.
+      - Mozilla Public License Version 1.1 or later (the "MPL")
+        The complete license can be found at:
+        http://www.mozilla.org/MPL/MPL-1.1.html
+
+    HTTP client PHP class
+    ----
+    Copyright: 1999 - 2006, Manuel Lemos
+    License: BSD
+        Redistribution and use in source and binary forms, with or without
+        modification, are permitted provided that the following conditions
+        are met:
+
+          Redistributions of source code must retain the above copyright
+          notice, this list of conditions and the following disclaimer.
+
+          Redistributions in binary form must reproduce the above copyright
+          notice, this list of conditions and the following disclaimer in the
+          documentation and/or other materials provided with the distribution.
+
+          Neither the name of Manuel Lemos nor the names of his contributors
+          may be used to endorse or promote products derived from this software
+          without specific prior written permission.
+
+        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+        "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+        LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+        A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR
+        CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+        EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+        PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+        PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+        LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+        NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+        SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+        
+
+The Ubuntu packaging:
+    Copyright (C) 2008 by nijaba <nicolas.barcet@ubuntu.com>
+    released under GNU/GPL License v2 
+

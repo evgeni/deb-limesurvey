@@ -1,0 +1,13 @@
+--- a/config-defaults.php
++++ b/config-defaults.php
+@@ -462,8 +462,8 @@
+ $standardtemplaterooturl= "$rooturl/templates"; // Location of the templates
+ 
+ $homedir        =   "$rootdir".DIRECTORY_SEPARATOR."admin";     // The physical disk location of the admin scripts
+-$publicdir      =   "$rootdir";                                 // The physical disk location of the public scripts
+-$tempdir        =   "$rootdir".DIRECTORY_SEPARATOR."tmp";       // The physical location where LimeSurvey can store temporary files
++$publicdir      =   "/var/lib/limesurvey";                      // The physical disk location of the public scripts
++$tempdir        =   "$publicdir".DIRECTORY_SEPARATOR."tmp";       // The physical location where LimeSurvey can store temporary files
+ // Note: For OS/2 the $tempdir may need to be defined as an actual directory
+ // example: "x:/limesurvey/tmp". We don't know why.
+ $sFCKEditorURL   =   "$homeurl/scripts/fckeditor.266";

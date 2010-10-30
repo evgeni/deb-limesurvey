@@ -1,0 +1,9 @@
+version=3
+
+#opts="uversionmangle=s/\([0-9]\)\([0-9a-z]*\)_\([0-9a-z]*\)_\([0-9]*\)/\1\.\2+\3/" http://sf.net/limesurvey/limesurvey(.*)\.tar\.gz
+#opts="uversionmangle=s/\([[:digit:]]\)\([[:alnum:]]*\)-\([0-9a-z]*\)-\([0-9]*\)/\1\.\2+\3/" http://sf.net/limesurvey/limesurvey(.*)\.tar\.gz
+
+#opts=uversionmangle=s/\([0-9]\)\([0-9a-z]*\)\(.*\)/\1\.\2+\3/ \
+#opts=uversionmangle=s/-1([0-9]*)(plus|)-build([0-9]+)-([0-9]+)/1.$2$3-$4/ \
+opts=uversionmangle=s/([0-9]*)(plus|)[-_]build([0-9]*).*/1.$1$2-build$3/ \
+http://sf.net/limesurvey/limesurvey1(.*)\.tar\.gz

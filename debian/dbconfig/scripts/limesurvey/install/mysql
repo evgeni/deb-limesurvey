@@ -1,0 +1,2 @@
+#!/bin/sh
+. /usr/share/dbconfig-common/scripts/limesurvey/install/create.sh

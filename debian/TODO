@@ -7,4 +7,6 @@ TODO for limesurvey Debian packaging
 - if possible, remove binary font files from admin/classes/tcpdf/fonts and
   replace them with symlinks
 - fix remaining Lintian errors and warnings
-
+- move index.php and admin.php (and maybe other user accessible scripts) to
+  something like /usr/share/limesurvey/www and only expose that directory
+  directly through Apache

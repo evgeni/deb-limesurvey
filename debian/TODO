@@ -4,9 +4,10 @@ TODO for limesurvey Debian packaging
 - change default admin password, ask at package setup, or disable
 - change Apache include file, comment out actual Alias and document this in the
   Debian README
-- if possible, remove binary font files from admin/classes/tcpdf/fonts and
-  replace them with symlinks
-- fix remaining Lintian errors and warnings
+- remove binary font files from admin/classes/tcpdf/fonts from the source
+  archive. Done for the binary package
 - move index.php and admin.php (and maybe other user accessible scripts) to
   something like /usr/share/limesurvey/www and only expose that directory
   directly through Apache
+- check all licenses
+- fix remaining Lintian errors and warnings

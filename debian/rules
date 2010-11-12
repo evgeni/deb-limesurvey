@@ -10,15 +10,26 @@
 
 PACKAGE=limesurvey
 
-build:  patch
+build:  patch fontfiles
 
 clean-patched:
 	dh_testdir
 	dh_testroot
 	dh_clean
 
-clean:	clean-patched unpatch
+clean:	clean-patched clean-fontfiles unpatch
 
+fontfiles:
+	mkdir -p debian/fontfiles
+	# Copy php descriptions for core fonts
+	grep -l 'type=.core.' $(CURDIR)/admin/classes/tcpdf/fonts/*.php | xargs -I "__FILENAME__" mv __FILENAME__ debian/fontfiles/
+	# Create suitable font files from Debian truetype fonts
+	debian/tcpdf-convertfont.sh /usr/share/fonts/truetype/unifont/unifont.ttf debian/fontfiles
+	for f in /usr/share/fonts/truetype/freefont/*.ttf; do debian/tcpdf-convertfont.sh "$$f" debian/fontfiles; done
+	for f in /usr/share/fonts/truetype/ttf-dejavu/*.ttf; do debian/tcpdf-convertfont.sh "$$f" debian/fontfiles; done
+
+clean-fontfiles:
+	rm -rf debian/fontfiles
 
 install:build
 	dh_testdir
@@ -29,19 +40,18 @@ install:build
 	tar cpf - --exclude=debian --exclude=docs * | tar -C debian/limesurvey/usr/share/limesurvey -xpf -
 	#Remove license files
 	rm debian/limesurvey/usr/share/limesurvey/admin/classes/http/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/admin/classes/json/LICENSE
 	rm debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/LICENSE.TXT
+	rm debian/limesurvey/usr/share/limesurvey/admin/scripts/fckeditor.266/license.txt
 	rm debian/limesurvey/usr/share/limesurvey/classes/adodb/license.txt
 	rm debian/limesurvey/usr/share/limesurvey/classes/php-gettext/COPYING
 	rm debian/limesurvey/usr/share/limesurvey/classes/phpmailer/LICENSE
-	rm debian/limesurvey/usr/share/limesurvey/admin/scripts/fckeditor.266/license.txt
 	#Remove fonts
 	rm debian/limesurvey/usr/share/limesurvey/fonts/KacstFarsi.ttf
 	rm debian/limesurvey/usr/share/limesurvey/fonts/KacstOffice.ttf
 	rm debian/limesurvey/usr/share/limesurvey/fonts/verabd.ttf
 	rm debian/limesurvey/usr/share/limesurvey/fonts/verait.ttf
 	rm debian/limesurvey/usr/share/limesurvey/fonts/vera.ttf
-	# Remove binary font utilities
-	rm -rf debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/fonts/utils
 	#place symlinks for fonts
 	ln -s /usr/share/fonts/truetype/ttf-bitstream-vera/VeraBd.ttf \
 		debian/limesurvey/usr/share/limesurvey/fonts/verabd.ttf
@@ -53,6 +63,9 @@ install:build
 		debian/limesurvey/usr/share/limesurvey/fonts/KacstFarsi.ttf
 	ln -s /usr/share/fonts/truetype/ttf-kacst/KacstOffice.ttf \
 		debian/limesurvey/usr/share/limesurvey/fonts/KacstOffice.ttf
+	# Remove tcpdf fonts and utils, use font files based on Debian system fonts
+	rm -rf debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/fonts/*
+	cp debian/fontfiles/* debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/fonts
 	#move modifiable dirs to var lib
 	cd debian/limesurvey/usr/share/limesurvey && mv templates tmp upload ../../../var/lib/limesurvey
 	cd debian/limesurvey/usr/share/limesurvey && mv config*.php ../../../etc/limesurvey

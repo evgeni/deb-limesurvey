@@ -1,3 +1,17 @@
+limesurvey (1.90plus-build9343-1~pre3) unstable; urgency=low
+
+  * Create font files in admin/classes/tcpdf/fonts from Debian fonts
+    under /usr/share/fonts/truetype
+  * Move license from admin/classes/json to debian/copyright
+
+ -- Jan-Pascal van Best <janpascal@vanbest.org>  Fri, 12 Nov 2010 16:30:00 +0100
+
+limesurvey (1.90plus-build9343-1~pre2) unstable; urgency=low
+
+  * Bump
+
+ -- Jan-Pascal van Best <janpascal@vanbest.org>  Fri, 12 Nov 2010 11:31:27 +0100
+
 limesurvey (1.90plus-build9343-1~pre1) unstable; urgency=low
 
   * New upstream release

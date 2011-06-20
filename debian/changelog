@@ -1,3 +1,16 @@
+limesurvey (1.90plus-build9642-1~pre1) unstable; urgency=low
+
+  * New upstream build number
+  * Fix lintian warnings related to missing debian/source/format and native
+    package status
+  * Fix lintian warning that the first word of the description was "an"
+  * Removed executable permissions from
+    fckeditor.266/editor/filemanager/connectors/php/config.php in order to fix
+    lintian warning
+  * Added myself as a co-maintainer
+
+ -- Eric Gerlach <eric@gerlach.ca>  Mon, 20 Jun 2011 17:57:43 -0400
+
 limesurvey (1.90plus-build9343-1~pre3) unstable; urgency=low
 
   * Create font files in admin/classes/tcpdf/fonts from Debian fonts

@@ -94,6 +94,7 @@ binary-indep: build install
 	chown -R root:www-data debian/limesurvey/usr/share/limesurvey
 	chown -R root:www-data debian/limesurvey/etc/limesurvey
 	chmod -R 640 debian/limesurvey/etc/limesurvey/*
+	chmod 644 debian/limesurvey/usr/share/limesurvey/admin/scripts/fckeditor.266/editor/filemanager/connectors/php/config.php
 	find debian/limesurvey/var/lib/limesurvey -type d | xargs chmod 750 
 	find debian/limesurvey/var/lib/limesurvey -type f | xargs chmod 640
 	#find debian/limesurvey/usr/share/limesurvey -type d | xargs chmod 755 

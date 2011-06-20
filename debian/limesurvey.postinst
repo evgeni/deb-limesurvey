@@ -25,8 +25,8 @@ dbc_generate_include_perms='640'
 # source dbconfig-common stuff
 . /usr/share/dbconfig-common/dpkg/postinst
 
-sudo chmod ug+x /usr/share/dbconfig-common/scripts/limesurvey/install/*
-sudo chmod -R ug+x /usr/share/dbconfig-common/scripts/limesurvey/upgrade/*
+chmod ug+x /usr/share/dbconfig-common/scripts/limesurvey/install/*
+chmod -R ug+x /usr/share/dbconfig-common/scripts/limesurvey/upgrade/*
 
 dbc_go limesurvey $@
 

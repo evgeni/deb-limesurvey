@@ -25,9 +25,6 @@ dbc_generate_include_perms='640'
 # source dbconfig-common stuff
 . /usr/share/dbconfig-common/dpkg/postinst
 
-chmod ug+x /usr/share/dbconfig-common/scripts/limesurvey/install/*
-chmod -R ug+x /usr/share/dbconfig-common/scripts/limesurvey/upgrade/*
-
 dbc_go limesurvey $@
 
 if [ "$DPKG_DEBUG" = "developer" ]; then
@@ -68,10 +65,17 @@ case "$1" in
         servers="apache apache-ssl apache-perl apache2"
         . /usr/share/wwwconfig-common/restart.sh
 
-	# Block install directory
-	rm -rf /usr/share/limesurvey/admin/install.done || true
-	mv /usr/share/limesurvey/admin/install /usr/share/limesurvey/admin/install.done
-	chmod 700 /usr/share/limesurvey/admin/install.done
+        # Block install directory
+
+        # Don't remove install.done unless there's something to take its place
+        if [ -d /usr/share/limesurvey/admin/install.done -a -d /usr/share/limesurvey/admin/install ]; then
+                rm -rf /usr/share/limesurvey/admin/install.done
+        fi
+        # If we need to, move install to install.done to prevent re-running the script
+        if [ -d /usr/share/limesurvey/admin/install ]; then
+                mv /usr/share/limesurvey/admin/install /usr/share/limesurvey/admin/install.done
+                chmod 700 /usr/share/limesurvey/admin/install.done
+        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

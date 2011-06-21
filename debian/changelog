@@ -1,15 +1,17 @@
 limesurvey (1.90plus-build9642-1~pre1) unstable; urgency=low
 
   * New upstream build number
-  * Fix lintian warnings related to missing debian/source/format and native
-    package status
+  * Added debian/source/format
   * Fix lintian warning that the first word of the description was "an"
   * Removed executable permissions from
     fckeditor.266/editor/filemanager/connectors/php/config.php in order to fix
     lintian warning
   * Added myself as a co-maintainer
+  * Moved some permission changes from postinst to rules
+  * Updated Standards-Version after checking the checklist
+  * Undo blocking install directory in prerm to allow dpkg-reconfigure
 
- -- Eric Gerlach <eric@gerlach.ca>  Mon, 20 Jun 2011 17:57:43 -0400
+ -- Eric Gerlach <eric@gerlach.ca>  Tue, 21 Jun 2011 11:53:50 -0400
 
 limesurvey (1.90plus-build9343-1~pre3) unstable; urgency=low
 

@@ -6,7 +6,7 @@ Uploaders: Jan-Pascal van Best <janpascal@vanbest.org>, Eric Gerlach <eric@gerla
 DM-Upload-Allowed: yes
 Vcs-Browser: http://svn.debian.org/wsvn/collab-maint/deb-maint/limesurvey/
 Vcs-Svn: svn+ssh://svn.debian.org/svn/collab-maint/deb-maint/limesurvey
-Standards-Version: 3.8.3
+Standards-Version: 3.9.1
 Build-Depends: debhelper (>= 6.0), quilt (>= 0.46),
  ttf-unifont, ttf-freefont, ttf-dejavu-core, ttf-dejavu-extra, 
  texlive-font-utils, php5-cli

@@ -1,12 +1,33 @@
 #! /bin/bash
-# prerm script for ${package_name}
+# prerm script for limesurvey
 #
+
+# summary of how this script can be called:
+#        * <prerm> `remove'
+#        * <old-prerm> `upgrade' <new-version>
+#        * <new-prerm> `failed-upgrade' <old-version>
+#        * <conflictor's-prerm> `remove' `in-favour' <package> <new-version>
+#        * <deconfigured's-prerm> `deconfigure' `in-favour'
+#          <package-being-installed> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see /usr/share/doc/packaging-manual/
 
 set -e
 
 . /usr/share/debconf/confmodule
 . /usr/share/dbconfig-common/dpkg/prerm
 dbc_go limesurvey $@
+
+case "$1" in
+    remove|failed-upgrade)
+    ;;
+
+    upgrade|deconfigure)
+	# Unblock install directory to allow for dpkg-reconfigure
+	mv /usr/share/limesurvey/admin/install.done /usr/share/limesurvey/admin/install
+	chmod 755 /usr/share/limesurvey/admin/install
+    ;;
+esac
 
 #DEBHELPER#
 

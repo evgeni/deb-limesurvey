@@ -34,7 +34,7 @@ clean-fontfiles:
 install:build
 	dh_testdir
 	dh_testroot
-	dh_clean -k
+	dh_prep
 	dh_installdirs -X.svn -XCVS
 	dh_install -XCVS -X.svn
 	tar cpf - --exclude=debian --exclude=docs * | tar -C debian/limesurvey/usr/share/limesurvey -xpf -
@@ -42,10 +42,13 @@ install:build
 	rm debian/limesurvey/usr/share/limesurvey/admin/classes/http/LICENSE.txt
 	rm debian/limesurvey/usr/share/limesurvey/admin/classes/json/LICENSE
 	rm debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/LICENSE.TXT
-	rm debian/limesurvey/usr/share/limesurvey/admin/scripts/fckeditor.266/license.txt
+	rm debian/limesurvey/usr/share/limesurvey/admin/scripts/ckeditor.36/LICENSE.html
 	rm debian/limesurvey/usr/share/limesurvey/classes/adodb/license.txt
 	rm debian/limesurvey/usr/share/limesurvey/classes/php-gettext/COPYING
 	rm debian/limesurvey/usr/share/limesurvey/classes/phpmailer/LICENSE
+	rm debian/limesurvey/usr/share/limesurvey/admin/classes/gtranslate/COPYING
+	rm debian/limesurvey/usr/share/limesurvey/admin/scripts/kcfinder/doc/LICENSE.GPL
+	rm debian/limesurvey/usr/share/limesurvey/admin/scripts/kcfinder/doc/LICENSE.LGPL
 	#Remove fonts
 	rm debian/limesurvey/usr/share/limesurvey/fonts/KacstFarsi.ttf
 	rm debian/limesurvey/usr/share/limesurvey/fonts/KacstOffice.ttf
@@ -94,7 +97,6 @@ binary-indep: build install
 	chown -R root:www-data debian/limesurvey/usr/share/limesurvey
 	chown -R root:www-data debian/limesurvey/etc/limesurvey
 	chmod -R 640 debian/limesurvey/etc/limesurvey/*
-	chmod 644 debian/limesurvey/usr/share/limesurvey/admin/scripts/fckeditor.266/editor/filemanager/connectors/php/config.php
 	chmod 755 debian/limesurvey/usr/share/dbconfig-common/scripts/limesurvey/install/*
 	chmod -R 755 debian/limesurvey/usr/share/dbconfig-common/scripts/limesurvey/upgrade/*
 	find debian/limesurvey/var/lib/limesurvey -type d | xargs chmod 750 

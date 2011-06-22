@@ -9,14 +9,14 @@
 +
  // Basic Setup
  
--$databasetype       =   'mysql';        // ADOdb database driver - valid values are mysql, mysqli, odbc_mssql, mssql_n, odbtp or postgres
-+$databasetype       =   $dbtype;        // ADOdb database driver - valid values are mysql, mysqli, odbc_mssql, mssql_n, odbtp or postgres
-                                         // mysql: Recommended driver for mysql
-                                         // mysqli: Slightly faster driver for mysql - not on all server systems available
-                                         // odbc_mssql: MSSQL driver using ODBC with MS SQL Server
+-$databasetype       =   'mysql';       // ADOdb database driver - valid values are mysql, mysqli, odbc_mssql, mssql_n, odbtp or postgres
++$databasetype       =   $dbtype;       // ADOdb database driver - valid values are mysql, mysqli, odbc_mssql, mssql_n, odbtp or postgres
+                                        // mysql: Recommended driver for mysql
+                                        // mysqli: Slightly faster driver for mysql - not on all server systems available 
+                                        // odbc_mssql: MSSQL driver using ODBC with MS SQL Server
 @@ -33,10 +36,10 @@
-                                         // odbtp: ODBTP driver to access MSSQL-Server is needed for this one - we also recommend to activate $databasepersistent for decent speed
-                                         // postgres: Standard postgres driver
+                                        // odbtp: ODBTP driver to access MSSQL-Server is needed for this one - we also recommend to activate $databasepersistent for decent speed
+                                        // postgres: Standard postgres driver
  
 -$databaselocation   =   'localhost';   // Network location of your Database - for odbc_mssql or mssqlnative use the mssql servername, not localhost or IP
 -$databasename       =   'limesurvey';  // The name of the database that we will create

@@ -140,9 +140,9 @@ License:
     On Debian systems, the complete text of the Lesser GNU General Public
     License, can be found in /usr/share/common-licenses/LGPL.
 
-    FCKeditor - http://www.fckeditor.net
+    CKeditor - http://ckeditor.com
     ----
-    Copyright: 2003-2009 Frederico Caldeira Knabben
+    Copyright: 2003-2011 Frederico Knabben
     License: Licensed under the terms of any of the following licenses at your
     choice:
       - GNU General Public License Version 2 or later (the "GPL")
@@ -214,7 +214,26 @@ License:
       (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
       THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+    GTranslate
+    ----------
+    Copyright: 2009, Jose da Silva Jose da Silva <jose@josedasilva.net>
+    License:        GNU Lesser General Public License (LGPL v3)
+      On Debian systems, the complete text of the Lesser GNU General Public
+      License, can be found in /usr/share/common-licenses/LGPL.
+
+    KCFinder
+    --------
+    Copyright: 2010, KCFinder Project, Pavel Tzonkov <pavelc@users.sourceforge.net>
+    License:        GNU General Public License (GPL), GNU Lesser General Public
+                    License (LGPL)
+      On Debian systems, the complete text of the Lesser GNU General Public
+      License can be found in /usr/share/common-licenses/LGPL.
+      On Debian systems, the complete text of the GNU General Public
+      License, can be found in /usr/share/common-licenses/GPL.
+
+
+
 The Debian packaging:
-    Copyright: 2008-2010, nijaba <nicolas.barcet@ubuntu.com> and Jan-Pascal van Best <janpascal@vanbest.org>
+    Copyright: 2008-2010, nijaba <nicolas.barcet@ubuntu.com>, Jan-Pascal van Best <janpascal@vanbest.org>, and Eric Gerlach <eric@gerlach.ca>
     License: GNU General Public License, version 2
       On Debian systems, the full text of this license may be found in /usr/share/common-licenses/GPL-2

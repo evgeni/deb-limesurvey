@@ -24,8 +24,10 @@ case "$1" in
 
     upgrade|deconfigure)
 	# Unblock install directory to allow for dpkg-reconfigure
-	mv /usr/share/limesurvey/admin/install.done /usr/share/limesurvey/admin/install
-	chmod 755 /usr/share/limesurvey/admin/install
+	if [ -d /usr/share/limesurvey/admin/install.done ]; then
+	    mv /usr/share/limesurvey/admin/install.done /usr/share/limesurvey/admin/install
+	    chmod 755 /usr/share/limesurvey/admin/install
+        fi
     ;;
 esac
 

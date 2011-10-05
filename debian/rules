@@ -40,7 +40,6 @@ install:build
 	tar cpf - --exclude=debian --exclude=docs * | tar -C debian/limesurvey/usr/share/limesurvey -xpf -
 	#Remove license files
 	rm debian/limesurvey/usr/share/limesurvey/admin/classes/http/LICENSE.txt
-	rm debian/limesurvey/usr/share/limesurvey/admin/classes/json/LICENSE
 	rm debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/LICENSE.TXT
 	rm debian/limesurvey/usr/share/limesurvey/admin/scripts/ckeditor.36/LICENSE.html
 	rm debian/limesurvey/usr/share/limesurvey/classes/adodb/license.txt

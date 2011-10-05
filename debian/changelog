@@ -1,3 +1,11 @@
+limesurvey (1.91plus-build11026-1~pre1) unstable; urgency=low
+
+  * New upstream release
+  * Added a symlink: /usr/share/limesurvey/upload ->
+    /var/lib/limesurvey/upload to enable templates to be moved on upgrade
+
+ -- Eric Gerlach <egerlach@feds.uwaterloo.ca>  Wed, 05 Oct 2011 13:13:06 -0400
+
 limesurvey (1.91plus-build10315-1~pre1) unstable; urgency=low
 
   * New upstream release

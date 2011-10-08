@@ -1,4 +1,4 @@
 version=3
 
-opts=uversionmangle=s/([0-9]*)(plus|)[-_]build([0-9]*).*/1.$1$2-build$3/ \
+opts=uversionmangle=s/^([0-9]*)(plus|RC[0-9]|)[-_]build([0-9]*).*/1.$1$2-build$3/ \
   http://sf.net/limesurvey/limesurvey1(.*)\.tar\.gz 

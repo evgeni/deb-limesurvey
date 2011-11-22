@@ -1,4 +1,4 @@
-limesurvey (191plus-build11379-1~pre1) UNRELEASED; urgency=low
+limesurvey (1.91plus-build11379-1~pre1) UNRELEASED; urgency=low
 
   * New upstream release
   * Remove quilt handling from debian/rules.

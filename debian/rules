@@ -10,14 +10,13 @@
 
 PACKAGE=limesurvey
 
-build:  patch fontfiles
+build:  fontfiles
 
-clean-patched:
+clean:
 	dh_testdir
 	dh_testroot
 	dh_clean
-
-clean:	clean-patched clean-fontfiles unpatch
+	rm -rf debian/fontfiles
 
 fontfiles:
 	mkdir -p debian/fontfiles
@@ -28,10 +27,7 @@ fontfiles:
 	for f in /usr/share/fonts/truetype/freefont/*.ttf; do debian/tcpdf-convertfont.sh "$$f" debian/fontfiles; done
 	for f in /usr/share/fonts/truetype/ttf-dejavu/*.ttf; do debian/tcpdf-convertfont.sh "$$f" debian/fontfiles; done
 
-clean-fontfiles:
-	rm -rf debian/fontfiles
-
-install:build
+install: build
 	dh_testdir
 	dh_testroot
 	dh_prep
@@ -107,39 +103,6 @@ binary-indep: build install
 	dh_builddeb
 
 binary: binary-indep
-.PHONY: build clean binary-indep binary install patch unpatch
+.PHONY: build clean binary-indep binary install
 
-binary-arch: 
-
-# Apply patches to the package
-patch: patch-stamp
-
-QUILTBIN= /usr/bin/quilt
-QUILTOPT= --quiltrc debian/quiltrc.build
-
-patch-stamp:
-	if [ -e $(QUILTBIN) ] ; then \
-		$(QUILTBIN) $(QUILTOPT) push -a || test $$? = 2; \
-	else  \
-		list= `cat debian/patches/series|sed 's/#.*$$//'|grep -v '^$$'`; \
-		if [ -n "$$list" ] ; then \
-			for patch in `echo $$list` ; do \
-				patch -p1 < debian/patches/$$patch ; \
-			done ; \
-		fi ; \
-	fi
-	touch debian/stamp-patched
-
-unpatch:
-	if [ -e $(QUILTBIN) ] ; then \
-		$(QUILTBIN) $(QUILTOPT) pop -a || test $$? = 2; \
-	else if [ -e debian/stamp-patched ] ; then \
-		list= `cat debian/patches/series|sed 's/#.*$$//'|grep -v '^$$'|tac`; \
-		if [ -n "$$list" ] ; then \
-			for patch in `echo $$list` ; do \
-				patch -p1 -R < debian/patches/$$patch ; \
-			done; \
-		fi;fi; \
-	fi
-	rm -rf .pc
-	rm -f debian/stamp-patch*
+binary-arch:

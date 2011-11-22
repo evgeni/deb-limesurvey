@@ -72,7 +72,6 @@ install: build
 	chown -R root:www-data debian/limesurvey/usr/share/limesurvey
 	chown -R root:www-data debian/limesurvey/etc/limesurvey 
 	chmod -R 640 debian/limesurvey/etc/limesurvey/*
-	cp debian/binary.lintian-overrides debian/limesurvey/usr/share/lintian/overrides/limesurvey
 
 # Everything else is handled by dh_install
 
@@ -84,6 +83,7 @@ binary-indep: build install
 	dh_installexamples -X.svn
 	dh_installchangelogs docs/release_notes.txt
 	dh_installdebconf	
+	dh_lintian
 	dh_link
 	dh_compress
 	dh_fixperms

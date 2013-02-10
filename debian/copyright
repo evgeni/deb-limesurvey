@@ -7,11 +7,6 @@ Source: http://www.limesurvey.org/
 Have to remove framework/web/widgets/captcha/Duality.ttf, as it does
 not permit modification.
 
-Also the following two Javascript files are not licensed or
-attributed:
-  framework/web/js/source/jquery.ajaxqueue.js
-  scripts/jquery/jquery.checkgroup.js
-
 The images in styles/gartergrey/images/* are non-free.
 
 *****
@@ -308,6 +303,12 @@ Copyright: 2010 "Cowboy" Ben Alman
 License: MIT or GPL-2
 Comment: jQuery BBQ Plugin 1.2.1
 
+Files: framework/web/js/source/jquery.ajaxqueue.js
+Copyright: Author information lost in the JQuery server crash
+License: MIT
+Comment: The license is recorded on the webpage
+ http://www.docracy.com/0zp0431xc4x/quakelive-com-notices-tos
+
 Files: framework/web/js/source/jquery.autocomplete.js
  framwork/web/js/source/autocomplete/*
 Copyright: 2009 Jörn Zaefferer
@@ -339,6 +340,7 @@ Comment: jQuery TreeView 1.4.1; file says "Dual licensed under the MIT
 
 Files: framework/web/js/source/jquery.rating.js
  framework/web/js/source/rating/*
+ scripts/jquery.rating.js
 Copyright: 2008 Fyneworks.com
 License: Expat or GPL-2
 Comment: jQuery Star Rating 3.13; file says "Dual licensed under the MIT
@@ -425,6 +427,18 @@ Copyright: 2007-2011 LimeSurvey Project Team / Carsten Schmitz;
  2003-2005 John Lim
 License: GPL-2+ and BSD-3-clause-adodb
 Comment: Code contains comment: "From adodb" on line 1435
+
+Files: scripts/ajaxupload.js
+Copyright: Andrew Valums
+License: MIT
+
+Files: scripts/coookies.js
+Copyright: Harmen Janssen <http://www.whatstyle.net>
+License: public-domain
+ The website http://www.whatstyle.net/articles/28/subcookies where this
+ is published says:
+   You can download the entire cookies.js file and use it freely.
+Comment: Yes, the filename does have a triple "ooo".
 
 Files: scripts/expressions/em_javascript.js
 Copyright: 2007-2011 LimeSurvey Project Team / Carsten Schmitz;
@@ -540,6 +554,11 @@ Copyright: Brian Cherne brian(at)cherne(dot)net
 License: Expat or GPL-3
 Comment: Script (original version) just says "GPL" which is too vague;
  I have assumed the current GPL version.
+
+Files: scripts/jquery/jquery.checkgroup.js
+Copyright: Author information lost in the JQuery server crash
+License: Expat
+Comment: This was confirmed by email from the Limesurvey developers
 
 Files: scripts/jquery/jqGrid/*
 Copyright: 2008, Tony Tomov, tony@trirand.com

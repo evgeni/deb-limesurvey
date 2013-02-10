@@ -438,6 +438,33 @@ License: public-domain
  The website http://www.whatstyle.net/articles/28/subcookies where this
  is published says:
    You can download the entire cookies.js file and use it freely.
+ .
+ An email conversation with him ran:
+ .
+ Date: Sun, 10 Feb 2013 22:15:25 +0100
+ From: Harmen Janssen <harmen@grrr.nl>
+ Subject: Re: Whatstyle.net comment
+ To: jdg@debian.org
+ .
+ Hi!
+ .
+ Yes, use it however you like :)
+ I'm glad you like it!
+ .
+ Kind regards,
+ Harmen Janssen
+ .
+ > Verzonden door: Julian Gilbey
+ > E-mail adres verzender: jdg@debian.org (mailto:jdg@debian.org)
+ > IP-adres verzender: 80.229.14.168
+ > Bericht:
+ > Hi! Just came across your cookies.js script - very nice (on
+ > http://www.whatstyle.net/articles/28/subcookies). You say "use it freely";
+ > do you mean by this that you are putting the script in the public domain?
+ >
+ > Many thanks!
+ >
+ > Julian
 Comment: Yes, the filename does have a triple "ooo".
 
 Files: scripts/expressions/em_javascript.js

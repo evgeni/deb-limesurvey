@@ -1,13 +1,12 @@
 Source: limesurvey
 Section: web
 Priority: optional
-Maintainer: Nicolas Barcet <nicolas.barcet@ubuntu.com>
-Uploaders: Jan-Pascal van Best <janpascal@vanbest.org>, Eric Gerlach <eric@gerlach.ca>
-DM-Upload-Allowed: yes
+Maintainer: Julian Gilbey <jdg@debian.org>
+Uploaders: Nicolas Barcet <nicolas.barcet@ubuntu.com>, Jan-Pascal van Best <janpascal@vanbest.org>, Eric Gerlach <eric@gerlach.ca>
 Vcs-Browser: http://svn.debian.org/wsvn/collab-maint/deb-maint/limesurvey/trunk/
 Vcs-Svn: svn+ssh://svn.debian.org/svn/collab-maint/deb-maint/limesurvey/trunk
-Standards-Version: 3.9.1
-Build-Depends: debhelper (>= 7.0),
+Standards-Version: 3.9.3
+Build-Depends: debhelper (>= 9.0),
  ttf-unifont, ttf-freefont, ttf-dejavu-core, ttf-dejavu-extra, 
  texlive-font-utils, php5-cli
 Homepage: http://www.limesurvey.org/

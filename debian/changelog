@@ -1,3 +1,11 @@
+limesurvey (200plus-build130122-1) UNRELEASED; urgency=low
+
+  * New upstream release
+  * Converted copyright file to copyright-format-1.0; just a few comments
+    about non-free files still remaining
+
+ -- Julian Gilbey <jdg@debian.org>  Sun, 10 Feb 2013 16:31:05 +0000
+
 limesurvey (1.91plus-build120302-1~pre1) UNRELEASED; urgency=low
 
   * New upstream release

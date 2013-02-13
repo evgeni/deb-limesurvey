@@ -79,6 +79,11 @@ install: build
 	for file in $$(ls $(CURDIR)/debian/limesurvey/etc/limesurvey); do \
 		ln -s /etc/limesurvey/$$file $(CURDIR)/debian/limesurvey/usr/share/limesurvey/application/config/$$file; \
 	done
+	# use Debian's jQuery
+	for file in framework/web/js/source/jquery.min.js third_party/kcfinder/js/jquery.js framework/web/js/source/jquery.js scripts/jquery/jquery.js; do \
+		rm debian/limesurvey/usr/share/limesurvey/$$file; \
+		ln -s /usr/share/javascript/jquery/jquery.js debian/limesurvey/usr/share/limesurvey/$$file; \
+	done
 	# install db scripts
 	install -D -m0644 installer/sql/create-pgsql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/pgsql
 	install -D -m0644 installer/sql/create-mysql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/mysql

@@ -17,7 +17,7 @@ clean:
 fontfiles:
 	mkdir -p debian/fontfiles
 	# Copy php descriptions for core fonts
-	grep -l 'type=.core.' $(CURDIR)/admin/classes/tcpdf/fonts/*.php | xargs -I "__FILENAME__" mv __FILENAME__ debian/fontfiles/
+	grep -l 'type=.core.' $(CURDIR)/application/third_party/tcpdf/fonts/*.php | xargs -I "__FILENAME__" mv __FILENAME__ debian/fontfiles/
 	# Create suitable font files from Debian truetype fonts
 	debian/tcpdf-convertfont.sh /usr/share/fonts/truetype/unifont/unifont.ttf debian/fontfiles
 	for f in /usr/share/fonts/truetype/freefont/*.ttf; do debian/tcpdf-convertfont.sh "$$f" debian/fontfiles; done
@@ -31,38 +31,36 @@ install: build
 	dh_install -XCVS -X.svn
 	tar cpf - --exclude=debian --exclude=docs * | tar -C debian/limesurvey/usr/share/limesurvey -xpf -
 	#Remove license files
-	rm debian/limesurvey/usr/share/limesurvey/admin/classes/http/LICENSE.txt
-	rm debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/LICENSE.TXT
-	rm debian/limesurvey/usr/share/limesurvey/admin/scripts/ckeditor.36/LICENSE.html
-	rm debian/limesurvey/usr/share/limesurvey/classes/adodb/license.txt
-	rm debian/limesurvey/usr/share/limesurvey/classes/php-gettext/COPYING
-	rm debian/limesurvey/usr/share/limesurvey/classes/phpmailer/LICENSE
-	rm debian/limesurvey/usr/share/limesurvey/admin/classes/gtranslate/COPYING
-	rm debian/limesurvey/usr/share/limesurvey/admin/scripts/kcfinder/doc/LICENSE.GPL
-	rm debian/limesurvey/usr/share/limesurvey/admin/scripts/kcfinder/doc/LICENSE.LGPL
+	#rm debian/limesurvey/usr/share/limesurvey/admin/classes/http/LICENSE.txt
+	#rm debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/LICENSE.TXT
+	#rm debian/limesurvey/usr/share/limesurvey/admin/scripts/ckeditor.36/LICENSE.html
+	#rm debian/limesurvey/usr/share/limesurvey/classes/adodb/license.txt
+	#rm debian/limesurvey/usr/share/limesurvey/classes/php-gettext/COPYING
+	#rm debian/limesurvey/usr/share/limesurvey/classes/phpmailer/LICENSE
+	#rm debian/limesurvey/usr/share/limesurvey/admin/classes/gtranslate/COPYING
+	#rm debian/limesurvey/usr/share/limesurvey/admin/scripts/kcfinder/doc/LICENSE.GPL
+	#rm debian/limesurvey/usr/share/limesurvey/admin/scripts/kcfinder/doc/LICENSE.LGPL
 	#Remove fonts
-	rm debian/limesurvey/usr/share/limesurvey/fonts/KacstFarsi.ttf
-	rm debian/limesurvey/usr/share/limesurvey/fonts/KacstOffice.ttf
-	rm debian/limesurvey/usr/share/limesurvey/fonts/verabd.ttf
-	rm debian/limesurvey/usr/share/limesurvey/fonts/verait.ttf
-	rm debian/limesurvey/usr/share/limesurvey/fonts/vera.ttf
+	rm debian/limesurvey/usr/share/limesurvey/fonts/DejaVuSans.ttf
+	rm debian/limesurvey/usr/share/limesurvey/fonts/FreeSans.ttf
 	#place symlinks for fonts
-	ln -s /usr/share/fonts/truetype/ttf-bitstream-vera/VeraBd.ttf \
-		debian/limesurvey/usr/share/limesurvey/fonts/verabd.ttf
-	ln -s /usr/share/fonts/truetype/ttf-bitstream-vera/VeraIt.ttf \
-		debian/limesurvey/usr/share/limesurvey/fonts/verait.ttf
-	ln -s /usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf \
-		debian/limesurvey/usr/share/limesurvey/fonts/vera.ttf
-	ln -s /usr/share/fonts/truetype/ttf-kacst/KacstFarsi.ttf \
-		debian/limesurvey/usr/share/limesurvey/fonts/KacstFarsi.ttf
-	ln -s /usr/share/fonts/truetype/ttf-kacst/KacstOffice.ttf \
-		debian/limesurvey/usr/share/limesurvey/fonts/KacstOffice.ttf
+	ln -s /usr/share/fonts/truetype/freefont/FreeSans.ttf \
+		debian/limesurvey/usr/share/limesurvey/fonts/FreeSans.ttf
+	ln -s /usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf \
+		debian/limesurvey/usr/share/limesurvey/fonts/DejaVuSans.ttf
 	# Remove tcpdf fonts and utils, use font files based on Debian system fonts
-	rm -rf debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/fonts/*
-	cp debian/fontfiles/* debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/fonts
+	rm -rf debian/limesurvey/usr/share/limesurvey/application/third_party/tcpdf/fonts/*
+	cp debian/fontfiles/* debian/limesurvey/usr/share/limesurvey/application/third_party/tcpdf/fonts
 	#move modifiable dirs to var lib
-	cd debian/limesurvey/usr/share/limesurvey && mv templates tmp upload ../../../var/lib/limesurvey
-	cd debian/limesurvey/usr/share/limesurvey && mv config*.php ../../../etc/limesurvey
+	cd debian/limesurvey/usr/share/limesurvey && mv templates tmp upload $(CURDIR)/debian/limesurvey/var/lib/limesurvey
+	cd debian/limesurvey/usr/share/limesurvey/application/config/ && mv *.php $(CURDIR)/debian/limesurvey/etc/limesurvey
+	cp debian/config.php $(CURDIR)/debian/limesurvey/etc/limesurvey
+	for file in $$(ls $(CURDIR)/debian/limesurvey/etc/limesurvey); do \
+		ln -s /etc/limesurvey/$$file $(CURDIR)/debian/limesurvey/usr/share/limesurvey/application/config/$$file; \
+	done
+	# install db scripts
+	install -D installer/sql/create-pgsql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/pgsql
+	install -D installer/sql/create-mysql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/mysql
 	# fix owners
 	chown -R www-data:www-data debian/limesurvey/var/lib/limesurvey
 	chown -R root:www-data debian/limesurvey/usr/share/limesurvey
@@ -88,8 +86,6 @@ binary-indep: build install
 	chown -R root:www-data debian/limesurvey/usr/share/limesurvey
 	chown -R root:www-data debian/limesurvey/etc/limesurvey
 	chmod -R 640 debian/limesurvey/etc/limesurvey/*
-	chmod 755 debian/limesurvey/usr/share/dbconfig-common/scripts/limesurvey/install/*
-	chmod -R 755 debian/limesurvey/usr/share/dbconfig-common/scripts/limesurvey/upgrade/*
 	find debian/limesurvey/var/lib/limesurvey -type d | xargs chmod 750 
 	find debian/limesurvey/var/lib/limesurvey -type f | xargs chmod 640
 	#find debian/limesurvey/usr/share/limesurvey -type d | xargs chmod 755 

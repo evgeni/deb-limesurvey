@@ -6,8 +6,8 @@ DESTDIR="$2"
 CURDIR=$( pwd )
 
 TTF2AFM="/usr/bin/ttf2afm"
-MAKEFONT="$CURDIR/admin/classes/tcpdf/fonts/utils/makefont.php"
-ENC="$CURDIR/admin/classes/tcpdf/fonts/utils/enc"
+MAKEFONT="$CURDIR/application/third_party/tcpdf/fonts/utils/makefont.php"
+ENC="$CURDIR/application/third_party/tcpdf/fonts/utils/enc"
 
 BASENAME=$( basename "$TTFFILE" )
 AFMFILE="${BASENAME%.*}.afm"

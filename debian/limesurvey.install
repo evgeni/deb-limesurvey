@@ -1,4 +1,3 @@
 debian/apache.conf  etc/limesurvey
-debian/dbconfig/scripts  usr/share/dbconfig-common/
 
 

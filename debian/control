@@ -7,13 +7,13 @@ Vcs-Browser: http://svn.debian.org/wsvn/collab-maint/deb-maint/limesurvey/trunk/
 Vcs-Svn: svn+ssh://svn.debian.org/svn/collab-maint/deb-maint/limesurvey/trunk
 Standards-Version: 3.9.3
 Build-Depends: debhelper (>= 9.0),
- ttf-unifont, ttf-freefont, ttf-dejavu-core, ttf-dejavu-extra, 
+ fonts-freefont-ttf | ttf-freefont, ttf-dejavu-core,
  texlive-font-utils, php5-cli
 Homepage: http://www.limesurvey.org/
 
 Package: limesurvey
 Architecture: all
-Depends: debconf (>= 0.5) | debconf-2.0, ucf (>= 0.28), apache2 | httpd, libapache2-mod-php5, php5-gd, php5-ldap, php5-mysql | php5-pgsql, wwwconfig-common (>= 0.0.37), mysql-client | virtual-mysql-client | postgresql-client, dbconfig-common, php5-cli, ttf-bitstream-vera, ttf-kacst, ${misc:Depends}
+Depends: debconf (>= 0.5) | debconf-2.0, ucf (>= 0.28), apache2 | httpd, libapache2-mod-php5, php5-gd, php5-ldap, php5-mysql | php5-pgsql, wwwconfig-common (>= 0.0.37), mysql-client | virtual-mysql-client | postgresql-client, dbconfig-common, php5-cli, fonts-freefont-ttf | ttf-freefont, ttf-dejavu-core, ${misc:Depends}
 Description: open source web survey application
  Limesurvey is a php web application to perform online suvey.  
  It basically contains everything you need for doing nearly every survey with

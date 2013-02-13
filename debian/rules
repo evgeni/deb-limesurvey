@@ -84,6 +84,10 @@ install: build
 		rm debian/limesurvey/usr/share/limesurvey/$$file; \
 		ln -s /usr/share/javascript/jquery/jquery.js debian/limesurvey/usr/share/limesurvey/$$file; \
 	done
+	rm debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jquery.metadata.js
+	ln -s /usr/share/javascript/jquery-metadata/jquery.metadata.js debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jquery.metadata.js
+	rm debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jquery.cookie.js
+	ln -s /usr/share/javascript/jquery-cookie/jquery.cookie.js debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jquery.cookie.js
 	# install db scripts
 	install -D -m0644 installer/sql/create-pgsql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/pgsql
 	install -D -m0644 installer/sql/create-mysql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/mysql

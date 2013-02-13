@@ -31,15 +31,32 @@ install: build
 	dh_install -XCVS -X.svn
 	tar cpf - --exclude=debian --exclude=docs * | tar -C debian/limesurvey/usr/share/limesurvey -xpf -
 	#Remove license files
-	#rm debian/limesurvey/usr/share/limesurvey/admin/classes/http/LICENSE.txt
-	#rm debian/limesurvey/usr/share/limesurvey/admin/classes/tcpdf/LICENSE.TXT
-	#rm debian/limesurvey/usr/share/limesurvey/admin/scripts/ckeditor.36/LICENSE.html
-	#rm debian/limesurvey/usr/share/limesurvey/classes/adodb/license.txt
-	#rm debian/limesurvey/usr/share/limesurvey/classes/php-gettext/COPYING
-	#rm debian/limesurvey/usr/share/limesurvey/classes/phpmailer/LICENSE
-	#rm debian/limesurvey/usr/share/limesurvey/admin/classes/gtranslate/COPYING
-	#rm debian/limesurvey/usr/share/limesurvey/admin/scripts/kcfinder/doc/LICENSE.GPL
-	#rm debian/limesurvey/usr/share/limesurvey/admin/scripts/kcfinder/doc/LICENSE.LGPL
+	rm debian/limesurvey/usr/share/limesurvey/third_party/ckeditor/LICENSE.html
+	rm debian/limesurvey/usr/share/limesurvey/third_party/kcfinder/doc/LICENSE.GPL
+	rm debian/limesurvey/usr/share/limesurvey/third_party/kcfinder/doc/LICENSE.LGPL
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/markdown/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/bbq/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/adodb/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/htmlpurifier/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/jquery/maskedinput/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/jquery/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/jquery/treeview/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/jquery/autocomplete/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/gettext/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/cldr/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/json/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/LICENSE
+	rm debian/limesurvey/usr/share/limesurvey/application/third_party/phpmailer/LICENSE
+	rm debian/limesurvey/usr/share/limesurvey/application/third_party/simpletest/LICENSE
+	rm debian/limesurvey/usr/share/limesurvey/application/third_party/tcpdf/LICENSE.TXT
+	rm debian/limesurvey/usr/share/limesurvey/application/libraries/admin/http/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/scripts/admin/codemirror_ui/LICENSE
+	rm debian/limesurvey/usr/share/limesurvey/scripts/admin/codemirror_ui/lib/CodeMirror-2.0/LICENSE
+	rm debian/limesurvey/usr/share/limesurvey/scripts/jquery/jquery.actual/LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/jqueryui/MIT-LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jui/MIT-LICENSE.txt
+	rm debian/limesurvey/usr/share/limesurvey/application/third_party/php-gettext/COPYING
+	rm debian/limesurvey/usr/share/limesurvey/application/libraries/admin/gtranslate/COPYING
 	#Remove fonts
 	rm debian/limesurvey/usr/share/limesurvey/fonts/DejaVuSans.ttf
 	rm debian/limesurvey/usr/share/limesurvey/fonts/FreeSans.ttf

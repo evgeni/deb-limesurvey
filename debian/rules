@@ -60,11 +60,15 @@ install: build
 	#Remove fonts
 	rm debian/limesurvey/usr/share/limesurvey/fonts/DejaVuSans.ttf
 	rm debian/limesurvey/usr/share/limesurvey/fonts/FreeSans.ttf
+	rm -f debian/limesurvey/usr/share/limesurvey/framework/web/widgets/captcha/Duality.ttf
 	#place symlinks for fonts
 	ln -s /usr/share/fonts/truetype/freefont/FreeSans.ttf \
 		debian/limesurvey/usr/share/limesurvey/fonts/FreeSans.ttf
 	ln -s /usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf \
 		debian/limesurvey/usr/share/limesurvey/fonts/DejaVuSans.ttf
+	# we should use a better "captcha" font at some point
+	ln -s /usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf \
+		debian/limesurvey/usr/share/limesurvey/framework/web/widgets/captcha/Duality.ttf
 	# Remove tcpdf fonts and utils, use font files based on Debian system fonts
 	rm -rf debian/limesurvey/usr/share/limesurvey/application/third_party/tcpdf/fonts/*
 	cp debian/fontfiles/* debian/limesurvey/usr/share/limesurvey/application/third_party/tcpdf/fonts

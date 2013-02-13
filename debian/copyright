@@ -4,9 +4,9 @@ Source: http://www.limesurvey.org/
 Comment:
  Have to remove framework/web/widgets/captcha/Duality.ttf, as it does
  not permit modification.
-.
+ .
  The images in styles/gartergrey/images/* are non-free.
-.
+ .
  Some of the fonts are non-free (the "PDF Core 14" fonts) and need removing.
 
 Files: debian/*

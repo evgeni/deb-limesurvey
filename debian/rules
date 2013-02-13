@@ -88,14 +88,16 @@ install: build
 	ln -s /usr/share/javascript/jquery-metadata/jquery.metadata.js debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jquery.metadata.js
 	rm debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jquery.cookie.js
 	ln -s /usr/share/javascript/jquery-cookie/jquery.cookie.js debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jquery.cookie.js
+	rm debian/limesurvey/usr/share/limesurvey/scripts/jquery/jquery.tablesorter.min.js
+	ln -s /usr/share/javascript/jquery-tablesorter/jquery.tablesorter.min.js debian/limesurvey/usr/share/limesurvey/scripts/jquery/jquery.tablesorter.min.js
 	# use Debian's PHP libs
 	rm -rf debian/limesurvey/usr/share/limesurvey/application/third_party/phpmailer/
 	ln -s /usr/share/php/libphp-phpmailer debian/limesurvey/usr/share/limesurvey/application/third_party/phpmailer
 	rm -rf debian/limesurvey/usr/share/limesurvey/application/third_party/php-gettext/
 	ln -s /usr/share/php/php-gettext debian/limesurvey/usr/share/limesurvey/application/third_party/php-gettext
-	# remove unneeded ckeditor files
-	rm -rf debian/limesurvey/usr/share/limesurvey/third_party/ckeditor/_samples/
-	rm -rf debian/limesurvey/usr/share/limesurvey/third_party/ckeditor/_source/
+	# use Debian's ckeditor
+	rm -rf debian/limesurvey/usr/share/limesurvey/third_party/ckeditor/
+	ln -s /usr/share/javascript/ckeditor debian/limesurvey/usr/share/limesurvey/third_party/ckeditor
 	# install db scripts
 	install -D -m0644 installer/sql/create-pgsql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/pgsql
 	install -D -m0644 installer/sql/create-mysql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/mysql

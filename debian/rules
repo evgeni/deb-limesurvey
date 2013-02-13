@@ -76,8 +76,8 @@ install: build
 		ln -s /etc/limesurvey/$$file $(CURDIR)/debian/limesurvey/usr/share/limesurvey/application/config/$$file; \
 	done
 	# install db scripts
-	install -D installer/sql/create-pgsql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/pgsql
-	install -D installer/sql/create-mysql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/mysql
+	install -D -m0644 installer/sql/create-pgsql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/pgsql
+	install -D -m0644 installer/sql/create-mysql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/mysql
 	# fix owners
 	chown -R www-data:www-data debian/limesurvey/var/lib/limesurvey
 	chown -R root:www-data debian/limesurvey/usr/share/limesurvey

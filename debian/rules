@@ -164,8 +164,9 @@ get-orig-source:
 		../../debian/tcpdf-convertfont.sh /usr/share/fonts/truetype/unifont/unifont.ttf ../../get-orig-source/fontfiles && \
 		for f in /usr/share/fonts/truetype/freefont/*.ttf; do ../../debian/tcpdf-convertfont.sh "$$f" ../../get-orig-source/fontfiles; done && \
 		for f in /usr/share/fonts/truetype/ttf-dejavu/*.ttf; do ../../debian/tcpdf-convertfont.sh "$$f" ../../get-orig-source/fontfiles; done
+	cp -a get-orig-source/limesurvey-${VERSION}/application/third_party/tcpdf/fonts/utils/ get-orig-source/fontfiles/
 	rm -rf get-orig-source/limesurvey-${VERSION}/application/third_party/tcpdf/fonts/*
-	cp get-orig-source/fontfiles/* get-orig-source/limesurvey-${VERSION}/application/third_party/tcpdf/fonts/
+	cp -a get-orig-source/fontfiles/* get-orig-source/limesurvey-${VERSION}/application/third_party/tcpdf/fonts/
 
 	# wipe away pear
 	# this might break Excel export

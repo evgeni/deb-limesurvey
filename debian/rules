@@ -61,6 +61,8 @@ install: build
 	# we should use a better "captcha" font at some point
 	ln -s /usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf \
 		debian/limesurvey/usr/share/limesurvey/framework/web/widgets/captcha/Duality.ttf
+	# Remove tcpdf utils
+	rm -rf debian/limesurvey/usr/share/limesurvey/application/third_party/tcpdf/fonts/utils
 	#move modifiable dirs to var lib
 	cd debian/limesurvey/usr/share/limesurvey && mv templates tmp upload $(CURDIR)/debian/limesurvey/var/lib/limesurvey
 	cd debian/limesurvey/usr/share/limesurvey/application/config/ && mv *.php $(CURDIR)/debian/limesurvey/etc/limesurvey

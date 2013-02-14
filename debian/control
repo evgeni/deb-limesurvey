@@ -13,7 +13,7 @@ Homepage: http://www.limesurvey.org/
 
 Package: limesurvey
 Architecture: all
-Depends: debconf (>= 0.5) | debconf-2.0, ucf (>= 0.28), apache2 | httpd, libapache2-mod-php5, php5-gd, php5-ldap, php5-mysql | php5-pgsql, wwwconfig-common (>= 0.0.37), mysql-client | virtual-mysql-client | postgresql-client, dbconfig-common, php5-cli, fonts-freefont-ttf | ttf-freefont, ttf-dejavu-core, libjs-jquery, libjs-jquery-metadata, libjs-jquery-cookie, libjs-jquery-tablesorter, libphp-phpmailer, php-gettext, ckeditor, ${misc:Depends}
+Depends: debconf (>= 0.5) | debconf-2.0, ucf (>= 0.28), apache2 | httpd, libapache2-mod-php5, php5-gd, php5-ldap, php5-mysql | php5-pgsql, wwwconfig-common (>= 0.0.37), mysql-client | virtual-mysql-client | postgresql-client, dbconfig-common, php5-cli, fonts-freefont-ttf | ttf-freefont, ttf-dejavu-core, libjs-jquery, libjs-jquery-metadata, libjs-jquery-cookie, libjs-jquery-tablesorter, libphp-phpmailer, php-gettext, ${misc:Depends}
 Description: open source web survey application
  Limesurvey is a php web application to perform online suvey.  
  It basically contains everything you need for doing nearly every survey with

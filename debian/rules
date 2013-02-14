@@ -96,8 +96,11 @@ install: build
 	rm -rf debian/limesurvey/usr/share/limesurvey/application/third_party/php-gettext/
 	ln -s /usr/share/php/php-gettext debian/limesurvey/usr/share/limesurvey/application/third_party/php-gettext
 	# use Debian's ckeditor
-	rm -rf debian/limesurvey/usr/share/limesurvey/third_party/ckeditor/
-	ln -s /usr/share/javascript/ckeditor debian/limesurvey/usr/share/limesurvey/third_party/ckeditor
+	#rm -rf debian/limesurvey/usr/share/limesurvey/third_party/ckeditor/
+	#ln -s /usr/share/javascript/ckeditor debian/limesurvey/usr/share/limesurvey/third_party/ckeditor
+	# remove unneeded ckeditor files
+	rm -rf debian/limesurvey/usr/share/limesurvey/third_party/ckeditor/_samples/
+	rm -rf debian/limesurvey/usr/share/limesurvey/third_party/ckeditor/_source/
 	# install db scripts
 	install -D -m0644 installer/sql/create-pgsql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/pgsql
 	install -D -m0644 installer/sql/create-mysql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/mysql

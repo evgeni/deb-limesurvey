@@ -97,6 +97,8 @@ install: build
 	ln -s /usr/share/php/libphp-phpmailer debian/limesurvey/usr/share/limesurvey/application/third_party/phpmailer
 	rm -rf debian/limesurvey/usr/share/limesurvey/application/third_party/php-gettext/
 	ln -s /usr/share/php/php-gettext debian/limesurvey/usr/share/limesurvey/application/third_party/php-gettext
+	rm -rf debian/limesurvey/usr/share/limesurvey/application/libraries/admin/pear/PEAR.php
+	ln -s /usr/share/php/PEAR.php debian/limesurvey/usr/share/limesurvey/application/libraries/admin/pear/PEAR.php
 	# use Debian's ckeditor
 	#rm -rf debian/limesurvey/usr/share/limesurvey/third_party/ckeditor/
 	#ln -s /usr/share/javascript/ckeditor debian/limesurvey/usr/share/limesurvey/third_party/ckeditor

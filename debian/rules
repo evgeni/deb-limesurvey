@@ -8,22 +8,12 @@ PACKAGE = limesurvey
 FILE = limesurvey200plus-build130206.tar.bz2
 VERSION = 2.00plus-build130206
 
-build:  fontfiles
+build:
 
 clean:
 	dh_testdir
 	dh_testroot
 	dh_clean
-	rm -rf debian/fontfiles
-
-fontfiles:
-	mkdir -p debian/fontfiles
-	# Copy php descriptions for core fonts
-	grep -l 'type=.core.' $(CURDIR)/application/third_party/tcpdf/fonts/*.php | xargs -I "__FILENAME__" mv __FILENAME__ debian/fontfiles/
-	# Create suitable font files from Debian truetype fonts
-	debian/tcpdf-convertfont.sh /usr/share/fonts/truetype/unifont/unifont.ttf debian/fontfiles
-	for f in /usr/share/fonts/truetype/freefont/*.ttf; do debian/tcpdf-convertfont.sh "$$f" debian/fontfiles; done
-	for f in /usr/share/fonts/truetype/ttf-dejavu/*.ttf; do debian/tcpdf-convertfont.sh "$$f" debian/fontfiles; done
 
 install: build
 	dh_testdir
@@ -71,9 +61,6 @@ install: build
 	# we should use a better "captcha" font at some point
 	ln -s /usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf \
 		debian/limesurvey/usr/share/limesurvey/framework/web/widgets/captcha/Duality.ttf
-	# Remove tcpdf fonts and utils, use font files based on Debian system fonts
-	rm -rf debian/limesurvey/usr/share/limesurvey/application/third_party/tcpdf/fonts/*
-	cp debian/fontfiles/* debian/limesurvey/usr/share/limesurvey/application/third_party/tcpdf/fonts
 	#move modifiable dirs to var lib
 	cd debian/limesurvey/usr/share/limesurvey && mv templates tmp upload $(CURDIR)/debian/limesurvey/var/lib/limesurvey
 	cd debian/limesurvey/usr/share/limesurvey/application/config/ && mv *.php $(CURDIR)/debian/limesurvey/etc/limesurvey

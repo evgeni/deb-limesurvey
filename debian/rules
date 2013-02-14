@@ -163,6 +163,11 @@ get-orig-source:
 	rm -rf get-orig-source/limesurvey-${VERSION}/application/third_party/tcpdf/fonts/*
 	cp get-orig-source/fontfiles/* get-orig-source/limesurvey-${VERSION}/application/third_party/tcpdf/fonts/
 
+	# wipe away pear
+	# this might break Excel export
+	rm -rf get-orig-source/limesurvey-${VERSION}/application/libraries/admin/pear/PEAR.php
+	rm -rf get-orig-source/limesurvey-${VERSION}/application/libraries/admin/pear/OLE
+
 	# create tarball
 	cd get-orig-source && tar caf ../limesurvey-${VERSION}+dfsg.tar.bz2 limesurvey-${VERSION}
 	rm -rf get-orig-source

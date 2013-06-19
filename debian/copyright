@@ -6,9 +6,6 @@ Comment:
  not permit modification.
  .
  The images in styles/gartergrey/images/* are non-free.
- .
- Some of the fonts might be non-free (the "PDF Core 14" fonts) and need
- removing - this is currently being investigated.
 
 Files: debian/*
 Copyright: 2008-2010, nijaba <nicolas.barcet@ubuntu.com>,
@@ -52,7 +49,7 @@ Files: framework/web/js/source/jquery.js
  framework/web/js/source/jquery.min.js
  scripts/jquery/jquery.js
 Copyright: 2011 John Resig; 2011 The Dojo Foundation
-License: MIT or GPL-2
+License: Expat or GPL-2
 Comment: jQuery 1.7.1; includes Sizzle CSS Selector Engine which says:
  "Released under the MIT, BSD, and GPL Licenses"; there is nothing clearer
  than that.
@@ -299,14 +296,14 @@ Comment: jQuery UI 1.8.17; version 1.9.0 is only licensed under Expat
 
 Files: framework/web/js/source/jquery.ba-bbq.*
 Copyright: 2010 "Cowboy" Ben Alman
-License: MIT or GPL-2
+License: Expat or GPL-2
 Comment: jQuery BBQ Plugin 1.2.1
 
 Files: framework/web/js/source/jquery.ajaxqueue.js
-Copyright: Author information lost in the JQuery server crash
-License: MIT
-Comment: The license is recorded on the webpage
- http://www.docracy.com/0zp0431xc4x/quakelive-com-notices-tos
+Copyright: John Resig / Mike Hostetler
+License: Expat or GPL-3
+Comment: The license was confirmed by email:
+ "Thanks for your email.  The code is MIT/GPL, apologies on no license."
 
 Files: framework/web/js/source/jquery.autocomplete.js
  framwork/web/js/source/autocomplete/*
@@ -386,7 +383,7 @@ Comment: Bgiframe.js plugin (v2.1.2)
 
 Files: framework/web/js/source/jquery.cookie.js
 Copyright: 2006 Klaus Hartl (stilbuero.de)
-License: License: Expat or GPL-3
+License: Expat or GPL-3
 Comment: jQuery Cookie plugin, pre-version 1.1; file says "Dual licensed
  under the MIT and GPL licenses" but only gives a URI for the GPL (which
  points to GPL v3).
@@ -429,7 +426,7 @@ Comment: Code contains comment: "From adodb" on line 1435
 
 Files: scripts/ajaxupload.js
 Copyright: Andrew Valums
-License: MIT
+License: Expat
 
 Files: scripts/coookies.js
 Copyright: Harmen Janssen <http://www.whatstyle.net>
@@ -757,6 +754,21 @@ Copyright: Primoz Peterlin <primoz.peterlin@biofiz.mf.uni-lj.si>
 License: GPL-3+
 Comment: There are a lot of contributors listed in the freefont-* folders,
  but the whole collection has been released under the GPL.
+
+Files: application/third_party/tcpdf/fonts/pdfa*.z
+Copyright: Primoz Peterlin <primoz.peterlin@biofiz.mf.uni-lj.si>,
+ 2002, 2003, 2005, 2008, 2009, 2010 Free Software Foundation,
+ Nicola Asuni
+License: GPL-3+
+Comment: Nicola Asuni (the tcpdf author) explained in an email:
+ The PDFA fonts are the equivalent 14 PDF core fonts that must be
+ embedded in case the document is in PDF/A mode.
+ .
+ The fonts with the header as above were created by me by subsetting
+ and editing the original GNU FreeFont fonts released under GNU-GPLv3.
+ As reported on the README.TXT file, the license and other info about
+ GNU FreeFont files is reported on the fonts/freefont-20100919
+ directory.
 
 Files: application/third_party/tcpdf/fonts/utils/pfm2afm*
  application/third_party/tcpdf/fonts/utils/src/pfm2afm-src.tar.gz

@@ -134,6 +134,8 @@
 
         if ( ($fieldtype == 'email-inv' ||
         $fieldtype == 'email-reg' ||
+        $fieldtype == 'email-admin-notification' ||
+        $fieldtype == 'email-admin-resp' ||
         $fieldtype == 'email-conf' ||
         $fieldtype == 'email-rem' ) &&
         getEmailFormat($surveyID) != 'html')
@@ -243,7 +245,7 @@
         ,LimeReplacementFieldsQID : \"".$qID."\"
         ,LimeReplacementFieldsType : \"".$fieldtype."\"
         ,LimeReplacementFieldsAction : \"".$action."\"
-        ,LimeReplacementFieldsPath : \"".Yii::app()->getController()->createUrl("admin/limereplacementfields/index/")."\"
+        ,LimeReplacementFieldsPath : \"".Yii::app()->getController()->createUrl("admin/limereplacementfields/sa/index/")."\"
         ,width:'660'
         ,language:'".sTranslateLangCode2CK(Yii::app()->session['adminlang'])."'
         ,smiley_path : \"".Yii::app()->getConfig('uploadurl')."/images/smiley/msn/\"\n"

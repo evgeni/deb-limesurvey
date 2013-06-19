@@ -22,9 +22,10 @@
 *  @param mixed $gdata          An array containing the percentages for the chart items
 *  @param mixed $grawdata       An array containing the raw count for the chart items
 *  @param mixed $cache          An object containing [Hashkey] and [CacheFolder]
+*  @param string $sQuestionType The question type
 *  @return                Name
 */
-function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawdata, $cache, $oLanguage)
+function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawdata, $cache, $oLanguage, $sQuestionType)
 {
     /* This is a lazy solution to bug #6389. A better solution would be to find out how
        the "T" gets passed to this function from the statistics.js file in the first place! */
@@ -65,8 +66,7 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
     if (count($lbl)>72)
     {
         $DataSet = array(1=>array(1=>1));
-        if ($cache->IsInCache("graph".$language.$iSurveyID,$DataSet))
-        {
+        if ($cache->IsInCache("graph".$language.$iSurveyID,$DataSet) && Yii::app()->getConfig('debug')<2) {
             $cachefilename=basename($cache->GetFileFromCache("graph".$language.$iSurveyID,$DataSet));
         }
         else
@@ -161,17 +161,12 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
 
             $counter=0;
             foreach ($lblout as $sLabelName)
-            {
-                $DataSet->SetSerieName($sLabelName, "Serie$counter");
+            {                                  
+                $DataSet->SetSerieName(html_entity_decode($sLabelName,null,'UTF-8'), "Serie$counter");
                 $counter++;
             }
-
             
-            
-            
-            
-            if ($cache->IsInCache("graph".$language.$iSurveyID,$DataSet->GetData()))
-            {
+            if ($cache->IsInCache("graph".$language.$iSurveyID,$DataSet->GetData()) && Yii::app()->getConfig('debug')<2) {
                 $cachefilename=basename($cache->GetFileFromCache("graph".$language.$iSurveyID,$DataSet->GetData()));
             }
             else
@@ -213,17 +208,23 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
             // this block is to remove the items with value == 0
             // and an inelegant way to remove comments from List with Comments questions
             $i = 0;
-            $aHelperArray=array_keys($lbl);
+            $j = 0;
+            $labelTmp = array();
             while (isset ($gdata[$i]))
             {
-                if ($gdata[$i] == 0 || ($type == "O" && substr($aHelperArray[$i],0,strlen($oLanguage->gT("Comments")))==$oLanguage->gT("Comments")))
+                $aHelperArray=array_keys($lbl);
+                if ($gdata[$i] == 0 || ($sQuestionType == "O" && substr($aHelperArray[$i],0,strlen($oLanguage->gT("Comments")))==$oLanguage->gT("Comments")))
                 {
                     array_splice ($gdata, $i, 1);
-                    array_splice ($lbl, $i, 1);
                 }
                 else
-                {$i++;}
+                {
+                    $i++;
+                    $labelTmp = $labelTmp + array_slice($lbl, $j, 1, true); // Preserve numeric keys for the labels!
+                }
+                $j++;
             }
+            $lbl = $labelTmp;
 
             if ($language=='ar')
             {
@@ -242,13 +243,13 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
             elseif (getLanguageRTL($language))
             {
                 foreach($lbl as $kkey => $kval){
-                    $lblout[]= UTF8Strrev($kkey.' )'.$kval.'(');
+                    $lblout[]= UTF8Strrev(html_entity_decode($kkey,null,'UTF-8').' )'.$kval.'(');
                 }
             }
             else
             {
                 foreach($lbl as $kkey => $kval){
-                    $lblout[]= $kkey.' ('.$kval.')';
+                    $lblout[]= html_entity_decode($kkey,null,'UTF-8').' ('.$kval.')';
                 }
             }
 
@@ -260,8 +261,7 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
             $DataSet->AddAllSeries();
             $DataSet->SetAbsciseLabelSerie("Serie2");
 
-            if ($cache->IsInCache("graph".$language.$iSurveyID, $DataSet->GetData()))
-            {
+            if ($cache->IsInCache("graph".$language.$iSurveyID, $DataSet->GetData()) && Yii::app()->getConfig('debug')<2) {
                 $cachefilename=basename($cache->GetFileFromCache("graph".$language.$iSurveyID,$DataSet->GetData()));
             }
             else
@@ -514,9 +514,9 @@ function buildSelects($allfields, $surveyid, $language) {
                     if (substr($pv, -1, 1) == "E" && !empty($_POST[$pv]))
                     {
                         $datetimeobj = new Date_Time_Converter($_POST[$pv], $formatdata['phpdate'].' H:i');
-                        $_POST[$pv]=$datetimeobj->convert("Y-m-d");
+                        $sDateValue=$datetimeobj->convert("Y-m-d");
 
-                        $selects[] = Yii::app()->db->quoteColumnName('datestamp')." >= ".dbQuoteAll($_POST[$pv]." 00:00:00")." and ".Yii::app()->db->quoteColumnName('datestamp')." <= ".dbQuoteAll($_POST[$pv]." 23:59:59");
+                        $selects[] = Yii::app()->db->quoteColumnName('datestamp')." >= ".dbQuoteAll($sDateValue." 00:00:00")." and ".Yii::app()->db->quoteColumnName('datestamp')." <= ".dbQuoteAll($sDateValue." 23:59:59");
                     }
                     else
                     {
@@ -524,16 +524,16 @@ function buildSelects($allfields, $surveyid, $language) {
                         if (substr($pv, -1, 1) == "L" && !empty($_POST[$pv]))
                         {
                             $datetimeobj = new Date_Time_Converter($_POST[$pv], $formatdata['phpdate'].' H:i');
-                            $_POST[$pv]=$datetimeobj->convert("Y-m-d H:i:s");
-                            $selects[]= Yii::app()->db->quoteColumnName('datestamp')." < ".dbQuoteAll($_POST[$pv]);
+                            $sDateValue=$datetimeobj->convert("Y-m-d H:i:s");
+                            $selects[]= Yii::app()->db->quoteColumnName('datestamp')." < ".dbQuoteAll($sDateValue);
                         }
 
                         //timestamp greater than
                         if (substr($pv, -1, 1) == "G" && !empty($_POST[$pv]))
                         {
                             $datetimeobj = new Date_Time_Converter($_POST[$pv], $formatdata['phpdate'].' H:i');
-                            $_POST[$pv]=$datetimeobj->convert("Y-m-d H:i:s");
-                            $selects[]= Yii::app()->db->quoteColumnName('datestamp')." > ".dbQuoteAll($_POST[$pv]);
+                            $sDateValue=$datetimeobj->convert("Y-m-d H:i:s");
+                            $selects[]= Yii::app()->db->quoteColumnName('datestamp')." > ".dbQuoteAll($sDateValue);
                         }
                     }
                 }
@@ -574,6 +574,9 @@ class statistics_helper {
       */
      protected $sheet;
      
+     protected $xlsPercents;
+     
+     protected $formatBold;
      /**
       * The current Excel workbook we are working on
       * 
@@ -852,27 +855,19 @@ class statistics_helper {
             switch($outputType)
             {
                 case 'xls':
-
-                    $headXLS = array();
-                    $tableXLS = array();
-                    $footXLS = array();
-
                     $xlsTitle = sprintf($statlang->gT("Field summary for %s"),html_entity_decode($qtitle,ENT_QUOTES,'UTF-8'));
                     $xlsDesc = html_entity_decode($qquestion,ENT_QUOTES,'UTF-8');
                     $this->xlsRow++;
                     $this->xlsRow++;
-
                     $this->xlsRow++;
                     $this->sheet->write($this->xlsRow, 0,$xlsTitle);
                     $this->xlsRow++;
                     $this->sheet->write($this->xlsRow, 0,$xlsDesc);
-
-                    $headXLS[] = array($statlang->gT("Calculation"),$statlang->gT("Result"));
                     $this->xlsRow++;
                     $this->sheet->write($this->xlsRow, 0,$statlang->gT("Calculation"));
                     $this->sheet->write($this->xlsRow, 1,$statlang->gT("Result"));
-
                     break;
+                    
                 case 'pdf':
                     $headPDF = array();
                     $tablePDF = array();
@@ -940,11 +935,6 @@ class statistics_helper {
                 switch($outputType)
                 {
                     case 'xls':
-
-                        $headXLS = array();
-                        $tableXLS = array();
-                        $footXLS = array();
-
                         $xlsTitle = sprintf($statlang->gT("Field summary for %s"),html_entity_decode($qtitle,ENT_QUOTES,'UTF-8'));
                         $xlsDesc = html_entity_decode($qquestion,ENT_QUOTES,'UTF-8');
                         $this->xlsRow++;
@@ -954,13 +944,11 @@ class statistics_helper {
                         $this->sheet->write($this->xlsRow,0,$xlsTitle);
                         $this->xlsRow++;
                         $this->sheet->write($this->xlsRow,0,$xlsDesc);
-
-                        $headXLS[] = array($statlang->gT("Calculation"),$statlang->gT("Result"));
                         $this->xlsRow++;
                         $this->sheet->write($this->xlsRow,0,$statlang->gT("Calculation"));
                         $this->sheet->write($this->xlsRow,1,$statlang->gT("Result"));
-
                         break;
+
                     case 'pdf':
 
                         $headPDF = array();
@@ -1051,7 +1039,7 @@ class statistics_helper {
                 elseif (incompleteAnsFilterState() == "complete") {$query .= " AND submitdate is not null";}
 
                 //$sql was set somewhere before
-                if ($sql != "NULL") {$query .= " AND $sql";}
+                if (!empty($sql)) {$query .= " AND $sql";}
 
                 //execute query
                 $result=Yii::app()->db->createCommand($query)->queryAll();
@@ -1100,9 +1088,6 @@ class statistics_helper {
                                 $this->xlsRow++;
                                 $this->sheet->write($this->xlsRow, 0,html_entity_decode($shw[0],ENT_QUOTES,'UTF-8'));
                                 $this->sheet->write($this->xlsRow, 1,html_entity_decode($shw[1],ENT_QUOTES,'UTF-8'));
-
-
-                                $tableXLS[] = array($shw[0],$shw[1]);
 
                                 break;
                             case 'pdf':
@@ -1185,27 +1170,19 @@ class statistics_helper {
                     switch($outputType)
                     {
                         case 'xls':
-
-                            $tableXLS = array();
-                            $tableXLS[] = array($statlang->gT("Not enough values for calculation"));
-
                             $this->xlsRow++;
                             $this->sheet->write($this->xlsRow, 0, $statlang->gT("Not enough values for calculation"));
-
-
-
                             break;
-                        case 'pdf':
 
+                        case 'pdf':
                             $tablePDF = array();
                             $tablePDF[] = array($statlang->gT("Not enough values for calculation"));
                             $this->pdf->AddPage('P','A4');
                             $this->pdf->Bookmark($this->pdf->delete_html($qquestion), 1, 0);
                             $this->pdf->titleintopdf($pdfTitle,$titleDesc);
-
                             $this->pdf->equalTable($tablePDF);
-
                             break;
+                            
                         case 'html':
 
                             //output
@@ -1644,8 +1621,6 @@ class statistics_helper {
                 $this->sheet->write($this->xlsRow, 0,$xlsTitle);
                 $this->xlsRow++;
                 $this->sheet->write($this->xlsRow, 0,$xlsDesc);
-
-                $tableXLS = array();
                 $footXLS = array();
 
                 break;
@@ -1801,7 +1776,7 @@ class statistics_helper {
             elseif (incompleteAnsFilterState() == "complete") {$query .= " AND submitdate is not null";}
 
             //check for any "sql" that has been passed from another script
-            if ($sql != "NULL") {$query .= " AND $sql";}
+            if (!empty($sql)) {$query .= " AND $sql";}
 
             //get data
             $row=Yii::app()->db->createCommand($query)->queryScalar();
@@ -1842,6 +1817,20 @@ class statistics_helper {
                     {
                         $tablePDF2[]=array($row2['id'], $row2['value']);
                     }
+                }            
+                    
+                if ($browse===true && isset($_POST['showtextinline']) && $outputType=='xls') {
+                    $headXLS = array();
+                    $tableXLS = array();
+                    $headXLS[] = array($statlang->gT("ID"),$statlang->gT("Response"));
+
+                    $result2= $this->_listcolumn($surveyid,$sColumnName);
+
+                    foreach ($result2 as $row2)
+                    {
+                        $tableXLS[]=array($row2['id'],$row2['value']);
+                    }
+
                 }                
                     
                     
@@ -1903,17 +1892,13 @@ class statistics_helper {
                         switch($outputType)
                         {
                             case 'xls':
-
-                                $headXLS = array();
-                                $headXLS[] = array($statlang->gT("Answer"),$statlang->gT("Count"),$statlang->gT("Percentage"),$statlang->gT("Sum"));
-
                                 $this->xlsRow++;
                                 $this->sheet->write($this->xlsRow,0,$statlang->gT("Answer"));
                                 $this->sheet->write($this->xlsRow,1,$statlang->gT("Count"));
                                 $this->sheet->write($this->xlsRow,2,$statlang->gT("Percentage"));
                                 $this->sheet->write($this->xlsRow,3,$statlang->gT("Sum"));
-
                                 break;
+
                             case 'pdf':
 
                                 $headPDF = array();
@@ -1944,14 +1929,10 @@ class statistics_helper {
                         switch($outputType)
                         {
                             case 'xls':
-                                $headXLS = array();
-                                $headXLS[] = array($statlang->gT("Answer"),$statlang->gT("Count"),$statlang->gT("Percentage"));
-
                                 $this->xlsRow++;
                                 $this->sheet->write($this->xlsRow,0,$statlang->gT("Answer"));
                                 $this->sheet->write($this->xlsRow,1,$statlang->gT("Count"));
                                 $this->sheet->write($this->xlsRow,2,$statlang->gT("Percentage"));
-
                                 break;
 
                             case 'pdf':
@@ -1982,63 +1963,6 @@ class statistics_helper {
                 //text for answer column is always needed
                 $fname="$al[1] ($al[0])";
 
-                //these question types get special treatment by Yii::app()->getConfig('showaggregateddata')
-                if($outputs['qtype'] == "5" || $outputs['qtype'] == "A")
-                {
-                    //put non-edited data in here because $row will be edited later
-                    $grawdata[]=$row;
-                    $showaggregated_indice=count($grawdata) - 1;
-                    $showaggregated_indice_table[$showaggregated_indice]="aggregated";
-                    $showaggregated_indice=-1;
-
-                    //keep in mind that we already added data (will be checked later)
-                    $justadded = true;
-
-                    //we need a counter because we want to sum up certain values
-                    //reset counter if 5 items have passed
-                    if(!isset($testcounter) || $testcounter >= 4)
-                    {
-                        $testcounter = 0;
-                    }
-                    else
-                    {
-                        $testcounter++;
-                    }
-
-                    //beside the known percentage value a new aggregated value should be shown
-                    //therefore this item is marked in a certain way
-
-                    if($testcounter == 0 )    //add 300 to original value
-                    {
-                        //store the original value!
-                        $tempcount = $row;
-                        //HACK: add three times the total number of results to the value
-                        //This way we get a 300 + X percentage which can be checked later
-                        $row += (3*$results);
-                    }
-
-                    //the third value should be shown twice later -> mark it
-                    if($testcounter == 2)    //add 400 to original value
-                    {
-                        //store the original value!
-                        $tempcount = $row;
-                        //HACK: add four times the total number of results to the value
-                        //This way there should be a 400 + X percentage which can be checked later
-                        $row += (4*$results);
-                    }
-
-                    //the last value aggregates the data of item 4 + item 5 later
-                    if($testcounter == 4 )    //add 200 to original value
-                    {
-                        //store the original value!
-                        $tempcount = $row;
-                        //HACK: add two times the total number of results to the value
-                        //This way there should be a 200 + X percentage which can be checked later
-                        $row += (2*$results);
-                    }
-
-                }    //end if -> question type = "5"/"A"
-
             }    //end if -> show aggregated data
 
             //handling what's left
@@ -2049,16 +1973,12 @@ class statistics_helper {
                     switch($outputType)
                     {
                         case 'xls':
-
-                            $headXLS = array();
-                            $headXLS[] = array($statlang->gT("Answer"),$statlang->gT("Count"),$statlang->gT("Percentage"));
-
                             $this->xlsRow++;
                             $this->sheet->write($this->xlsRow,0,$statlang->gT("Answer"));
                             $this->sheet->write($this->xlsRow,1,$statlang->gT("Count"));
                             $this->sheet->write($this->xlsRow,2,$statlang->gT("Percentage"));
-
                             break;
+
                         case 'pdf':
 
                             $headPDF = array();
@@ -2100,17 +2020,8 @@ class statistics_helper {
                 $gdata[] = "N/A";
             }
 
-            //only add this if we don't handle question type "5"/"A"
-            if(!isset($justadded))
-            {
-                //put absolute data into array
-                $grawdata[]=$row;
-            }
-            else
-            {
-                //unset to handle "no answer" data correctly
-                unset($justadded);
-            }
+            //put absolute data into array
+            $grawdata[]=$row;
 
             //put question title and code into array
             $label[]=$fname;
@@ -2290,9 +2201,6 @@ class statistics_helper {
         //we need to know which item we are editing
         $itemcounter = 1;
 
-        //array to store items 1 - 5 of question types "5" and "A"
-        $stddevarray = array();
-
         //loop through all available answers
         while (isset($gdata[$i]))
         {
@@ -2332,21 +2240,18 @@ class statistics_helper {
 
 
             //no data
-            if ($gdata[$i] == "N/A")
+            if ($gdata[$i] === "N/A")
             {
                 switch($outputType)
                 {
                     case 'xls':
-
                         $label[$i]=flattenText($label[$i]);
-                        $tableXLS[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $gdata[$i]). "%");
-
                         $this->xlsRow++;
                         $this->sheet->write($this->xlsRow,0,$label[$i]);
-                        $this->sheet->write($this->xlsRow,1,$grawdata[$i]);
-                        $this->sheet->write($this->xlsRow,2,sprintf("%01.2f", $gdata[$i]). "%");
-
+                        $this->sheet->writeNumber($this->xlsRow,1,$grawdata[$i]);
+                        $this->sheet->writeNumber($this->xlsRow,2,$gdata[$i]/100, $this->xlsPercents);
                         break;
+
                     case 'pdf':
 
                         $tablePDF[] = array(flattenText($label[$i]),$grawdata[$i],sprintf("%01.2f", $gdata[$i]). "%", "");
@@ -2388,291 +2293,97 @@ class statistics_helper {
                 {
                     //mark that we have done soemthing special here
                     $aggregated = true;
-
-                    //just calculate everything once. the data is there in the array
-                    if($itemcounter == 1)
+                                                          
+                    if (($results-$grawdata[5])>0) {
+                        $percentage = $grawdata[$i] / ($results - $grawdata[5]) * 100;    // Only answered
+                    } else {
+                        $percentage = 0;
+                    }
+                    
+                    switch ($itemcounter)
                     {
-                        //there are always 5 answers
-                        for($x = 0; $x < 5; $x++)
-                        {
-                            //put 5 items into array for further calculations
-                            array_push($stddevarray, $grawdata[$x]);
-                        }
+                        case 1:
+                            if (($results-$grawdata[5])>0) {
+                                $aggregatedPercentage = ($grawdata[0] + $grawdata[1]) / ($results - $grawdata[5]) * 100;
+                            } else {
+                                $aggregatedPercentage = 0;
+                            }
+                            break;
+                        
+                        case 3:
+                            $aggregatedPercentage = $percentage;
+                            break;
+                        
+                        case 5:
+                            if (($results-$grawdata[5])>0) {
+                                $aggregatedPercentage = ($grawdata[3] + $grawdata[4]) / ($results - $grawdata[5]) * 100;
+                            } else {
+                                $aggregatedPercentage = 0;
+                            }
+                            break;
+                        
+                        case 6:
+                        case 7:
+                            if (($results-$grawdata[5])>0) {
+                                $percentage = $grawdata[$i] / $results * 100;                // All results
+                            } else {
+                                $percentage = 0;
+                            }
+
+                        default:
+                            $aggregatedPercentage = 'na';
+                            break;
                     }
 
-                    //"no answer" & items 2 / 4 - nothing special to do here, just adjust output
-                    if($gdata[$i] <= 100)
+                    
+                    switch($outputType)
                     {
-                        if($itemcounter == 2 && $label[$i+4] == $statlang->gT("No answer"))
-                        {
-                            //prevent division by zero
-                            if(($results - $grawdata[$i+4]) > 0)
-                            {
-                                //re-calculate percentage
-                                $percentage = ($grawdata[$i] / ($results - $grawdata[$i+4])) * 100;
+                        case 'xls':
+                            $label[$i]=flattenText($label[$i]);
+                            $this->xlsRow++;
+                            $this->sheet->write($this->xlsRow,0,$label[$i]);
+                            $this->sheet->writeNumber($this->xlsRow,1,$grawdata[$i]);
+                            $this->sheet->writeNumber($this->xlsRow,2,$percentage/100, $this->xlsPercents);
+                            if ($aggregatedPercentage !== 'na') {
+                                $this->sheet->writeNumber($this->xlsRow,3,$percentage/100, $this->xlsPercents);
                             }
-                            else
-                            {
-                                $percentage = 0;
+                            break;
+
+                        case 'pdf':
+                            $label[$i]=flattenText($label[$i]);
+                            if ($aggregatedPercentage !== 'na') {
+                                $tablePDF[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $percentage)."%",sprintf("%01.2f", $aggregatedPercentage)."%");
+                            } else {
+                                $tablePDF[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $percentage)."%","");
                             }
+                            break;
+                            
+                        case 'html':
+                            //output percentage
+                            $statisticsoutput .= "\t\t<td align='center' >";
+                            $statisticsoutput .= sprintf("%01.2f", $percentage) . "%</td>";
 
-                        }
-                        elseif($itemcounter == 4 && $label[$i+2] == $statlang->gT("No answer"))
-                        {
-                            //prevent division by zero
-                            if(($results - $grawdata[$i+2]) > 0)
-                            {
-                                //re-calculate percentage
-                                $percentage = ($grawdata[$i] / ($results - $grawdata[$i+2])) * 100;
+                            $statisticsoutput .= "\t\t<td align='center' >";
+                            if ($aggregatedPercentage !== 'na') {
+                                $statisticsoutput .= sprintf("%01.2f", $aggregatedPercentage)."%";
+                            } else {
+                                $statisticsoutput .= '&nbsp;';
                             }
-                            else
-                            {
-                                $percentage = 0;
-                            }
-                        }
-                        else
-                        {
-                            $percentage = $gdata[$i];
-                        }
-                        switch($outputType)
-                        {
-                            case 'xls':
-
-                                $label[$i]=flattenText($label[$i]);
-                                $tableXLS[]= array($label[$i],$grawdata[$i],sprintf("%01.2f", $percentage)."%");
-
-                                $this->xlsRow++;
-                                $this->sheet->write($this->xlsRow,0,$label[$i]);
-                                $this->sheet->write($this->xlsRow,1,$grawdata[$i]);
-                                $this->sheet->write($this->xlsRow,2,sprintf("%01.2f", $percentage)."%");
-
-                                break;
-                            case 'pdf':
-                                $label[$i]=flattenText($label[$i]);
-                                $tablePDF[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $percentage)."%", "");
-
-                                break;
-                            case 'html':
-                                //output
-                                $statisticsoutput .= "\t\t<td align='center'>";
-
-                                //output percentage
-                                $statisticsoutput .= sprintf("%01.2f", $percentage) . "%";
-
-                                //adjust output
-                                $statisticsoutput .= "\t\t</td>";
-                                break;
-                            default:
-
-
-                                break;
-                        }
-
+                            $statisticsoutput .= "</td>\t\t";
+                            break;
+                        
+                        default:
+                            break;
                     }
 
-                    //item 3 - just show results twice
-                    //old: if($gdata[$i] >= 400)
-                    //trying to fix bug #2583:
-                    if($gdata[$i] >= 400 && $i != 0)
-                    {
-                        //remove "400" which was added before
-                        $gdata[$i] -= 400;
-
-                        if($itemcounter == 3 && $label[$i+3] == $statlang->gT("No answer"))
-                        {
-                            //prevent division by zero
-                            if(($results - $grawdata[$i+3]) > 0)
-                            {
-                                //re-calculate percentage
-                                $percentage = ($grawdata[$i] / ($results - $grawdata[$i+3])) * 100;
-                            }
-                            else
-                            {
-                                $percentage = 0;
-                            }
-                        }
-                        else
-                        {
-                            //get the original percentage
-                            $percentage = $gdata[$i];
-                        }
-                        switch($outputType)
-                        {
-                            case 'xls':
-
-                                $label[$i]=flattenText($label[$i]);
-                                $tableXLS[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $percentage)."%",sprintf("%01.2f", $percentage)."%");
-
-                                $this->xlsRow++;
-                                $this->sheet->write($this->xlsRow,0,$label[$i]);
-                                $this->sheet->write($this->xlsRow,1,$grawdata[$i]);
-                                $this->sheet->write($this->xlsRow,2,sprintf("%01.2f", $percentage)."%");
-                                $this->sheet->write($this->xlsRow,3,sprintf("%01.2f", $percentage)."%");
-
-                                break;
-                            case 'pdf':
-                                $label[$i]=flattenText($label[$i]);
-                                $tablePDF[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $percentage)."%",sprintf("%01.2f", $percentage)."%");
-
-                                break;
-                            case 'html':
-                                //output percentage
-                                $statisticsoutput .= "\t\t<td align='center' >";
-                                $statisticsoutput .= sprintf("%01.2f", $percentage) . "%</td>";
-
-                                //output again (no real aggregation here)
-                                $statisticsoutput .= "\t\t<td align='center' >";
-                                $statisticsoutput .= sprintf("%01.2f", $percentage)."%";
-                                $statisticsoutput .= "</td>\t\t";
-                                break;
-                            default:
-
-
-                                break;
-                        }
-
-                    }
-
-                    //FIRST value -> add percentage of item 1 + item 2
-                    //old: if($gdata[$i] >= 300 && $gdata[$i] < 400)
-                    //trying to fix bug #2583:
-                    if(($gdata[$i] >= 300 && $gdata[$i] < 400) || ($i == 0 && $gdata[$i] <= 400))
-                    {
-                        //remove "300" which was added before
-                        $gdata[$i] -= 300;
-
-                        if($itemcounter == 1 && $label[$i+5] == $statlang->gT("No answer"))
-                        {
-                            //prevent division by zero
-                            if(($results - $grawdata[$i+5]) > 0)
-                            {
-                                //re-calculate percentage
-                                $percentage = ($grawdata[$i] / ($results - $grawdata[$i+5])) * 100;
-                                $percentage2 = ($grawdata[$i + 1] / ($results - $grawdata[$i+5])) * 100;
-                            }
-                            else
-                            {
-                                $percentage = 0;
-                                $percentage2 = 0;
-
-                            }
-                        }
-                        else
-                        {
-                            $percentage = $gdata[$i];
-                            $percentage2 = $gdata[$i+1];
-                        }
-                        //percentage of item 1 + item 2
-                        $aggregatedgdata = $percentage + $percentage2;
-
-
-                        switch($outputType)
-                        {
-                            case 'xls':
-
-                                $label[$i]=flattenText($label[$i]);
-                                $tableXLS[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $percentage)."%",sprintf("%01.2f", $aggregatedgdata)."%");
-
-                                $this->xlsRow++;
-                                $this->sheet->write($this->xlsRow,0,$label[$i]);
-                                $this->sheet->write($this->xlsRow,1,$grawdata[$i]);
-                                $this->sheet->write($this->xlsRow,2,sprintf("%01.2f", $percentage)."%");
-                                $this->sheet->write($this->xlsRow,3,sprintf("%01.2f", $aggregatedgdata)."%");
-
-                                break;
-                            case 'pdf':
-                                $label[$i]=flattenText($label[$i]);
-                                $tablePDF[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $percentage)."%",sprintf("%01.2f", $aggregatedgdata)."%");
-
-                                break;
-                            case 'html':
-                                //output percentage
-                                $statisticsoutput .= "\t\t<td align='center' >";
-                                $statisticsoutput .= sprintf("%01.2f", $percentage) . "%</td>";
-
-                                //output aggregated data
-                                $statisticsoutput .= "\t\t<td align='center' >";
-                                $statisticsoutput .= sprintf("%01.2f", $aggregatedgdata)."%";
-                                $statisticsoutput .= "</td>\t\t";
-                                break;
-                            default:
-
-
-                                break;
-                        }
-                    }
-
-                    //LAST value -> add item 4 + item 5
-                    if($gdata[$i] > 100 && $gdata[$i] < 300)
-                    {
-                        //remove "200" which was added before
-                        $gdata[$i] -= 200;
-
-                        if($itemcounter == 5 && $label[$i+1] == $statlang->gT("No answer"))
-                        {
-                            //prevent division by zero
-                            if(($results - $grawdata[$i+1]) > 0)
-                            {
-                                //re-calculate percentage
-                                $percentage = ($grawdata[$i] / ($results - $grawdata[$i+1])) * 100;
-                                $percentage2 = ($grawdata[$i - 1] / ($results - $grawdata[$i+1])) * 100;
-                            }
-                            else
-                            {
-                                $percentage = 0;
-                                $percentage2 = 0;
-                            }
-                        }
-                        else
-                        {
-                            $percentage = $gdata[$i];
-                            $percentage2 = $gdata[$i-1];
-                        }
-
-                        //item 4 + item 5
-                        $aggregatedgdata = $percentage + $percentage2;
-                        switch($outputType)
-                        {
-                            case 'xls':
-
-                                $label[$i]=flattenText($label[$i]);
-                                $tableXLS[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $percentage)."%",sprintf("%01.2f", $aggregatedgdata)."%");
-
-                                $this->xlsRow++;
-                                $this->sheet->write($this->xlsRow,0,$label[$i]);
-                                $this->sheet->write($this->xlsRow,1,$grawdata[$i]);
-                                $this->sheet->write($this->xlsRow,2,sprintf("%01.2f", $percentage)."%");
-                                $this->sheet->write($this->xlsRow,3,sprintf("%01.2f", $aggregatedgdata)."%");
-
-                                break;
-                            case 'pdf':
-                                $label[$i]=flattenText($label[$i]);
-                                $tablePDF[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $percentage)."%",sprintf("%01.2f", $aggregatedgdata)."%");
-
-                                break;
-                            case 'html':
-                                //output percentage
-                                $statisticsoutput .= "\t\t<td align='center' >";
-                                $statisticsoutput .= sprintf("%01.2f", $percentage) . "%</td>";
-
-                                //output aggregated data
-                                $statisticsoutput .= "\t\t<td align='center' >";
-                                $statisticsoutput .= sprintf("%01.2f", $aggregatedgdata)."%";
-                                $statisticsoutput .= "</td>\t\t";
-                                break;
-                            default:
-
-
-                                break;
-                        }
-
+                    if ($itemcounter == 5) {
                         // create new row "sum"
                         //calculate sum of items 1-5
-                        $sumitems = $grawdata[$i]
-                        + $grawdata[$i-1]
-                        + $grawdata[$i-2]
-                        + $grawdata[$i-3]
-                        + $grawdata[$i-4];
+                        $sumitems = $grawdata[0]
+                        + $grawdata[1]
+                        + $grawdata[2]
+                        + $grawdata[3]
+                        + $grawdata[4];
 
                         //special treatment for zero values
                         if($sumitems > 0)
@@ -2702,13 +2413,13 @@ class statistics_helper {
 
                                 $this->xlsRow++;
                                 $this->sheet->write($this->xlsRow,0,$statlang->gT("Sum")." (".$statlang->gT("Answers").")");
-                                $this->sheet->write($this->xlsRow,1,$sumitems);
-                                $this->sheet->write($this->xlsRow,2,$sumpercentage."%");
-                                $this->sheet->write($this->xlsRow,3,$sumpercentage."%");
+                                $this->sheet->writeNumber($this->xlsRow,1,$sumitems);
+                                $this->sheet->writeNumber($this->xlsRow,2,$sumpercentage/100, $this->xlsPercents);
+                                $this->sheet->writeNumber($this->xlsRow,3,$sumpercentage/100, $this->xlsPercents);
                                 $this->xlsRow++;
                                 $this->sheet->write($this->xlsRow,0,$statlang->gT("Number of cases"));
-                                $this->sheet->write($this->xlsRow,1,$TotalCompleted);
-                                $this->sheet->write($this->xlsRow,2,$casepercentage."%");
+                                $this->sheet->writeNumber($this->xlsRow,1,$TotalCompleted);
+                                $this->sheet->writeNumber($this->xlsRow,2,$casepercentage/100, $this->xlsPercents);
 
                                 break;
                             case 'pdf':
@@ -2748,14 +2459,12 @@ class statistics_helper {
                     {
                         case 'xls':
                             $label[$i]=flattenText($label[$i]);
-                            $tableXLS[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $gdata[$i])."%", "");
-
                             $this->xlsRow++;
                             $this->sheet->write($this->xlsRow,0,$label[$i]);
-                            $this->sheet->write($this->xlsRow,1,$grawdata[$i]);
-                            $this->sheet->write($this->xlsRow,2,sprintf("%01.2f", $gdata[$i])."%");
-
+                            $this->sheet->writeNumber($this->xlsRow,1,$grawdata[$i]);
+                            $this->sheet->writeNumber($this->xlsRow,2,$gdata[$i]/100, $this->xlsPercents);
                             break;
+                            
                         case 'pdf':
                             $label[$i]=flattenText($label[$i]);
                             $tablePDF[] = array($label[$i],$grawdata[$i],sprintf("%01.2f", $gdata[$i])."%", "");
@@ -2801,6 +2510,7 @@ class statistics_helper {
             if($outputs['qtype'] == "5" || $outputs['qtype'] == "A")
             {
                 $stddev = 0;
+                $stddevarray = array_slice($grawdata,0,5,true);
                 $am = 0;
 
                 //calculate arithmetic mean
@@ -2876,19 +2586,14 @@ class statistics_helper {
                 switch($outputType)
                 {
                     case 'xls':
-
-                        $tableXLS[] = array($statlang->gT("Arithmetic mean"),$am,'','');
-                        $tableXLS[] = array($statlang->gT("Standard deviation"),$stddev,'','');
-
                         $this->xlsRow++;
                         $this->sheet->write($this->xlsRow,0,$statlang->gT("Arithmetic mean"));
-                        $this->sheet->write($this->xlsRow,1,$am);
-
+                        $this->sheet->writeNumber($this->xlsRow,1,$am);
                         $this->xlsRow++;
                         $this->sheet->write($this->xlsRow,0,$statlang->gT("Standard deviation"));
-                        $this->sheet->write($this->xlsRow,1,$stddev);
-
+                        $this->sheet->writeNumber($this->xlsRow,1,$stddev);
                         break;
+
                     case 'pdf':
 
                         $tablePDF[] = array($statlang->gT("Arithmetic mean"),$am,'','');
@@ -2930,6 +2635,39 @@ class statistics_helper {
             }
         }
 
+        if($outputType=='xls' && (isset($headXLS) || isset($tableXLS))) 
+        {
+            if (isset($headXLS))
+            {
+                $this->xlsRow++;
+                $this->xlsRow++;
+                foreach($headXLS as $aRow)
+                {
+                    $this->xlsRow++;
+                    $iColumn=0;
+                    foreach ($aRow as $sValue)
+                    {
+                        $this->sheet->write($this->xlsRow,$iColumn,$sValue,$this->formatBold);
+                        $iColumn++;    
+                    }
+                }
+            }
+            if (isset($tableXLS))
+            {
+                foreach($tableXLS as $aRow)
+                {
+                    $this->xlsRow++;
+                    $iColumn=0;
+                    foreach ($aRow as $sValue)
+                    {
+                        $this->sheet->write($this->xlsRow,$iColumn,$sValue);
+                        $iColumn++;    
+                    }
+                }
+
+            }
+        }        
+        
         if ($outputType=='html') {
             $statisticsoutput .= "<tr><td colspan='4' style=\"text-align:center\" id='statzone_$rt'>";
         }
@@ -2968,7 +2706,7 @@ class statistics_helper {
 
             if (array_sum($gdata)>0 && $bShowGraph == true)
             {
-                $cachefilename = createChart($qqid, $qsid, $bShowPieChart, $lbl, $gdata, $grawdata, $MyCache, $statlang);
+                $cachefilename = createChart($qqid, $qsid, $bShowPieChart, $lbl, $gdata, $grawdata, $MyCache, $statlang, $outputs['qtype']);
                 //introduce new counter
                 if (!isset($ci)) {$ci=0;}
 
@@ -3175,29 +2913,10 @@ class statistics_helper {
         {
             //require_once('classes/tcpdf/mypdf.php');
             Yii::import('application.libraries.admin.pdf', true);
-            $pdfdefaultfont=Yii::app()->getConfig('pdfdefaultfont');
-            if($pdfdefaultfont=='auto')
-            {
-                $pdfdefaultfont=PDF_FONT_NAME_DATA;
-            }
-            // Array of PDF core fonts: are replaced by according fonts according to the alternatepdffontfile array.Maybe just courier,helvetica and times but if a user want symbol: why not ....
-            $pdfcorefont=array("courier","helvetica","symbol","times","zapfdingbats");
-            $pdffontsize=Yii::app()->getConfig('pdffontsize');
+            Yii::import('application.helpers.pdfHelper');
+            $aPdfLanguageSettings=pdfHelper::getPdfLanguageSettings($language);
 
-            // create new PDF document
             $this->pdf = new pdf();
-            if (in_array($pdfdefaultfont,$pdfcorefont))
-            {
-                $alternatepdffontfile=Yii::app()->getConfig('alternatepdffontfile');
-                if(array_key_exists($statlangcode,$alternatepdffontfile))
-                {
-                    $pdfdefaultfont = $alternatepdffontfile[$statlangcode];// Actually use only core font
-                }
-            }
-            if ($pdffontsize=='auto')
-            {
-                $pdffontsize=PDF_FONT_SIZE_MAIN;
-            }
 
             $surveyInfo = getSurveyInfo($surveyid,$language);
 
@@ -3208,31 +2927,17 @@ class statistics_helper {
             $this->pdf->SetSubject($surveyInfo['surveyls_title']);
             $this->pdf->SetKeywords('LimeSurvey,'.$statlang->gT("Statistics").', '.sprintf($statlang->gT("Survey %s"),$surveyid));
             $this->pdf->SetDisplayMode('fullpage', 'two');
-
-            //Set some pdf metadata
-            $lg=array();
-            $lg['a_meta_charset'] = 'UTF-8';
-            if (getLanguageRTL($statlangcode))
-            {
-                $lg['a_meta_dir'] = 'rtl';
-            }
-            else
-            {
-                $lg['a_meta_dir'] = 'ltr';
-            }
-            $lg['a_meta_language'] = $statlangcode;
-            $lg['w_page']=$statlang->gT("page");
-            $this->pdf->setLanguageArray($lg);
+            $this->pdf->setLanguageArray($aPdfLanguageSettings['lg']);
 
             // set header and footer fonts
-            $this->pdf->setHeaderFont(Array($pdfdefaultfont, '', PDF_FONT_SIZE_MAIN));
-            $this->pdf->setFooterFont(Array($pdfdefaultfont, '', PDF_FONT_SIZE_DATA));
+            $this->pdf->setHeaderFont(Array($aPdfLanguageSettings['pdffont'], '', PDF_FONT_SIZE_MAIN));
+            $this->pdf->setFooterFont(Array($aPdfLanguageSettings['pdffont'], '', PDF_FONT_SIZE_DATA));
 
             // set default header data 
             // Since png crashes some servers (and we can not try/catch that) we use .gif (or .jpg) instead
             $headerlogo = 'statistics.gif';
             $this->pdf->SetHeaderData($headerlogo, 10, $statlang->gT("Quick statistics",'unescaped') , $statlang->gT("Survey")." ".$surveyid." '".flattenText($surveyInfo['surveyls_title'],false,true,'UTF-8')."'");
-            $this->pdf->SetFont($pdfdefaultfont, '', $pdffontsize);
+            $this->pdf->SetFont($aPdfLanguageSettings['pdffont'], '', $aPdfLanguageSettings['pdffontsize']);
             // set default monospaced font
             $this->pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
         }
@@ -3265,6 +2970,9 @@ class statistics_helper {
 
             // Creating the first worksheet
             $this->sheet = $this->workbook->addWorksheet(utf8_decode('results-survey'.$surveyid));
+            $this->xlsPercents = &$this->workbook->addFormat();
+            $this->xlsPercents->setNumFormat('0.00%');
+            $this->formatBold = &$this->workbook->addFormat(array('Bold'=>1));
             $this->sheet->setInputEncoding('utf-8');
             $this->sheet->setColumn(0,20,20);
             $separator="~|";
@@ -3284,10 +2992,7 @@ class statistics_helper {
         //if incompleted answers should be filtert submitdate has to be not null
         if (incompleteAnsFilterState() == "incomplete") {$query .= " WHERE submitdate is null";}
         elseif (incompleteAnsFilterState() == "complete") {$query .= " WHERE submitdate is not null";}
-        $result = Yii::app()->db->createCommand($query)->query();
-
-        //$total = total number of answers
-        $row=$result->read(); $total=reset($row);
+        $total = Yii::app()->db->createCommand($query)->queryScalar();
 
         //are there any filters that have to be taken care of?
         if (isset($selects) && $selects)
@@ -3305,10 +3010,7 @@ class statistics_helper {
 
 
         //get me some data Scotty
-        $result=Yii::app()->db->createCommand($query)->query();
-
-        //put all results into $results
-        $row=$result->read(); $results=reset($row);
+        $results=Yii::app()->db->createCommand($query)->queryScalar();
 
         if ($total)
         {
@@ -3320,39 +3022,36 @@ class statistics_helper {
             case "xls":
                 $this->xlsRow = 0;
                 $this->sheet->write($this->xlsRow,0,$statlang->gT("Number of records in this query:",'unescaped'));
-                $this->sheet->write($this->xlsRow,1,$results);
+                $this->sheet->writeNumber($this->xlsRow,1,$results);
                 $this->xlsRow++;
                 $this->sheet->write($this->xlsRow,0,$statlang->gT("Total records in survey:",'unescaped'));
-                $this->sheet->write($this->xlsRow,1,$total);
+                $this->sheet->writeNumber($this->xlsRow,1,$total);
 
                 if($total)
                 {
                     $this->xlsRow++;
                     $this->sheet->write($this->xlsRow,0,$statlang->gT("Percentage of total:",'unescaped'));
-                    $this->sheet->write($this->xlsRow,1,$percent."%");
+                    $this->sheet->writeNumber($this->xlsRow,1,$results/$total, $this->xlsPercents);
                 }
 
                 break;
+
             case 'pdf':
-                
                 // add summary to pdf
-                $array = array();
-                //$array[] = array($statlang->gT("Results"),"");
-                $array[] = array($statlang->gT("Number of records in this query:",'unescaped'), $results);
-                $array[] = array($statlang->gT("Total records in survey:",'unescaped'), $total);
-
+                $array = array(
+                    array($statlang->gT("Number of records in this query:",'unescaped'), $results),
+                    array($statlang->gT("Total records in survey:",'unescaped'), $total)
+                );
                 if($total)
+                {
                     $array[] = array($statlang->gT("Percentage of total:",'unescaped'), $percent."%");
-
+                }
                 $this->pdf->AddPage('P', ' A4');
-
                 $this->pdf->Bookmark($statlang->gT("Results",'unescaped'), 0, 0);
                 $this->pdf->titleintopdf($statlang->gT("Results",'unescaped'),$statlang->gT("Survey",'unescaped')." ".$surveyid);
                 $this->pdf->tableintopdf($array);
-
-                $this->pdf->AddPage('P','A4');
-
                 break;
+                
             case 'html':
 
                 $statisticsoutput .= "<br />\n<table class='statisticssummary' >\n"
@@ -3385,7 +3084,8 @@ class statistics_helper {
 
         elseif (!empty($newsql)) {$sql = $newsql;}
 
-        if (!isset($sql) || !$sql) {$sql="NULL";}
+        if (!isset($sql) || !$sql) {$sql="";}
+        Yii::app()->session['response_filterview_'.$surveyid]=$sql;
 
         //only continue if we have something to output
         if ($results > 0)
@@ -3397,7 +3097,7 @@ class statistics_helper {
                 ."\t\t<p>"
                 ."\t\t\t<input type='submit' value='".$statlang->gT("Browse")."'  />\n"
                 ."\t\t\t<input type='hidden' name='sid' value='$surveyid' />\n"
-                ."\t\t\t<input type='hidden' name='sql' value=\"$sql\" />\n"
+                ."\t\t\t<input type='hidden' name='sqlfilter' value='1' />\n"
                 ."\t\t\t<input type='hidden' name='subaction' value='all' />\n"
                 ."\t\t</p>"
                 ."\t\t</form>\n";
@@ -3536,7 +3236,7 @@ class statistics_helper {
             }
 
             //if $sql values have been passed to the statistics script from another script, incorporate them
-            if ($sql != "NULL") {$query .= " AND $sql";}
+            if (!empty($sql)) {$query .= " AND $sql";}
         }
         
         if ($surveyid !== $sid) {

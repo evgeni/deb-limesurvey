@@ -128,7 +128,7 @@
 
         // Catalan
         $supportedLanguages['ca']['description'] = $clang->gT('Catalan');
-        $supportedLanguages['ca']['nativedescription'] = 'Catal&#940;';
+        $supportedLanguages['ca']['nativedescription'] = 'Catal&#224;';
         $supportedLanguages['ca']['rtl'] = false;
         $supportedLanguages['ca']['dateformat'] = 1;
         $supportedLanguages['ca']['radixpoint'] = 1;
@@ -394,6 +394,13 @@
         $supportedLanguages['nn']['dateformat'] = 4;
         $supportedLanguages['nn']['radixpoint'] = 1;
 
+        // Occitan
+        $supportedLanguages['oc']['description'] = $clang->gT('Occitan');
+        $supportedLanguages['oc']['nativedescription'] = 'Lenga d\'òc';
+        $supportedLanguages['oc']['rtl'] = false;
+        $supportedLanguages['oc']['dateformat'] = 5;
+        $supportedLanguages['oc']['radixpoint'] = 1;
+
         // Persian
         $supportedLanguages['fa']['description'] = $clang->gT('Persian');
         $supportedLanguages['fa']['nativedescription'] = '&#1601;&#1575;&#1585;&#1587;&#1740;';
@@ -445,7 +452,7 @@
 
         // Slovak
         $supportedLanguages['sk']['description'] = $clang->gT('Slovak');
-        $supportedLanguages['sk']['nativedescription'] = 'Slov&aacute;k';
+        $supportedLanguages['sk']['nativedescription'] = 'Sloven&#269;ina';
         $supportedLanguages['sk']['rtl'] = false;
         $supportedLanguages['sk']['dateformat'] = 4;
         $supportedLanguages['sk']['radixpoint'] = 1;
@@ -484,6 +491,20 @@
         $supportedLanguages['es']['rtl'] = false;
         $supportedLanguages['es']['dateformat'] = 5;
         $supportedLanguages['es']['radixpoint'] = 1;
+        
+        // Spanish (Argentina)
+        $supportedLanguages['es-AR']['description'] = $clang->gT('Spanish (Argentina)');
+        $supportedLanguages['es-AR']['nativedescription'] = 'Espa&#241;ol rioplatense';
+        $supportedLanguages['es-AR']['rtl'] = false;
+        $supportedLanguages['es-AR']['dateformat'] = 5;
+        $supportedLanguages['es-AR']['radixpoint'] = 0;
+
+        // Spanish (Argentina) (Informal)
+        $supportedLanguages['es-AR-informal']['description'] = $clang->gT('Spanish (Argentina) (Informal)');
+        $supportedLanguages['es-AR-informal']['nativedescription'] = 'Espa&#241;ol rioplatense informal';
+        $supportedLanguages['es-AR-informal']['rtl'] = false;
+        $supportedLanguages['es-AR-informal']['dateformat'] = 5;
+        $supportedLanguages['es-AR-informal']['radixpoint'] = 0;
 
         // Spanish (Chile)
         $supportedLanguages['es-CL']['description'] = $clang->gT('Spanish (Chile)');

@@ -18,6 +18,8 @@ class Tokens_dynamic extends LSActiveRecord
 {
 	protected static $sid = 0;
 
+    public $emailstatus='OK'; // Default value for email status
+
     /**
      * Returns the static model of Settings table
      *
@@ -76,7 +78,6 @@ class Tokens_dynamic extends LSActiveRecord
 		return 'tid';
 	}
 	
-	
 	/**
 	* Returns this model's validation rules
 	*
@@ -93,7 +94,6 @@ class Tokens_dynamic extends LSActiveRecord
 // Date rules currently don't work properly with MSSQL, deactivating for now
 		);  
 	}	
-
     
     /**
      * Returns summary information of this token table
@@ -158,7 +158,6 @@ class Tokens_dynamic extends LSActiveRecord
 		$command->addCondition("(completed ='N') or (completed='')");
 		$command->addCondition("token <> ''");
 		$command->addCondition("email <> ''");
-
 		if ($bEmail) { 
 			$command->addCondition("(sent = 'N') or (sent = '')");
 		} else {
@@ -186,6 +185,43 @@ class Tokens_dynamic extends LSActiveRecord
 		return $oResult;
     }
 
+    public function findUninvitedIDs($aTokenIds = false, $iMaxEmails = 0, $bEmail = true, $SQLemailstatuscondition = '', $SQLremindercountcondition = '', $SQLreminderdelaycondition = '')
+    {
+        $command = new CDbCriteria;
+        $command->condition = '';    
+        $command->addCondition("(completed ='N') or (completed='')");
+        $command->addCondition("token <> ''");
+        $command->addCondition("email <> ''");
+        if ($bEmail) { 
+            $command->addCondition("(sent = 'N') or (sent = '')");
+        } else {
+            $command->addCondition("(sent <> 'N') AND (sent <> '')");
+        }
+
+        if ($SQLemailstatuscondition)
+            $command->addCondition($SQLemailstatuscondition);
+            
+        if ($SQLremindercountcondition)
+            $command->addCondition($SQLremindercountcondition);
+            
+        if ($SQLreminderdelaycondition)
+            $command->addCondition($SQLreminderdelaycondition);
+            
+        if ($aTokenIds)     
+            $command->addCondition("tid IN ('".implode("', '", $aTokenIds)."')" );
+            
+        if ($iMaxEmails)
+            $command->limit = $iMaxEmails;
+            
+        $command->order = 'tid';    
+
+        $oResult=$this->getCommandBuilder()
+            ->createFindCommand($this->getTableSchema(), $command)
+            ->select('tid')
+            ->queryColumn();
+        return $oResult;
+    }
+    
 	function insertParticipant($data)
 	{
             $token = new self;
@@ -340,7 +376,6 @@ class Tokens_dynamic extends LSActiveRecord
         return array($newtokencount,count($tkresult));
     }
     
-    
      /**
      * This method is invoked before saving a record (after validation, if any).
      * The default implementation raises the {@link onBeforeSave} event.
@@ -375,7 +410,7 @@ class Tokens_dynamic extends LSActiveRecord
         $criteria->compare('token',$this->token,true);
 		$criteria->compare('language',$this->language,true);
         $criteria->compare('sent',$this->sent,true);
-        $criteria->compare('sentreminder',$this->sentreminder,true);
+        $criteria->compare('remindersent',$this->remindersent,true);
         $criteria->compare('remindercount',$this->remindercount,true);
         $criteria->compare('completed',$this->completed,true);
         $criteria->compare('usesleft',$this->usesleft,true);

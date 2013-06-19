@@ -336,8 +336,6 @@ class Survey_Common_Action extends CAction
     function _questionbar($iSurveyID, $gid, $qid, $action = null)
     {
         $clang = $this->getController()->lang;
-
-
         $baselang = Survey::model()->findByPk($iSurveyID)->language;
 
         //Show Question Details
@@ -351,7 +349,7 @@ class Survey_Common_Action extends CAction
         $aData['sqct'] = $sqct = count($sqrq);
 
         $qrrow = Questions::model()->findByAttributes(array('qid' => $qid, 'gid' => $gid, 'sid' => $iSurveyID, 'language' => $baselang));
-
+        if (is_null($qrrow)) return;
         $questionsummary = "<div class='menubar'>\n";
 
         // Check if other questions in the Survey are dependent upon this question
@@ -886,6 +884,11 @@ class Survey_Common_Action extends CAction
         $aData['sImageURL'] = Yii::app()->getConfig("adminimageurl");
         $aData['clang'] = Yii::app()->lang;
         $aData['surveyid'] = $iSurveyID;
+        $js_admin_includes[] = Yii::app()->getConfig('generalscripts') . 'jquery/superfish.js';
+        $js_admin_includes[] = Yii::app()->getConfig('generalscripts') . 'jquery/hoverIntent.js';
+        $this->getController()->_js_admin_includes($js_admin_includes);
+        $this->getController()->_css_admin_includes(Yii::app()->getConfig('adminstyleurl')."superfish.css");
+        
 
         $tmp_survlangs = Survey::model()->findByPk($iSurveyID)->additionalLanguages;
         $baselang = Survey::model()->findByPk($iSurveyID)->language;

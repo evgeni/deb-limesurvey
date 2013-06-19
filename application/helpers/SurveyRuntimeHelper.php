@@ -509,7 +509,7 @@ class SurveyRuntimeHelper {
                 }
                 $redata['completed'] = $completed;
                 echo templatereplace(file_get_contents($sTemplatePath."completed.pstpl"), array('completed' => $completed), $redata);
-                echo "\n<br />\n";
+                echo "\n";
                 if ((($LEMdebugLevel & LEM_DEBUG_TIMING) == LEM_DEBUG_TIMING))
                 {
                     echo LimeExpressionManager::GetDebugTimingMessage();
@@ -864,48 +864,48 @@ class SurveyRuntimeHelper {
                 ExprMgr_process_relevance_and_tailoring(evt_type,name,type);
 END;
 
-        if ($previewgrp)
-        {
-            // force the group to be visible, even if irrelevant - will not always work
-            print <<<END
-    $('#relevanceG' + LEMgseq).val(1);
-    $(document).ready(function() {
-        $('#group-' + LEMgseq).show();
-    });
-    $(document).change(function() {
-        $('#group-' + LEMgseq).show();
-    });
-    $(document).bind('keydown',function(e) {
-                if (e.keyCode == 9) {
-                    $('#group-' + LEMgseq).show();
-                    return true;
-                }
-                return true;
-            });
+#        if ($previewgrp && false)
+#        {
+#            // force the group to be visible, even if irrelevant - will not always work
+#            print <<<END
+#    $('#relevanceG' + LEMgseq).val(1);
+#    $(document).ready(function() {
+#        $('#group-' + LEMgseq).show();
+#    });
+#    $(document).change(function() {
+#        $('#group-' + LEMgseq).show();
+#    });
+#    $(document).bind('keydown',function(e) {
+#                if (e.keyCode == 9) {
+#                    $('#group-' + LEMgseq).show();
+#                    return true;
+#                }
+#                return true;
+#            });
 
-END;
-        }
+#END;
+#        }
         
         print <<<END
             }
         // -->
         </script>
 END;
-        
+        $showpopups=Yii::app()->getConfig('showpopups');
         //Display the "mandatory" message on page if necessary
-        if (isset($showpopups) && $showpopups == 0 && $stepInfo['mandViolation'] && $okToShowErrors)
+        if (!$showpopups && $stepInfo['mandViolation'] && $okToShowErrors)
         {
             echo "<p><span class='errormandatory'>" . $clang->gT("One or more mandatory questions have not been answered. You cannot proceed until these have been completed.") . "</span></p>";
         }
 
         //Display the "validation" message on page if necessary
-        if (isset($showpopups) && $showpopups == 0 && !$stepInfo['valid'] && $okToShowErrors)
+        if (!$showpopups && !$stepInfo['valid'] && $okToShowErrors)
         {
             echo "<p><span class='errormandatory'>" . $clang->gT("One or more questions have not been answered in a valid manner. You cannot proceed until these answers are valid.") . "</span></p>";
         }
 
         //Display the "file validation" message on page if necessary
-        if (isset($showpopups) && $showpopups == 0 && isset($filenotvalidated) && $filenotvalidated == true && $okToShowErrors)
+        if (!$showpopups && isset($filenotvalidated) && $filenotvalidated == true && $okToShowErrors)
         {
             echo "<p><span class='errormandatory'>" . $clang->gT("One or more uploaded files are not in proper format/size. You cannot proceed until these files are valid.") . "</span></p>";
         }
@@ -975,7 +975,7 @@ END;
                     continue; // skip this one
                 }
 
-                if ((!$qinfo['relevant'] && !$previewquestion) || ($qinfo['hidden'] && $qinfo['info']['type'] == '*'))
+                if (!$qinfo['relevant'] || ($qinfo['hidden'] && $qinfo['info']['type'] == '*'))
                 {
                     $n_q_display = ' style="display: none;"';
                 }
@@ -1032,26 +1032,26 @@ END;
 
         LimeExpressionManager::FinishProcessingGroup($LEMskipReprocessing);
         echo LimeExpressionManager::GetRelevanceAndTailoringJavaScript();
-        if ($previewquestion){
-            // force the question to be visible, even if irrelevant
-            echo "
-        <script type='text/javascript'>
-    $('#relevance" . $_qid . "').val(1);
-    $(document).ready(function() {
-        $('#question" . $_qid . "').show();
-    });
-    $(document).change(function() {
-        $('#question" . $_qid . "').show();
-    });
-    $(document).bind('keydown',function(e) {
-                if (e.keyCode == 9) {
-                    $('#question" . $_qid . "').show();
-                    return true;
-                }
-                return true;
-            });
-         </script>";
-        }
+#        if ($previewquestion && false){
+#            // force the question to be visible, even if irrelevant
+#            echo "
+#        <script type='text/javascript'>
+#    $('#relevance" . $_qid . "').val(1);
+#    $(document).ready(function() {
+#        $('#question" . $_qid . "').show();
+#    });
+#    $(document).change(function() {
+#        $('#question" . $_qid . "').show();
+#    });
+#    $(document).bind('keydown',function(e) {
+#                if (e.keyCode == 9) {
+#                    $('#question" . $_qid . "').show();
+#                    return true;
+#                }
+#                return true;
+#            });
+#         </script>";
+#        }
         LimeExpressionManager::FinishProcessingPage();
 
         if (!$previewgrp && !$previewquestion)

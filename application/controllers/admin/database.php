@@ -213,8 +213,14 @@ class database extends Survey_Common_Action
 
             if ($invalidCode == 1) $databaseoutput .= "<script type=\"text/javascript\">\n<!--\n alert(\"".$clang->gT("Answers with a code of 0 (zero) or blank code are not allowed, and will not be saved","js")."\")\n //-->\n</script>\n";
             if ($duplicateCode == 1) $databaseoutput .= "<script type=\"text/javascript\">\n<!--\n alert(\"".$clang->gT("Duplicate codes found, these entries won't be updated","js")."\")\n //-->\n</script>\n";
-
-            Yii::app()->session['flashmessage']= $clang->gT("Answer options were successfully saved.");
+            if (!Yii::app()->request->getPost('bFullPOST'))
+            {
+                Yii::app()->session['flashmessage'] = $clang->gT("Not all answer options were saved. This usually happens due to server limitations ( PHP setting max_input_vars) - please contact your system administrator.");
+            }
+            else
+            {
+                Yii::app()->session['flashmessage']= $clang->gT("Answer options were successfully saved.");
+            }
             LimeExpressionManager::SetDirtyFlag();
             if ($databaseoutput != '')
             {
@@ -224,9 +230,6 @@ class database extends Survey_Common_Action
             {
                 $this->getController()->redirect($this->getController()->createUrl('/admin/question/sa/answeroptions/surveyid/'.$surveyid.'/gid/'.$gid.'/qid/'.$qid));
             }
-
-            //$action='editansweroptions';
-
         }
 
 
@@ -344,9 +347,14 @@ class database extends Survey_Common_Action
 
             LimeExpressionManager::UpgradeConditionsToRelevance($surveyid);
 
-            //include("surveytable_functions.php");
-            //surveyFixColumns($surveyid);
-            Yii::app()->session['flashmessage'] = $clang->gT("Subquestions were successfully saved.");
+            if (!Yii::app()->request->getPost('bFullPOST'))
+            {
+                Yii::app()->session['flashmessage'] = $clang->gT("Not all subquestions were saved. This usually happens due to server limitations ( PHP setting max_input_vars) - please contact your system administrator.");
+            }
+            else
+            {
+                Yii::app()->session['flashmessage'] = $clang->gT("Subquestions were successfully saved.");
+            }
 
             //$action='editsubquestions';
             LimeExpressionManager::SetDirtyFlag();
@@ -437,7 +445,9 @@ class database extends Survey_Common_Action
                             'question_order' => $question_order,
                             'language' => $alang
                             );
+                            switchMSSQLIdentityInsert('questions',true);
                             $langqid=Questions::model()->insertRecords($data);
+                            switchMSSQLIdentityInsert('questions',false);
 
                             // Checked */
                             if (!$langqid)
@@ -900,29 +910,12 @@ class database extends Survey_Common_Action
                     $url = Yii::app()->request->getPost('url_'.$langname);
                     if ($url == 'http://') {$url="";}
 
-                    // Clean XSS attacks
-                    if ($xssfilter)
-                    {
-                        $purifier = new CHtmlPurifier();
-                        $purifier->options = array(
-                        'HTML.Allowed' => 'p,a[href],b,i'
-                        );
-                        $short_title=$purifier->purify(Yii::app()->request->getPost('short_title_'.$langname));
-                        $description=$purifier->purify(Yii::app()->request->getPost('description_'.$langname));
-                        $welcome=$purifier->purify(Yii::app()->request->getPost('welcome_'.$langname));
-                        $endtext=$purifier->purify(Yii::app()->request->getPost('endtext_'.$langname));
-                        $sURLDescription=$purifier->purify(Yii::app()->request->getPost('urldescrip_'.$langname));
-                        $sURL=$purifier->purify(Yii::app()->request->getPost('url_'.$langname));
-                    }
-                    else
-                    {
-                        $short_title = html_entity_decode(Yii::app()->request->getPost('short_title_'.$langname), ENT_QUOTES, "UTF-8");
-                        $description = html_entity_decode(Yii::app()->request->getPost('description_'.$langname), ENT_QUOTES, "UTF-8");
-                        $welcome = html_entity_decode(Yii::app()->request->getPost('welcome_'.$langname), ENT_QUOTES, "UTF-8");
-                        $endtext = html_entity_decode(Yii::app()->request->getPost('endtext_'.$langname), ENT_QUOTES, "UTF-8");
-                        $sURLDescription = html_entity_decode(Yii::app()->request->getPost('urldescrip_'.$langname), ENT_QUOTES, "UTF-8");
-                        $sURL = html_entity_decode(Yii::app()->request->getPost('url_'.$langname), ENT_QUOTES, "UTF-8");
-                    }
+                    $short_title = html_entity_decode(Yii::app()->request->getPost('short_title_'.$langname), ENT_QUOTES, "UTF-8");
+                    $description = html_entity_decode(Yii::app()->request->getPost('description_'.$langname), ENT_QUOTES, "UTF-8");
+                    $welcome = html_entity_decode(Yii::app()->request->getPost('welcome_'.$langname), ENT_QUOTES, "UTF-8");
+                    $endtext = html_entity_decode(Yii::app()->request->getPost('endtext_'.$langname), ENT_QUOTES, "UTF-8");
+                    $sURLDescription = html_entity_decode(Yii::app()->request->getPost('urldescrip_'.$langname), ENT_QUOTES, "UTF-8");
+                    $sURL = html_entity_decode(Yii::app()->request->getPost('url_'.$langname), ENT_QUOTES, "UTF-8");
 
                     // Fix bug with FCKEditor saving strange BR types
                     $short_title = Yii::app()->request->getPost('short_title_'.$langname);

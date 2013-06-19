@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='dejavuserif.z';
-$originalsize=363200;
+$originalsize=366124;
 // --- EOF ---

@@ -226,6 +226,10 @@
             {
                 $route.="/action/previewgroup/gid/".intval(Yii::app()->request->getParam('gid',0));
             }
+            if (Yii::app()->request->getParam('token')!='')
+            {
+                $route.="/token/".Yii::app()->request->getParam('token');
+            }
             $sHTMLCode = "<select id='languagechanger' name='languagechanger' class='languagechanger' onchange='javascript:window.location=this.value'>\n";
             foreach ($slangs as $sLanguage)
             {
@@ -988,6 +992,10 @@
                     $aReplacementVars["FIRSTNAME"]=$oTokenInformation->firstname;
                     $aReplacementVars["LASTNAME"]=$oTokenInformation->lastname;
                     $aReplacementVars["TOKEN"]=$clienttoken;
+                    // added survey url in replacement vars
+                    $surveylink = Yii::app()->createAbsoluteUrl("/survey/index/sid/{$surveyid}",array('lang'=>$_SESSION['survey_'.$surveyid]['s_lang'],'token'=>$clienttoken));
+                    $aReplacementVars['SURVEYURL'] = $surveylink;
+                    
                     $attrfieldnames=getAttributeFieldNames($surveyid);
                     foreach ($attrfieldnames as $attr_name)
                     {
@@ -1266,7 +1274,7 @@
         $thissurvey = getSurveyInfo($surveyid);
         if (empty($templang))
         {
-            $templang=$thissurvey['language'];
+            $templang=$clang->langcode;
         }
 
         $_SESSION['survey_'.$surveyid]['templatename']=validateTemplateDir($thissurvey['template']);
@@ -1276,8 +1284,7 @@
         $loadsecurity = returnGlobal('loadsecurity');
 
         // NO TOKEN REQUIRED BUT CAPTCHA ENABLED FOR SURVEY ACCESS
-        if ($tokensexist == 0 &&
-        isCaptchaEnabled('surveyaccessscreen',$thissurvey['usecaptcha']))
+        if ($tokensexist == 0 && isCaptchaEnabled('surveyaccessscreen',$thissurvey['usecaptcha']) && !$preview)
         {
 
             // IF CAPTCHA ANSWER IS NOT CORRECT OR NOT SET
@@ -1698,7 +1705,11 @@
     //An array containing information about used to insert the data into the db at the submit stage
     //4. SESSION VARIABLE - fieldarray
     //See rem at end..
-    $_SESSION['survey_'.$surveyid]['token'] = $clienttoken;
+    
+    if ($tokensexist == 1 && $clienttoken)
+    {
+        $_SESSION['survey_'.$surveyid]['token'] = $clienttoken;
+    }
 
     if ($thissurvey['anonymized'] == "N")
     {
@@ -1972,7 +1983,7 @@
     // Prefill questions/answers from command line params
     $reservedGetValues= array('token','sid','gid','qid','lang','newtest','action');
     $startingValues=array();
-    if (isset($_GET) && !$preview)
+    if (isset($_GET))
     {
         foreach ($_GET as $k=>$v)
         {
@@ -1983,6 +1994,7 @@
         }
     }
     $_SESSION['survey_'.$surveyid]['startingValues']=$startingValues;
+
     if (isset($_SESSION['survey_'.$surveyid]['fieldarray'])) $_SESSION['survey_'.$surveyid]['fieldarray']=array_values($_SESSION['survey_'.$surveyid]['fieldarray']);
 
     //Check if a passthru label and value have been included in the query url
@@ -2297,6 +2309,7 @@ function UpdateGroupList($surveyid, $language)
 /**
 * FieldArray contains all necessary information regarding the questions
 * This function is needed to update it in case the survey is switched to another language
+* @todo: Make 'fieldarray' obsolete by replacing with EM session info
 */
 function UpdateFieldArray()
 {
@@ -2313,9 +2326,11 @@ function UpdateFieldArray()
 
             $query = "SELECT title, question FROM {{questions}} WHERE qid=".$questionarray[0]." AND language='".$_SESSION['survey_'.$surveyid]['s_lang']."'";
             $usrow = Yii::app()->db->createCommand($query)->queryRow();
-            if (!$usrow) safeDie ("Couldn't get question <br />$query<br />");      //Checked
-            $questionarray[2]=$usrow['title'];
-            $questionarray[3]=$usrow['question'];
+            if ($usrow) 
+            {
+                $questionarray[2]=$usrow['title'];
+                $questionarray[3]=$usrow['question'];
+            }
             unset($questionarray);
         }
     }
@@ -2471,9 +2486,10 @@ function checkQuota($checkaction,$surveyid)
         $redata = compact(array_keys(get_defined_vars()));
         foreach($quota_info as $quota)
         {
-            $quota['Message']=templatereplace($quota['Message'],array(),$redata);
-            $quota['Url']=templatereplace($quota['Url'],array(),$redata);
-            $quota['UrlDescrip']=templatereplace($quota['UrlDescrip'],array(),$redata);
+            $quota['Message'] = templatereplace($quota['Message'],array(),$redata);
+            $quota['Url'] = passthruReplace($quota['Url'], $thissurvey);
+            $quota['Url'] = templatereplace($quota['Url'],array(),$redata);
+            $quota['UrlDescrip'] = templatereplace($quota['UrlDescrip'],array(),$redata);
             if ((isset($quota['status']) && $quota['status'] == "matched") && (isset($quota['Action']) && $quota['Action'] == "1"))
             {
                 // If a token is used then mark the token as completed

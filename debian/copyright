@@ -7,7 +7,8 @@ Comment:
  .
  The images in styles/gartergrey/images/* are non-free.
  .
- Some of the fonts are non-free (the "PDF Core 14" fonts) and need removing.
+ Some of the fonts might be non-free (the "PDF Core 14" fonts) and need
+ removing - this is currently being investigated.
 
 Files: debian/*
 Copyright: 2008-2010, nijaba <nicolas.barcet@ubuntu.com>,

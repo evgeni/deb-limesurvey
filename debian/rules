@@ -5,8 +5,8 @@
 # export DH_VERBOSE=1
 
 PACKAGE = limesurvey
-FILE = limesurvey200plus-build130206.tar.bz2
-VERSION = 2.00plus-build130206
+FILE = limesurvey200plus-build130611.tar.bz2
+VERSION = 2.00plus-build130611
 
 build:
 

@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='dejavusans-extralight.z';
-$originalsize=345204;
+$originalsize=352564;
 // --- EOF ---

@@ -274,6 +274,8 @@ $(document).ready(function() {
         edit:false,
         refresh: true,
         search: false,
+            alertcap: sWarningMsg,
+            alerttext: sSelectRowMsg,
             addtitle: createParticipantTxt, 
             deltitle: deleteParticipantTxt, 
             refreshtitle: refreshListTxt},
@@ -371,7 +373,9 @@ $(document).ready(function() {
                             }
                         }
                         jQuery("#displayparticipants").jqGrid('setGridParam',{
-                            url:jsonSearchUrl+'/'+searchconditions,
+                            mtype:'POST',
+                            postData:{searchcondition:searchconditions},
+                            url:jsonSearchUrl,
                             gridComplete: function(){
                                 if(jQuery("#displayparticipants").jqGrid('getGridParam', 'records') == 0) {
                                     var dialog_buttons={};
@@ -383,6 +387,7 @@ $(document).ready(function() {
                                         buttons: dialog_buttons,
                                         resizable: false
                                     });
+                                    jQuery("#displayparticipants").jqGrid('setGridParam',{mtype:'GET'});
                                 }
                             }}).trigger("reloadGrid");
                         $(this).dialog("close");
@@ -726,7 +731,7 @@ $(document).ready(function() {
             }
             if(att_type=="DD") { //Dropdown
                 var att_p_values = $("#displayparticipants_"+parid[0]+"_t").getCell(id,'attpvalues');
-                $("#displayparticipants_"+parid[0]+"_t").setColProp('attvalue',{ edittype:'select',editoptions:{ value:":Select One;"+att_p_values}});
+                $("#displayparticipants_"+parid[0]+"_t").setColProp('attvalue',{ edittype:'select',editoptions:{ value:":;"+att_p_values}});
             }
             if(att_type=="TB") { //Textbox
                 $("#displayparticipants_"+parid[0]+"_t").setColProp('attvalue',{ edittype:'text'});

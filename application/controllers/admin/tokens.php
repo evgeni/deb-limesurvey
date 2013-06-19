@@ -145,6 +145,10 @@ class tokens extends Survey_Common_Action
                     }
                 }
             }
+            else
+            {
+                 $hostname = $hostname.":".$port;
+            }
 
             $flags = "";
             switch ($accounttype)
@@ -462,7 +466,7 @@ class tokens extends Survey_Common_Action
             }
             // Check if the token can be taken
             if ($token['token'] != "" && ($token['completed'] == "N" || $token['completed'] == "") && hasSurveyPermission($iSurveyId, 'responses', 'create')) {
-                $action .= viewHelper::getImageLink('do_16.png', "survey/index/sid/{$iSurveyId}/token/{$token['token']}/newtest/Y", $clang->gT("Do survey"), '_blank');
+                $action .= viewHelper::getImageLink('do_16.png', "survey/index/sid/{$iSurveyId}/token/{$token['token']}/lang/{$token['language']}/newtest/Y", $clang->gT("Do survey"), '_blank');
             } else {
                 $action .= '<div style="width: 20px; height: 16px; float: left;"></div>';
             }
@@ -1250,11 +1254,7 @@ class tokens extends Survey_Common_Action
         {
             if (empty($aData['tokenids']))
             {
-                $aTokens = Tokens_dynamic::model($iSurveyId)->findUninvited($aTokenIds, 0, $bEmail, $SQLemailstatuscondition);
-                foreach($aTokens as $aToken)
-                {
-                    $aData['tokenids'][] = $aToken['tid'];
-                }
+                $aData['tokenids'] = Tokens_dynamic::model($iSurveyId)->findUninvitedIDs($aTokenIds, 0, $bEmail, $SQLemailstatuscondition);
             }
             $this->_renderWrappedTemplate('token', array('tokenbar', $sSubAction), $aData);
         }
@@ -1286,8 +1286,9 @@ class tokens extends Survey_Common_Action
                 }
             }
 
-            $ctresult = Tokens_dynamic::model($iSurveyId)->findUninvited($aTokenIds, 0, $bEmail, $SQLemailstatuscondition, $SQLremindercountcondition, $SQLreminderdelaycondition);
+            $ctresult = Tokens_dynamic::model($iSurveyId)->findUninvitedIDs($aTokenIds, 0, $bEmail, $SQLemailstatuscondition, $SQLremindercountcondition, $SQLreminderdelaycondition);
             $ctcount = count($ctresult);
+            unset($ctresult);
 
             $emresult = Tokens_dynamic::model($iSurveyId)->findUninvited($aTokenIds, $iMaxEmails, $bEmail, $SQLemailstatuscondition, $SQLremindercountcondition, $SQLreminderdelaycondition);
             $emcount = count($emresult);
@@ -1392,8 +1393,11 @@ class tokens extends Survey_Common_Action
                             if(!empty($emrow['participant_id']))
                             {
                                 $slquery = Survey_links::model()->find('participant_id = :pid AND survey_id = :sid AND token_id = :tid',array(':pid'=>$emrow['participant_id'],':sid'=>$iSurveyId,':tid'=>$emrow['tid']));
-                                $slquery->date_invited = dateShift(date("Y-m-d H:i:s"), "Y-m-d H:i", Yii::app()->getConfig("timeadjust"));
-                                $slquery->save();
+                                if (!is_null($slquery))
+                                {
+                                    $slquery->date_invited = dateShift(date("Y-m-d H:i:s"), "Y-m-d H:i", Yii::app()->getConfig("timeadjust"));
+                                    $slquery->save();
+                                }
                             }
                             $tokenoutput .= "{$emrow['tid']}: {$emrow['firstname']} {$emrow['lastname']} ({$emrow['email']})<br />\n";
                             if (Yii::app()->getConfig("emailsmtpdebug") == 2)
@@ -1830,9 +1834,8 @@ class tokens extends Survey_Common_Action
             $firstline = array();
 
             $sPath = Yii::app()->getConfig('tempdir');
-            $sFileName = $_FILES['the_file']['name'];
             $sFileTmpName = $_FILES['the_file']['tmp_name'];
-            $sFilePath = $sPath . '/' . $sFileName;
+            $sFilePath = $sPath . '/' . randomChars(20);
 
             if (!@move_uploaded_file($sFileTmpName, $sFilePath))
             {
@@ -2049,6 +2052,20 @@ class tokens extends Survey_Common_Action
             $aData['iSurveyId'] = $iSurveyId;
             $aData['thissurvey'] = getSurveyInfo($iSurveyId);
             $aData['surveyid'] = $iSurveyId;
+            $aTokenTableFields = getTokenFieldsAndNames($iSurveyId);
+            unset($aTokenTableFields['sent']);
+            unset($aTokenTableFields['remindersent']);
+            unset($aTokenTableFields['remindercount']);
+            unset($aTokenTableFields['usesleft']);
+            foreach ($aTokenTableFields as $sKey=>$sValue)
+            {
+                if ($sValue['description']!=$sKey) 
+                {
+                   $sValue['description'] .= ' - '.$sKey; 
+                }
+                $aNewTokenTableFields[$sKey]= $sValue['description'];
+            }
+            $aData['aTokenTableFields'] = $aNewTokenTableFields; 
             $this->_renderWrappedTemplate('token', array('tokenbar', 'csvupload'), $aData);
         }
     }
@@ -2381,7 +2398,7 @@ class tokens extends Survey_Common_Action
     * @param array $aData Data to be passed on. Optional.
     */
     protected function _renderWrappedTemplate($sAction = 'token', $aViewUrls = array(), $aData = array())
-    {
+    {                   
         $aData['imageurl'] = Yii::app()->getConfig('adminimageurl');
         $aData['display']['menu_bars'] = false;
         parent::_renderWrappedTemplate($sAction, $aViewUrls, $aData);

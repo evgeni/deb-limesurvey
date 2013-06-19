@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='dejavusansmono-oblique.z';
-$originalsize=241972;
+$originalsize=242608;
 // --- EOF ---

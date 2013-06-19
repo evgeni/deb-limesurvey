@@ -47,9 +47,9 @@ class remotecontrol extends Survey_Common_Action
             }
             elseif($RPCType=='json')
             {
-                Yii::app()->loadLibrary('jsonRPCServer');
+                Yii::app()->loadLibrary('LSjsonRPCServer');
 
-                jsonRPCServer::handle($oHandler);
+                LSjsonRPCServer::handle($oHandler);
             }
             exit;
         } else {
@@ -91,6 +91,8 @@ class remotecontrol extends Survey_Common_Action
             Yii::app()->loadLibrary('jsonRPCClient');
             $client = new jsonRPCClient($serverUrl);
         }
+        else die('RPC interface not activated in global settings');
+        
 
         $sSessionKey= $client->call('get_session_key', array('admin','password'));
         if (is_array($sSessionKey)) {echo $sSessionKey['status']; die();}
@@ -679,6 +681,34 @@ class remotecontrol_handle
 
 	}
 
+/**
+     * RPC Routine to export submission timeline.
+     * Returns an array of values (count and period)
+     *
+     * @access public
+     * @param string $sSessionKey Auth credentials
+     * @param int $iSurveyID Id of the Survey
+     * @param string $sType (day|hour)
+     * @param string $dStart
+     * @param string $dEnd
+     * @return array On success: The timeline. On failure array with error information
+     * */
+    public function export_timeline($sSessionKey, $iSurveyID, $sType, $dStart, $dEnd)
+    {
+		if (!$this->_checkSessionKey($sSessionKey)) return array('status' => 'Invalid session key');
+		if (!in_array($sType, array('day','hour'))) return array('status' => 'Invalid Period');
+		if (!hasSurveyPermission($iSurveyID, 'responses', 'read')) return array('status' => 'No permission');
+		$oSurvey=Survey::model()->findByPk($iSurveyID);
+		if (is_null($oSurvey)) return array('status' => 'Error: Invalid survey ID');
+       	if (!tableExists('{{survey_' . $iSurveyID . '}}')) return array('status' => 'No available data');
+       		
+		$oResponses = Survey_dynamic::model($iSurveyID)->timeline($sType, $dStart, $dEnd);
+		if (empty($oResponses))  return array('status' => 'No valid Data');
+
+		return $oResponses;
+		
+	}
+	
     /**
      * RPC routine to get survey summary, regarding token usage and survey participation.
      * Returns the requested value as string.
@@ -1769,7 +1799,7 @@ class remotecontrol_handle
 
 				foreach ($aQuestionList as $oQuestion)
 				{
-					$aData[]= array('id'=>$oQuestion->primaryKey,'type'=>$oQuestion->attributes['type'], 'question'=>$oQuestion->attributes['question']);
+					$aData[]= array('id'=>$oQuestion->primaryKey,'title'=>$oQuestion->attributes['title'],'type'=>$oQuestion->attributes['type'], 'question'=>$oQuestion->attributes['question']);
 				}
 				return $aData;
 			}
@@ -2003,11 +2033,11 @@ class remotecontrol_handle
 	}
 
 
-
    /**
     * RPC Routine to return the ids and info  of token/participants of a survey.
     * if $bUnused is true, user will get the list of not completed tokens (token_return functionality).
     * Parameters iStart and ilimit are used to limit the number of results of this call.
+    * Parameter aAttributes is an optional array containing more attribute that may be requested
     *
     * @access public
     * @param string $sSessionKey Auth credentials
@@ -2015,9 +2045,10 @@ class remotecontrol_handle
     * @param int $iStart Start id of the token list
     * @param int  $iLimit Number of participants to return
     * @param bool $bUnused If you want unused tokensm, set true
+    * @param bool|array $aAttributes The extented attributes that we want
     * @return array The list of tokens
     */
-	public function list_participants($sSessionKey, $iSurveyID, $iStart=0, $iLimit=10, $bUnused=false)
+	public function list_participants($sSessionKey, $iSurveyID, $iStart=0, $iLimit=10, $bUnused=false,$aAttributes=false)
 	{
        if ($this->_checkSessionKey($sSessionKey))
        {
@@ -2038,9 +2069,16 @@ class remotecontrol_handle
 				if(count($oTokens)==0)
 					return array('status' => 'No Tokens found');
 
+				if($aAttributes) {
+					$aBasicDestinationFields=Tokens_dynamic::model()->tableSchema->columnNames;
+					$aTokenProperties=array_intersect($aAttributes,$aBasicDestinationFields);
+					$currentAttributes = array('tid','token','firstname','lastname','email');
+					$extendedAttributes = array_diff($aTokenProperties, $currentAttributes);
+				}
+
 				foreach ($oTokens as $token)
 					{
-						$aData[] = array(
+						$dataArray = array(
 									'tid'=>$token->primarykey,
 									'token'=>$token->attributes['token'],
 									'participant_info'=>array(
@@ -2048,6 +2086,11 @@ class remotecontrol_handle
 														'lastname'=>$token->attributes['lastname'],
 														'email'=>$token->attributes['email'],
 														    ));
+						
+						foreach($extendedAttributes as $sAttribute)
+							$dataArray[$sAttribute]=$token->attributes[$sAttribute];								
+								    
+						$aData[]= $dataArray;								    														    
 					}
 				return $aData;
 			}
@@ -2057,6 +2100,8 @@ class remotecontrol_handle
         else
             return array('status' => 'Invalid Session Key');
 	}
+
+
 
     /**
      * RPC routine to to initialise the survey's collection of tokens where new participant tokens may be later added.
@@ -2130,12 +2175,26 @@ class remotecontrol_handle
 
 			$oTokens = Tokens_dynamic::model($iSurveyID);
 			$aResultTokens = $oTokens->findUninvited(false, $iMaxEmails, true, $SQLemailstatuscondition);
-			$aAllTokens = $oTokens->findUninvited(false, 0, true, $SQLemailstatuscondition);
+			$aAllTokens = $oTokens->findUninvitedIDs(false, 0, true, $SQLemailstatuscondition);
+            $iAllTokensCount=count($aAllTokens);
+            unset($aAllTokens);
 			if (empty($aResultTokens))
 				return array('status' => 'Error: No candidate tokens');
 
+			foreach($aResultTokens as $key=>$oToken)
+			{
+				//pattern taken from php_filter_validate_email PHP_5_4/ext/filter/logical_filters.c
+				$pattern = '/^(?!(?:(?:\\x22?\\x5C[\\x00-\\x7E]\\x22?)|(?:\\x22?[^\\x5C\\x22]\\x22?)){255,})(?!(?:(?:\\x22?\\x5C[\\x00-\\x7E]\\x22?)|(?:\\x22?[^\\x5C\\x22]\\x22?)){65,}@)(?:(?:[\\x21\\x23-\\x27\\x2A\\x2B\\x2D\\x2F-\\x39\\x3D\\x3F\\x5E-\\x7E]+)|(?:\\x22(?:[\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x21\\x23-\\x5B\\x5D-\\x7F]|(?:\\x5C[\\x00-\\x7F]))*\\x22))(?:\\.(?:(?:[\\x21\\x23-\\x27\\x2A\\x2B\\x2D\\x2F-\\x39\\x3D\\x3F\\x5E-\\x7E]+)|(?:\\x22(?:[\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x21\\x23-\\x5B\\x5D-\\x7F]|(?:\\x5C[\\x00-\\x7F]))*\\x22)))*@(?:(?:(?!.*[^.]{64,})(?:(?:(?:xn--)?[a-z0-9]+(?:-+[a-z0-9]+)*\\.){1,126}){1,}(?:(?:[a-z][a-z0-9]*)|(?:(?:xn--)[a-z0-9]+))(?:-+[a-z0-9]+)*)|(?:\\[(?:(?:IPv6:(?:(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){7})|(?:(?!(?:.*[a-f0-9][:\\]]){7,})(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,5})?::(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,5})?)))|(?:(?:IPv6:(?:(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){5}:)|(?:(?!(?:.*[a-f0-9]:){5,})(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,3})?::(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,3}:)?)))?(?:(?:25[0-5])|(?:2[0-4][0-9])|(?:1[0-9]{2})|(?:[1-9]?[0-9]))(?:\\.(?:(?:25[0-5])|(?:2[0-4][0-9])|(?:1[0-9]{2})|(?:[1-9]?[0-9]))){3}))\\]))$/iD';		
+
+				//if(!filter_var($emailaddress, FILTER_VALIDATE_EMAIL))
+				if (preg_match($pattern, $oToken['email']) !== 1)
+					unset($aResultTokens[$key]);
+			}
+
+			if (empty($aResultTokens))
+				return array('status' => 'Error: No candidate tokens');
 			$aResult = emailTokens($iSurveyID,$aResultTokens,'invite');
-			$iLeft = count($aAllTokens) - count($aResultTokens);
+			$iLeft = $iAllTokensCount - count($aResultTokens);
 			$aResult['status'] =$iLeft. " left to send";
 
 			return $aResult;
@@ -2193,15 +2252,18 @@ class remotecontrol_handle
 				$SQLremindercountcondition = "remindercount < " . $iMaxReminders;
 
 			$oTokens = Tokens_dynamic::model($iSurveyID);
+            $aAllTokens = $oTokens->findUninvitedIDs(false, 0, false, $SQLemailstatuscondition, $SQLremindercountcondition, $SQLreminderdelaycondition);
+            $iAllTokensCount=count($aAllTokens);
+            unset($aAllTokens); // save some memory before the next query
+            
 			$aResultTokens = $oTokens->findUninvited(false, $iMaxEmails, false, $SQLemailstatuscondition, $SQLremindercountcondition, $SQLreminderdelaycondition);
-			$aAllTokens = $oTokens->findUninvited(false, 0, false, $SQLemailstatuscondition, $SQLremindercountcondition, $SQLreminderdelaycondition);
 
 			if (empty($aResultTokens))
 				return array('status' => 'Error: No candidate tokens');
 
 			$aResult = emailTokens($iSurveyID, $aResultTokens, 'remind');
 
-			$iLeft = count($aAllTokens) - count($aResultTokens);
+			$iLeft = $iAllTokensCount - count($aResultTokens);
 			$aResult['status'] =$iLeft. " left to send";
 			return $aResult;
 		}
@@ -2256,6 +2318,8 @@ class remotecontrol_handle
 
             Survey_dynamic::sid($iSurveyID);
             $survey_dynamic = new Survey_dynamic;
+            $aBasicDestinationFields=$survey_dynamic->tableSchema->columnNames;
+            $aResponseData=array_intersect_key($aResponseData, array_flip($aBasicDestinationFields));
             $result_id = $survey_dynamic->insertRecords($aResponseData);
 
             if ($result_id)

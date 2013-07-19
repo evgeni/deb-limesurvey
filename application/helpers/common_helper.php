@@ -1596,22 +1596,21 @@ function fixMovedQuestionConditions($qid,$oldgid,$newgid) //Function rewrites th
 /**
 * This function returns POST/REQUEST vars, for some vars like SID and others they are also sanitized
 *
-* @param mixed $stringname
-* @param mixed $urlParam
+* @param string $stringname
+* @param boolean $bRestrictToString
 */
-function returnGlobal($stringname)
+function returnGlobal($stringname,$bRestrictToString=false)
 {
-    if ($stringname=='sid') // don't read SID from a Cookie
+    $urlParam=Yii::app()->request->getParam($stringname); 
+    if(!$urlParam && $aCookies=Yii::app()->request->getCookies() && $stringname!='sid')
     {
-        if (isset($_GET[$stringname])) $urlParam = $_GET[$stringname];
-        if (isset($_POST[$stringname])) $urlParam = $_POST[$stringname];
+        if(isset($aCookies[$stringname]))
+        {
+            $urlParam = $aCookies[$stringname];
+        } 
     }
-    elseif (isset($_REQUEST[$stringname]))
-    {
-        $urlParam = $_REQUEST[$stringname];
-    }
-
-    if (isset($urlParam))
+    $bUrlParamIsArray=is_array($urlParam);
+    if ($urlParam && (!$bUrlParamIsArray || !$bRestrictToString))
     {
         if ($stringname == 'sid' || $stringname == "gid" || $stringname == "oldqid" ||
         $stringname == "qid" || $stringname == "tid" ||
@@ -1621,11 +1620,19 @@ function returnGlobal($stringname)
         $stringname == "qaid" || $stringname == "scid" ||
         $stringname == "loadsecurity")
         {
-            return sanitize_int($urlParam);
+            if($bUrlParamIsArray){
+                return array_map("sanitize_int",$urlParam);
+            }else{
+                return sanitize_int($urlParam);
+            }
         }
         elseif ($stringname =="lang" || $stringname =="adminlang")
         {
-            return sanitize_languagecode($urlParam);
+            if($bUrlParamIsArray){
+                return array_map("sanitize_languagecode",$urlParam);
+            }else{
+                return sanitize_languagecode($urlParam);
+            }
         }
         elseif ($stringname =="htmleditormode" ||
         $stringname =="subaction" ||
@@ -1633,11 +1640,19 @@ function returnGlobal($stringname)
         $stringname =="templateeditormode"
         )
         {
-            return sanitize_paranoid_string($urlParam);
+            if($bUrlParamIsArray){
+                return array_map("sanitize_paranoid_string",$urlParam);
+            }else{
+                return sanitize_paranoid_string($urlParam);
+            }
         }
         elseif ( $stringname =="cquestions")
         {
-            return sanitize_cquestions($urlParam);
+            if($bUrlParamIsArray){
+                return array_map("sanitize_cquestions",$urlParam);
+            }else{
+                return sanitize_cquestions($urlParam);
+            }
         }
         return $urlParam;
     }
@@ -1645,7 +1660,6 @@ function returnGlobal($stringname)
     {
         return NULL;
     }
-
 }
 
 
@@ -5295,12 +5309,10 @@ function hasResources($id,$type='survey')
 function randomChars($length,$pattern="23456789abcdefghijkmnpqrstuvwxyz")
 {
     $patternlength = strlen($pattern)-1;
+    $key = '';
     for($i=0;$i<$length;$i++)
     {
-        if(isset($key))
-            $key .= $pattern{rand(0,$patternlength)};
-        else
-            $key = $pattern{rand(0,$patternlength)};
+        $key .= $pattern{mt_rand(0,$patternlength)};
     }
     return $key;
 }
@@ -5690,20 +5702,38 @@ function updateCheck()
     if (count($updateinfo) && trim(Yii::app()->getConfig('buildnumber'))!='')
     {
         setGlobalSetting('updateversions',json_encode($updateinfo));
-        if (isset($updateinfo['master'])){
-            $updateinfo=$updateinfo['master'];
-        }
-        else
+        $sUpdateNotificationType = getGlobalSetting('updatenotification');
+        switch ($sUpdateNotificationType)
         {
-            $updateinfo=reset($updateinfo);
+            case 'stable':
+                // Only show update if in stable (master) branch
+                if (isset($updateinfo['master'])) {
+                    $updateinfo=$updateinfo['master'];
+                } else {
+                    unset ($updateinfo);
+                }                    
+                break;
+
+            case 'both':
+                // Show first available update
+                $updateinfo=reset($updateinfo);    
+                break;
+                
+            default:
+                // Never show a notification
+                unset($updateinfo);
+                break;
         }
+    } else {
+        unset($updateinfo);
+    }
+    if (isset($updateinfo)) {
         setGlobalSetting('updateavailable',1);
         setGlobalSetting('updatebuild',$updateinfo['build']);
         setGlobalSetting('updateversion',$updateinfo['versionnumber']);
-    }
-    else
-    {
-        setGlobalSetting('updateavailable',0);
+    } else {
+        setGlobalSetting('updateavailable',0);    
+        $updateinfo = array();
     }
     setGlobalSetting('updatelastcheck',date('Y-m-d H:i:s'));
     return $updateinfo;

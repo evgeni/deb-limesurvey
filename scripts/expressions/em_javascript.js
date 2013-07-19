@@ -192,6 +192,53 @@ function LEMis_string(a)
     return isNaN(a);
 }
 
+/**
+ * Find the closest matching numerical input values in a list an replace it by the
+ * corresponding value within another list 
+ *
+ * @author Johannes Weberhofer, 2013
+ *
+ * @param numeric fValueToReplace
+ * @param numeric iStrict - 1 for exact matches only otherwise interpolation the 
+ * 		  closest value should be returned
+ * @param string sTranslateFromList - comma seperated list of values to translate from
+ * @param string sTranslateToList - comma seperated list of values to translate to
+ * @return numeric
+ */
+function LEMconvert_value( fValueToReplace, iStrict, sTranslateFromList, sTranslateToList) 
+{
+	if ( isNaN(fValueToReplace) || (iStrict==null) || (sTranslateFromList==null) || (sTranslateToList==null) ) 
+	{
+		return null;
+	}
+	aFromValues = sTranslateFromList.split(",");
+	aToValues = sTranslateToList.split(",");
+	if ( (aFromValues.length > 0)  && (aFromValues.length == aToValues.length) ) 
+	{
+		fMinimumDiff = null;
+		iNearestIndex = 0;
+		for ( i = 0; i < aFromValues.length; i++) {
+			if ( isNaN(aFromValues[i]) ) {
+				// break processing when non-numeric variables are about to be processed
+				return null;
+			}
+			fCurrentDiff = Math.abs(aFromValues[i] - fValueToReplace);
+			if (fCurrentDiff === 0) {
+				return aToValues[i];
+			} else if (i === 0) {
+				fMinimumDiff = fCurrentDiff;
+			} else if ( fMinimumDiff > fCurrentDiff ) {
+				fMinimumDiff = fCurrentDiff;
+				iNearestIndex = i;
+			}
+		}					
+		if ( iStrict !== 1 ) {
+			return aToValues[iNearestIndex];
+		}
+	}
+	return null;
+}
+
 function LEMif(a,b,c)
 {
     // implements conditional logic.  Note double negation of a to ensure it is cast to Boolean
@@ -2007,6 +2054,222 @@ function strstr (haystack, needle, bool) {
             return haystack.slice(pos);
         }
     }
+}
+
+function strtotime (text, now) {
+    /* 2013-06-12: taken from phpjs.org
+       and adapted for limesurvey */
+
+    // Convert string representation of date and time to a timestamp
+    //
+    // version: 1109.2015
+    // discuss at: http://phpjs.org/functions/strtotime
+    // +   original by: Caio Ariede (http://caioariede.com)
+    // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+    // +      input by: David
+    // +   improved by: Caio Ariede (http://caioariede.com)
+    // +   improved by: Brett Zamir (http://brett-zamir.me)
+    // +   bugfixed by: Wagner B. Soares
+    // +   bugfixed by: Artur Tchernychev
+    // +   improved by: A. Matías Quezada (http://amatiasq.com)
+    // %        note 1: Examples all have a fixed timestamp to prevent tests to fail because of variable time(zones)
+    // *     example 1: strtotime('+1 day', 1129633200);
+    // *     returns 1: 1129719600
+    // *     example 2: strtotime('+1 week 2 days 4 hours 2 seconds', 1129633200);
+    // *     returns 2: 1130425202
+    // *     example 3: strtotime('last month', 1129633200);
+    // *     returns 3: 1127041200
+    // *     example 4: strtotime('2009-05-04 08:30:00');
+    // *     returns 4: 1241418600
+    if (!text)
+        return null;
+
+    // Unecessary spaces
+    text = text.trim()
+        .replace(/\s{2,}/g, ' ')
+        .replace(/[\t\r\n]/g, '')
+        .toLowerCase();
+
+    // in contrast to php, js Date.parse function interprets: 
+    // dates given as yyyy-mm-dd as in timezone: UTC, 
+    // dates with "." or "-" as MDY instead of DMY
+	// dates with two-digit years differently
+    // etc...etc...
+    // ...therefore we manually parse lots of common date formats
+    var match = text.match(/^(\d{1,4})([\-\.\/\:])(\d{1,2})([\-\.\/\:])(\d{1,4})(?:\s(\d{1,2}):(\d{2})?:?(\d{2})?)?(?:\s([A-Z]+)?)?$/);
+    if (match && match[2]==match[4]) {
+        if (match[1]>1901) {
+            switch (match[2]) {
+                case '-': {  // YYYY-M-D
+                    if (match[3]>12 | match[5]>31) return(0);
+                    return new Date(match[1], parseInt(match[3], 10) - 1, match[5],
+                    match[6] || 0, match[7] || 0, match[8] || 0, match[9] || 0) / 1000;
+                    break;
+                }
+                case '.': {  // YYYY.M.D is not parsed by strtotime()
+                    return(0);
+                    break;
+                }
+                case '/': {  // YYYY/M/D
+                    if (match[3]>12 | match[5]>31) return(0);
+                    return new Date(match[1], parseInt(match[3], 10) - 1, match[5],
+                    match[6] || 0, match[7] || 0, match[8] || 0, match[9] || 0) / 1000;
+                    break;
+                }
+            }
+        }
+        else if (match[5]>1901) {
+            switch (match[2]) {
+                case '-': {  // D-M-YYYY
+                    if (match[3]>12 | match[1]>31) return(0);
+                    return new Date(match[5], parseInt(match[3], 10) - 1, match[1],
+                    match[6] || 0, match[7] || 0, match[8] || 0, match[9] || 0) / 1000;
+                    break;
+                }
+                case '.': {  // D.M.YYYY
+                    if (match[3]>12 | match[1]>31) return(0);
+                    return new Date(match[5], parseInt(match[3], 10) - 1, match[1],
+                    match[6] || 0, match[7] || 0, match[8] || 0, match[9] || 0) / 1000;
+                    break;
+                }
+                case '/': {  // M/D/YYYY
+                    if (match[1]>12 | match[3]>31) return(0);
+                    return new Date(match[5], parseInt(match[1], 10) - 1, match[3],
+                    match[6] || 0, match[7] || 0, match[8] || 0, match[9] || 0) / 1000;
+                    break;
+                }
+            }
+        }
+        else {
+            switch (match[2]) {
+                case '-': {  // YY-M-D
+                    if (match[3]>12 | match[5]>31 | (match[1] < 70 & match[1]>38)) return(0);
+                    var year = match[1] >= 0 && match[1] <= 38 ? +match[1] + 2000 : match[1];
+                    return new Date(year, parseInt(match[3], 10) - 1, match[5],
+                    match[6] || 0, match[7] || 0, match[8] || 0, match[9] || 0) / 1000;
+                    break;
+                }
+                case '.': {  // D.M.YY or H.MM.SS
+                    if (match[5]>=70) {    // D.M.YY
+                        if (match[3]>12 | match[1]>31) return(0);
+                        return new Date(match[5], parseInt(match[3], 10) - 1, match[1],
+                        match[6] || 0, match[7] || 0, match[8] || 0, match[9] || 0) / 1000;
+                    }
+                    else if (match[5]<60 & !(match[6])) {  // H.MM.SS
+                        if (match[1]>23 | match[3]>59) return(0);
+                        var today = new Date();
+                        return new Date(today.getFullYear(), today.getMonth(), today.getDate(),
+                        match[1] || 0, match[3] || 0, match[5] || 0, match[9] || 0) / 1000;
+                    }
+                    else  return(0);  // invalid format, cannot be parsed
+                    break;
+                }
+                case '/': {  // M/D/YY
+                    if (match[1]>12 | match[3]>31 | (match[5] < 70 & match[5]>38)) return(0);
+                    var year = match[5] >= 0 && match[5] <= 38 ? +match[5] + 2000 : match[5];
+                    return new Date(year, parseInt(match[1], 10) - 1, match[3],
+                    match[6] || 0, match[7] || 0, match[8] || 0, match[9] || 0) / 1000;
+                    break;
+                }
+                case ':': {  // HH:MM:SS
+                    if (match[1]>23 | match[3]>59 | match[5]>59) return(0);
+                    var today = new Date();
+                    return new Date(today.getFullYear(), today.getMonth(), today.getDate(),
+                    match[1] || 0, match[3] || 0, match[5] || 0) / 1000;
+                    break;
+                }
+            }
+        }
+    }
+    
+    
+    // other formats and "now" should be parsed by Date.parse()
+    if (text === 'now')
+        return now === null || isNaN(now) ? new Date().getTime() / 1000 | 0 : now | 0;
+    else if (!isNaN(parse = Date.parse(text)))
+        return parse / 1000 | 0;
+    
+    var date = now ? new Date(now * 1000) : new Date();
+    var days = {
+        'sun': 0,
+        'mon': 1,
+        'tue': 2,
+        'wed': 3,
+        'thu': 4,
+        'fri': 5,
+        'sat': 6
+    };
+    var ranges = {
+        'yea': 'FullYear',
+        'mon': 'Month',
+        'day': 'Date',
+        'hou': 'Hours',
+        'min': 'Minutes',
+        'sec': 'Seconds'
+    };
+
+    function lastNext(type, range, modifier) {
+        var day = days[range];
+
+        if (typeof(day) !== 'undefined') {
+            var diff = day - date.getDay();
+
+            if (diff === 0)
+                diff = 7 * modifier;
+            else if (diff > 0 && type === 'last')
+                diff -= 7;
+            else if (diff < 0 && type === 'next')
+                diff += 7;
+
+            date.setDate(date.getDate() + diff);
+        }
+    }
+    function process(val) {
+        var split = val.split(' ');
+        var type = split[0];
+        var range = split[1].substring(0, 3);
+        var typeIsNumber = /\d+/.test(type);
+
+        var ago = split[2] === 'ago';
+        var num = (type === 'last' ? -1 : 1) * (ago ? -1 : 1);
+
+        if (typeIsNumber)
+            num *= parseInt(type, 10);
+
+        if (ranges.hasOwnProperty(range))
+            return date['set' + ranges[range]](date['get' + ranges[range]]() + num);
+        else if (range === 'wee')
+            return date.setDate(date.getDate() + (num * 7));
+
+        if (type === 'next' || type === 'last')
+            lastNext(type, range, num);
+        else if (!typeIsNumber)
+            return false;
+
+        return true;
+    }
+
+    var regex = '([+-]?\\d+\\s' +
+        '(years?|months?|weeks?|days?|hours?|min|minutes?|sec|seconds?' +
+        '|sun\\.?|sunday|mon\\.?|monday|tue\\.?|tuesday|wed\\.?|wednesday' +
+        '|thu\\.?|thursday|fri\\.?|friday|sat\\.?|saturday)|(last|next)\\s' +
+        '(years?|months?|weeks?|days?|hours?|min|minutes?|sec|seconds?' +
+        '|sun\\.?|sunday|mon\\.?|monday|tue\\.?|tuesday|wed\\.?|wednesday' +
+        '|thu\\.?|thursday|fri\\.?|friday|sat\\.?|saturday))(\\sago)?';
+
+    match = text.match(new RegExp(regex, 'gi'));
+    if (!match)
+        return false;
+
+    for (var i = 0, len = match.length; i < len; i++)
+        if (!process(match[i]))
+            return false;
+
+    // ECMAScript 5 only
+    //if (!match.every(process))
+    //    return false;
+
+    return (date.getTime() / 1000);
 }
 
 function substr (str, start, len) {

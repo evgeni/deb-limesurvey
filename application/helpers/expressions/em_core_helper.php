@@ -221,11 +221,13 @@ class ExpressionManager {
 'strrev' => array('strrev', 'strrev', $this->gT('Reverse a string'), 'string strrev(string)', 'http://www.php.net/manual/en/function.strrev.php', 1),
 'strstr' => array('strstr', 'strstr', $this->gT('Find first occurrence of a string'), 'string strstr(haystack, needle)', 'http://www.php.net/manual/en/function.strstr.php', 2),
 'strtolower' => array('strtolower', 'LEMstrtolower', $this->gT('Make a string lowercase'), 'string strtolower(string)', 'http://www.php.net/manual/en/function.strtolower.php', 1),
+'strtotime' => array('strtotime', 'strtotime', $this->gT('Convert a date/time string to unix timestamp'), 'int strtotime(string)', 'http://www.php.net/manual/de/function.strtotime.php', 1),
 'strtoupper' => array('strtoupper', 'LEMstrtoupper', $this->gT('Make a string uppercase'), 'string strtoupper(string)', 'http://www.php.net/manual/en/function.strtoupper.php', 1),
 'substr' => array('substr', 'substr', $this->gT('Return part of a string'), 'string substr(string, start [, length])', 'http://www.php.net/manual/en/function.substr.php', 2,3),
 'sum' => array('array_sum', 'LEMsum', $this->gT('Calculate the sum of values in an array'), 'number sum(arg1, arg2, ... argN)', '', -2),
 'sumifop' => array('exprmgr_sumifop', 'LEMsumifop', $this->gT('Sum the values of answered questions in the list which pass the critiera (arg op value)'), 'number sumifop(op, value, arg1, arg2, ... argN)', '', -3),
 'tan' => array('tan', 'Math.tan', $this->gT('Tangent'), 'number tan(arg)', 'http://www.php.net/manual/en/function.tan.php', 1),
+'convert_value' => array('exprmgr_convert_value', 'LEMconvert_value', $this->gT('Convert a numerical value using a inputTable and outputTable of numerical values'), 'number convert_value(fValue, iStrict, sTranslateFromList, sTranslateToList)', '', 4),
 'time' => array('time', 'time', $this->gT('Return current UNIX timestamp'), 'number time()', 'http://www.php.net/manual/en/function.time.php', 0),
 'trim' => array('trim', 'trim', $this->gT('Strip whitespace (or other characters) from the beginning and end of a string'), 'string trim(string [, charlist])', 'http://www.php.net/manual/en/function.trim.php', 1,2),
 'ucwords' => array('ucwords', 'ucwords', $this->gT('Uppercase the first character of each word in a string'), 'string ucwords(string)', 'http://www.php.net/manual/en/function.ucwords.php', 1),
@@ -2835,6 +2837,47 @@ FGHI~stristr('ABCDEFGHI','fg')
 FGHI~strstr('ABCDEFGHI','FG')
 hi there!~strtolower(c)
 HI THERE!~strtoupper(c)
+3600~strtotime("27 Mar 1976 8:20")-strtotime("1976/03/27 7:20")
+10~(strtotime("13 Apr 2013")-strtotime("2013-04-03"))/60/60/24
+1985-11-05 00:00:00~date("Y-m-d H:i:s",strtotime("05 Nov 1985"))
+HOURS PASSED SINCE 1970~round(strtotime("now")/60/60)
+~""
+1985-11-05 00:00:00~date("Y-m-d H:i:s",strtotime("11/5/85"))
+2010-08-09 00:00:00~date("Y-m-d H:i:s",strtotime("8/9/10"))
+2010-08-09 00:00:00~date("Y-m-d H:i:s",strtotime("8/9/2010"))
+2010-08-09 00:00:00~date("Y-m-d H:i:s",strtotime("2010/8/9"))
+~""
+1985-11-05 00:00:00~date("Y-m-d H:i:s",strtotime("85-11-5"))
+2010-08-09 00:00:00~date("Y-m-d H:i:s",strtotime("10-8-9"))
+2010-08-09 00:00:00~date("Y-m-d H:i:s",strtotime("9-8-2010"))
+2010-08-09 00:00:00~date("Y-m-d H:i:s",strtotime("2010-8-9"))
+~""
+1985-11-05 00:53:20~date("Y-m-d H:i:s",strtotime("85-11-5 0:53:20"))
+2010-08-09 00:53:20~date("Y-m-d H:i:s",strtotime("10-8-9 0:53:20"))
+2010-08-09 11:12:13~date("Y-m-d H:i:s",strtotime("9-8-2010 11:12:13"))
+2010-08-09 11:12:13~date("Y-m-d H:i:s",strtotime("2010-8-9 11:12:13"))
+~""
+Today 11:11:59~date("Y-m-d H:i:s",strtotime("11.11.59"))
+Today 9:08:10~date("Y-m-d H:i:s",strtotime("9.8.10"))
+2010-08-09 00:00:00~date("Y-m-d H:i:s",strtotime("9.8.2010"))
+~""
+1985-11-05 00:53:20~date("Y-m-d H:i:s",strtotime("5.11.85 0:53:20"))
+2010-08-09 11:12:13~date("Y-m-d H:i:s",strtotime("9.8.2010 11:12:13"))
+~""
+1970-01-01 00:00:00~date("Y-m-d H:i:s",strtotime("70-01-01"))
+1999-01-01 00:00:00~date("Y-m-d H:i:s",strtotime("99-01-01"))
+2001-01-01 00:00:00~date("Y-m-d H:i:s",strtotime("01-01-01"))
+1902-01-01 00:00:00~date("Y-m-d H:i:s",strtotime("1902-01-01"))
+~""
+today 2:15:00~date("Y-m-d H:i:s",strtotime("2:15:00"))
+Some dates that are not (correctly) parsed:~"Some dates that are not (correctly) parsed:"
+1969-01-19 00:00:00~date("Y-m-d H:i:s",strtotime("69-01-19"))
+1985-11-05 00:00:00~date("Y-m-d H:i:s",strtotime("85/11/5"))
+1985-11-05 00:00:00~date("Y-m-d H:i:s",strtotime("5-11-85"))
+2010-08-09 00:00:00~date("Y-m-d H:i:s",strtotime("2010.8.9"))
+1985-11-05 00:00:00~date("Y-m-d H:i:s",strtotime("85.11.5"))
+1985-11-05 00:53:20~date("Y-m-d H:i:s",strtotime("85.11.5 0:53:20"))
+2010-08-09 11:12:13~date("Y-m-d H:i:s",strtotime("9.8.10 11:12:13"))
 678~substr('1234567890',5,3)
 15~sum(1,2,3,4,5)
 15~sum(one,two,three,four,five)
@@ -3025,6 +3068,18 @@ NULL~NUMBEROFQUESTIONS/=5
 NULL~NUMBEROFQUESTIONS-=6
 NULL~'Tom'='tired'
 NULL~max()
+NULL~convert_value( 10, 1, '0,5,10,15,20', '0,5,10,15') 
+100~convert_value( 10, 1, '0,5,10,15,20', '0,50,100,150,200')
+NULL~convert_value( 10, 0, '0,5,10,15,20', '0,50,100,150,200')
+100~convert_value( 8, 0, '0,5,10,15,20', '0,50,100,150,200')
+100~convert_value( 12, 0, '0,5,10,15,20', '0,50,100,150,200')
+0~convert_value( 0, 0, '0,5,10,15,20', '0,50,100,150,200')
+0~convert_value( -10000, 0, '0,5,10,15,20', '0,50,100,150,200')
+NULL~convert_value( -10000, 1, '0,5,10,15,20', '0,50,100,150,200')
+200~convert_value( 20, 0, '0,5,10,15,20', '0,50,100,150,200')
+200~convert_value( 20, 1, '0,5,10,15,20', '0,50,100,150,200')
+200~convert_value( 30, 0, '0,5,10,15,20', '0,50,100,150,200')
+NULL~convert_value( 30, 1, '0,5,10,15,20', '0,50,100,150,200')
 EOD;
 
         $atests = explode("\n",$tests);
@@ -3337,6 +3392,52 @@ function exprmgr_sumifop($args)
         }
     }
     return $result;
+}
+
+/**
+ * Find the closest matching numerical input values in a list an replace it by the
+ * corresponding value within another list 
+ * 
+ * @author Johannes Weberhofer, 2013
+ *
+ * @param numeric $fValueToReplace
+ * @param numeric $iStrict - 1 for exact matches only otherwise interpolation the 
+ * 		  closest value should be returned
+ * @param string $sTranslateFromList - comma seperated list of numeric values to translate from
+ * @param string $sTranslateToList - comma seperated list of numeric values to translate to
+ * @return numeric
+ */
+function exprmgr_convert_value($fValueToReplace, $iStrict, $sTranslateFromList, $sTranslateToList) 
+{
+	if ( (is_numeric($fValueToReplace)) && ($iStrict!=null) && ($sTranslateFromList!=null) && ($sTranslateToList!=null) ) 
+	{
+		$aFromValues = explode( ',', $sTranslateFromList);
+		$aToValues = explode( ',', $sTranslateToList);
+		if ( (count($aFromValues) > 0)  && (count($aFromValues) == count($aToValues)) )
+		{
+			$fMinimumDiff = null;
+			$iNearestIndex = 0;
+			for ( $i = 0; $i < count($aFromValues); $i++) {
+				if ( !is_numeric($aFromValues[$i])) {
+					// break processing when non-numeric variables are about to be processed
+					return null;
+				}
+				$fCurrentDiff = abs($aFromValues[$i] - $fValueToReplace);
+				if ($fCurrentDiff === 0) {
+					return $aToValues[$i];
+				} else if ($i === 0) {
+					$fMinimumDiff = $fCurrentDiff;
+				} else if ( $fMinimumDiff > $fCurrentDiff ) {
+					$fMinimumDiff = $fCurrentDiff;
+					$iNearestIndex = $i;
+				}
+			}					
+			if ( $iStrict !== 1 ) {
+				return $aToValues[$iNearestIndex];
+			}
+		}
+	}
+	return null;
 }
 
 /**

@@ -18,7 +18,7 @@
         global $clienttoken;
         $clang = Yii::app()->lang;
 
-        $scid=returnGlobal('scid');
+        $scid=returnGlobal('scid',true);
         if (isset($_POST['loadall']) && $_POST['loadall'] == "reload")
         {
             $query = "SELECT * FROM {{saved_control}} INNER JOIN {$thissurvey['tablename']}
@@ -1281,7 +1281,7 @@
         $_SESSION['survey_'.$surveyid]['templatepath']=getTemplatePath($_SESSION['survey_'.$surveyid]['templatename']).DIRECTORY_SEPARATOR;
         $sTemplatePath=$_SESSION['survey_'.$surveyid]['templatepath'];
 
-        $loadsecurity = returnGlobal('loadsecurity');
+        $loadsecurity = returnGlobal('loadsecurity',true);
 
         // NO TOKEN REQUIRED BUT CAPTCHA ENABLED FOR SURVEY ACCESS
         if ($tokensexist == 0 && isCaptchaEnabled('surveyaccessscreen',$thissurvey['usecaptcha']) && !$preview)
@@ -1319,7 +1319,7 @@
                 {
                     echo "
                     <input type='hidden' name='loadall' value='".htmlspecialchars($_GET['loadall'])."' id='loadall' />
-                    <input type='hidden' name='scid' value='".returnGlobal('scid')."' id='scid' />
+                    <input type='hidden' name='scid' value='".returnGlobal('scid',true)."' id='scid' />
                     <input type='hidden' name='loadname' value='".htmlspecialchars($_GET['loadname'])."' id='loadname' />
                     <input type='hidden' name='loadpass' value='".htmlspecialchars($_GET['loadpass'])."' id='loadpass' />";
                 }
@@ -1380,10 +1380,10 @@
                 echo '<div id="wrapper"><p id="tokenmessage">'.$clang->gT("This is a controlled survey. You need a valid token to participate.")."<br />";
                 echo $clang->gT("If you have been issued a token, please enter it in the box below and click continue.")."</p>
                 <script type='text/javascript'>var focus_element='#token';</script>"
-                .CHtml::form(array("/survey/index/sid/{$surveyid}"), 'post', array('id'=>'tokenform'))."
+                .CHtml::form(array("/survey/index/sid/{$surveyid}"), 'post', array('id'=>'tokenform','autocomplete'=>'off'))."
                 <ul>
                 <li>";?>
-            <label for='token'><?php $clang->eT("Token:");?></label><input class='text <?php echo $kpclass?>' id='token' type='text' name='token' />
+            <label for='token'><?php $clang->eT("Token:");?></label><input class='text <?php echo $kpclass?>' id='token' type='password' name='token' value='' />
             <?php
             echo "<input type='hidden' name='sid' value='".$surveyid."' id='sid' />
             <input type='hidden' name='lang' value='".$templang."' id='lang' />";
@@ -1399,7 +1399,7 @@
             {
                 echo "
                 <input type='hidden' name='loadall' value='".htmlspecialchars($_GET['loadall'])."' id='loadall' />
-                <input type='hidden' name='scid' value='".returnGlobal('scid')."' id='scid' />
+                <input type='hidden' name='scid' value='".returnGlobal('scid',true)."' id='scid' />
                 <input type='hidden' name='loadname' value='".htmlspecialchars($_GET['loadname'])."' id='loadname' />
                 <input type='hidden' name='loadpass' value='".htmlspecialchars($_GET['loadpass'])."' id='loadpass' />";
             }
@@ -1548,12 +1548,12 @@
                         && isset($_GET['loadname']) && isset($_GET['loadpass']))
                         {
                             echo "<input type='hidden' name='loadall' value='".htmlspecialchars($_GET['loadall'])."' id='loadall' />
-                            <input type='hidden' name='scid' value='".returnGlobal('scid')."' id='scid' />
+                            <input type='hidden' name='scid' value='".returnGlobal('scid',true)."' id='scid' />
                             <input type='hidden' name='loadname' value='".htmlspecialchars($_GET['loadname'])."' id='loadname' />
                             <input type='hidden' name='loadpass' value='".htmlspecialchars($_GET['loadpass'])."' id='loadpass' />";
                         }
 
-                        echo '<label for="token">'.$clang->gT("Token")."</label><input class='text' type='text' id='token' name='token'></li>";
+                        echo '<label for="token">'.$clang->gT("Token")."</label><input class='text' type='password' id='token' name='token'></li>";
                 }
                 else
                 {
@@ -1567,7 +1567,7 @@
                     && isset($_GET['loadname']) && isset($_GET['loadpass']))
                     {
                         echo "<input type='hidden' name='loadall' value='".htmlspecialchars($_GET['loadall'])."' id='loadall' />
-                        <input type='hidden' name='scid' value='".returnGlobal('scid')."' id='scid' />
+                        <input type='hidden' name='scid' value='".returnGlobal('scid',true)."' id='scid' />
                         <input type='hidden' name='loadname' value='".htmlspecialchars($_GET['loadname'])."' id='loadname' />
                         <input type='hidden' name='loadpass' value='".htmlspecialchars($_GET['loadpass'])."' id='loadpass' />";
                     }
@@ -1620,7 +1620,7 @@
     }
     if (returnGlobal('lang'))
     {
-        $language_to_set=returnGlobal('lang');
+        $language_to_set=returnGlobal('lang',true);
     } elseif (isset($tklanguage))
     {
         $language_to_set=$tklanguage;
@@ -2359,6 +2359,9 @@ function checkQuota($checkaction,$surveyid)
     $x=0;
 
     $clang = Yii::app()->lang;
+    // Fill this step "can be modified value"
+    // Must be replaced by Yii::app()->request->getPost($fieldname) but EM add hidden $fieldname answers (put deactivated on 130622)
+    $aPostedFields = explode("|",Yii::app()->request->getPost('fieldnames'));
 
     if(count($quota_info) > 0) // Quota's have to exist
     {
@@ -2366,6 +2369,7 @@ function checkQuota($checkaction,$surveyid)
         $querycond = array();
         foreach ($quota_info as $quota)
         {
+            $bQuotaEnforced=($quota['Action']=='1' || ($quota['AutoloadUrl'] && $quota['Url']!=''));// Quota Enforced don't test if quota memebers is in post value (can be modified)
             if (count($quota['members']) > 0) // Quota can't be empty
             {
                 $fields_list = array(); // Keep a list of fields for easy reference
@@ -2397,6 +2401,7 @@ function checkQuota($checkaction,$surveyid)
                     $querycond[] = $select_query;
                 }
                 // Test if the fieldname is in the array of value in the session
+                $matched_fields = false;
                 foreach($quota['members'] as $member)
                 {
                     foreach($member['fieldnames'] as $fieldname)
@@ -2406,26 +2411,22 @@ function checkQuota($checkaction,$surveyid)
                             if (in_array($_SESSION['survey_'.$surveyid][$fieldname],$fields_value_array[$fieldname])){
                                 $quota_info[$x]['members'][$y]['insession'] = "true";
                             }
+                            // Control if $_SESSION['survey_'.$surveyid][$fieldname] is answered (not NULL or !='')
+                            if($bQuotaEnforced)
+                            {
+                                $matched_fields = true;
+                                $global_matched = true;
+                            }
+                            elseif(in_array($fieldname,$aPostedFields))// Can we test Yii::app()->request->getPost($fieldname) ?
+                            {
+                                $matched_fields = true;
+                                $global_matched = true;
+                            }
                         }
                     }
                     $y++;
                 }
                 unset($fields_query_array);unset($fields_value_array);
-
-                // Lets only continue if any of the quota fields is in the posted page
-                $matched_fields = false;
-                if (isset($_POST['fieldnames']))
-                {
-                    $posted_fields = explode("|",$_POST['fieldnames']);
-                    foreach ($fields_list as $checkfield)
-                    {
-                        if (in_array($checkfield,$posted_fields))
-                        {
-                            $matched_fields = true;
-                            $global_matched = true;
-                        }
-                    }
-                }
 
                 // A field was submitted that is part of the quota
                 if ($matched_fields == true)
@@ -2506,12 +2507,12 @@ function checkQuota($checkaction,$surveyid)
             }
             doHeader();
 
-            echo templatereplace(file_get_contents($sTemplatePath."/startpage.pstpl"),array(),$redata,'frontend_helper[2617]');
+            echo templatereplace(file_get_contents($sTemplatePath."/startpage.pstpl"),array(),$redata,'frontend_helper['.__LINE__.']');
             echo "\t<div class='quotamessage'>\n";
             echo "\t".$quota['Message']."<br /><br />\n";
             echo "\t<a href='".$quota['Url']."'>".$quota['UrlDescrip']."</a><br />\n";
             echo "\t</div>\n";
-            echo templatereplace(file_get_contents($sTemplatePath."/endpage.pstpl"),array(),$redata,'frontend_helper[2622]');
+            echo templatereplace(file_get_contents($sTemplatePath."/endpage.pstpl"),array(),$redata,'frontend_helper['.__LINE__.']');
             doFooter();
             killSurveySession($surveyid);
             exit;
@@ -2522,21 +2523,22 @@ function checkQuota($checkaction,$surveyid)
 
                 sendCacheHeaders();
                 doHeader();
-
+                $surveymover = "<input type='hidden' name='move' value='movenext' id='movenext' />\n"
+                              . "<button class='submit' accesskey='p' type='button' onclick=\"javascript:document.limesurvey.move.value = 'moveprev'; $('#limesurvey').submit();\""
+                              . " value='". $clang->gT("Previous")."' name='move2' id='moveprevbtn' >". $clang->gT("Previous")."</button>\n"
+                              . "<input type='hidden' name='thisstep' value='".($_SESSION['survey_'.$surveyid]['step'])."' id='thisstep' />\n"
+                              . "<input type='hidden' name='sid' value='".returnGlobal('sid',true)."' id='sid' />\n"
+                              . "<input type='hidden' name='token' value='".$clienttoken."' id='token' />";
                 $redata = compact(array_keys(get_defined_vars()));
-                echo templatereplace(file_get_contents($sTemplatePath."/startpage.pstpl"),array(),$redata,'frontend_helper[2634]');
+                echo templatereplace(file_get_contents($sTemplatePath."/startpage.pstpl"),array(),$redata,'frontend_helper['.__LINE__.']');
                 echo "\t<div class='quotamessage'>\n";
                 echo "\t".$quota['Message']."<br /><br />\n";
                 echo "\t<a href='".$quota['Url']."'>".$quota['UrlDescrip']."</a><br />\n";
-                echo CHtml::form(array("/survey/index"), 'post', array('id'=>'limesurvey','name'=>'limesurvey'))."
-                <input type='hidden' name='move' value='movenext' id='movenext' />
-                <button class='nav-button nav-button-icon-left ui-corner-all' class='submit' accesskey='p' onclick=\"javascript:document.limesurvey.move.value = 'moveprev'; document.limesurvey.submit();\" id='moveprevbtn'>".$clang->gT("Previous")."</button>
-                <input type='hidden' name='thisstep' value='".($_SESSION['survey_'.$surveyid]['step'])."' id='thisstep' />
-                <input type='hidden' name='sid' value='".returnGlobal('sid')."' id='sid' />
-                <input type='hidden' name='token' value='".$clienttoken."' id='token' />
-                </form>\n";
+                echo CHtml::form(array("/survey/index"), 'post', array('id'=>'limesurvey','name'=>'limesurvey'));
+                echo $surveymover;
+                echo "</form>\n";
                 echo "\t</div>\n";
-                echo templatereplace(file_get_contents($sTemplatePath."/endpage.pstpl"),array(),$redata,'frontend_helper[2644]');
+                echo templatereplace(file_get_contents($sTemplatePath."/endpage.pstpl"),array(),$redata,'frontend_helper['.__LINE__.']');
                 doFooter();
                 exit;
             }
@@ -2663,7 +2665,7 @@ function display_first_page() {
         echo "\n<input type='hidden' name='token' value='$token' id='token' />\n";
     }
     echo "\n<input type='hidden' name='lastgroupname' value='_WELCOME_SCREEN_' id='lastgroupname' />\n"; //This is to ensure consistency with mandatory checks, and new group test
-    $loadsecurity = returnGlobal('loadsecurity');
+    $loadsecurity = returnGlobal('loadsecurity',true);
     if (isset($loadsecurity)) {
         echo "\n<input type='hidden' name='loadsecurity' value='$loadsecurity' id='loadsecurity' />\n";
     }

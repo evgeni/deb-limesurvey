@@ -1,2 +1,4 @@
 #!/bin/sh
+
+su -c 'psql -c "ALTER DATABASE limesurvey OWNER TO limesurvey;"' postgres
 . /usr/share/dbconfig-common/scripts/limesurvey/install/create.sh

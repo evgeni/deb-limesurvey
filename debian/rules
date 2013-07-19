@@ -96,9 +96,6 @@ install: build
 	# remove unneeded ckeditor files
 	rm -rf debian/limesurvey/usr/share/limesurvey/third_party/ckeditor/_samples/
 	rm -rf debian/limesurvey/usr/share/limesurvey/third_party/ckeditor/_source/
-	# install db scripts
-	install -D -m0644 installer/sql/create-pgsql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/pgsql
-	install -D -m0644 installer/sql/create-mysql.sql $(CURDIR)/debian/limesurvey/usr/share/dbconfig-common/data/limesurvey/install/mysql
 	# fix owners
 	chown -R www-data:www-data debian/limesurvey/var/lib/limesurvey
 	chown -R root:www-data debian/limesurvey/usr/share/limesurvey

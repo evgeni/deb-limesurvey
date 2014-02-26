@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='dejavusans-boldoblique.z';
-$originalsize=629396;
+$originalsize=632168;
 // --- EOF ---

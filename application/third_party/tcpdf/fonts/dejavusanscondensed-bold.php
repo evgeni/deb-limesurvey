@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='dejavusanscondensed-bold.z';
-$originalsize=631992;
+$originalsize=653336;
 // --- EOF ---

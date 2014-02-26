@@ -368,7 +368,7 @@ class SurveyRuntimeHelper {
                 //Before doing the "templatereplace()" function, check the $thissurvey['url']
                 //field for limereplace stuff, and do transformations!
                 $thissurvey['surveyls_url'] = passthruReplace($thissurvey['surveyls_url'], $thissurvey);
-                $thissurvey['surveyls_url'] = templatereplace($thissurvey['surveyls_url'], array(), $redata);   // to do INSERTANS substitutions
+                $thissurvey['surveyls_url'] = templatereplace($thissurvey['surveyls_url'], array(), $redata, 'Unspecified', false, NULL, array(), true );   // to do INSERTANS substitutions
                 
                 //END PAGE - COMMIT CHANGES TO DATABASE
                 if ($thissurvey['active'] != "Y") //If survey is not active, don't really commit
@@ -816,8 +816,12 @@ class SurveyRuntimeHelper {
                 else {
                     newval = newval.replace(numRegex,'');
                 }
-                if (LEMradix === ',') {
-                    newval = newval.split(',').join('.');
+                aNewval = newval.split(LEMradix);
+                if(aNewval.length>0){
+                    newval=aNewval[0];
+                }
+                if(aNewval.length>1){
+                    newval=newval+'.'+aNewval[1];
                 }
                 if (newval != '-' && newval != '.' && newval != '-.' && newval != parseFloat(newval)) {
                     newval = '';

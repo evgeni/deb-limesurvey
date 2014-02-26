@@ -81,7 +81,7 @@ else
     var notcontainsTxt="<?php $clang->eT("Does not contain") ?>";
     var greaterthanTxt="<?php $clang->eT("Greater than") ?>";
     var lessthanTxt="<?php $clang->eT("Less than") ?>";
-    var beginswithTxt="<?php $clang->et("Begins with") ?>";
+    var beginswithTxt="<?php $clang->eT("Begins with") ?>";
     var andTxt="<?php $clang->eT("AND") ?>";
     var orTxt="<?php $clang->eT("OR") ?>";
     /* End search form titles */
@@ -170,6 +170,7 @@ else
     var postUrl = "<?php echo Yii::app()->getController()->createUrl("admin/participants/sa/setSession"); ?>";
     var ajaxUrl = "<?php echo Yii::app()->getConfig('adminimageurl') . "/ajax-loader.gif" ?>";
     var redUrl = "<?php echo Yii::app()->getController()->createUrl("admin/participants/sa/displayParticipants"); ?>";
+    var searchconditions = "<?php echo $sSearchCondition; ?>";
     var colNames = '["participant_id","can_edit","<?php $clang->eT("First name") ?>","<?php $clang->eT("Last name") ?>","<?php $clang->eT("Email") ?>","<?php $clang->eT("Blacklisted") ?>","<?php $clang->eT("Surveys") ?>","<?php $clang->eT("Language") ?>","<?php $clang->eT("Owner name") ?>"<?php echo $columnNames; ?>]';
     var colModels = '[{ "name":"participant_id", "index":"participant_id", "width":100, "align":"center", "sorttype":"int", "sortable": true, "editable":false, "hidden":true},';
     colModels += '{ "name":"can_edit", "index":"can_edit", "width":10, "align":"center", "sorttype":"int", "sortable": true, "editable":false, "hidden":true},';

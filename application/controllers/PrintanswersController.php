@@ -129,6 +129,7 @@ class PrintanswersController extends LSYii_Controller {
             $pdf->setFooterFont(Array($aPdfLanguageSettings['pdffont'], '', PDF_FONT_SIZE_DATA));
             $pdf->SetFont($aPdfLanguageSettings['pdffont'], '', $aPdfLanguageSettings['pdffontsize']);
             $pdf->AddPage();
+            $pdf->titleintopdf($clang->gT("Survey name (ID)",'unescaped').": {$surveyname} ({$surveyid})");
         }
         $printoutput .= "\t<div class='printouttitle'><strong>".$clang->gT("Survey name (ID):")."</strong> $surveyname ($surveyid)</div><p>&nbsp;\n";
 
@@ -136,10 +137,15 @@ class PrintanswersController extends LSYii_Controller {
         // Since all data are loaded, and don't need JavaScript, pretend all from Group 1
         LimeExpressionManager::StartProcessingGroup(1,($thissurvey['anonymized']!="N"),$surveyid);
 
-        $aFullResponseTable = getFullResponseTable($surveyid,$id,$language,true);
+        $printanswershonorsconditions = Yii::app()->getConfig('printanswershonorsconditions');
+        $aFullResponseTable = getFullResponseTable($surveyid,$id,$language,$printanswershonorsconditions);
 
         //Get the fieldmap @TODO: do we need to filter out some fields?
-        unset ($aFullResponseTable['id']);
+        if($thissurvey['datestamp']!="Y"){
+            unset ($aFullResponseTable['submitdate']);
+        }else{
+            unset ($aFullResponseTable['id']);
+        }
         unset ($aFullResponseTable['token']);
         unset ($aFullResponseTable['lastpage']);
         unset ($aFullResponseTable['startlanguage']);

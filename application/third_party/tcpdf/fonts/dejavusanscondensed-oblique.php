@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='dejavusanscondensed-oblique.z';
-$originalsize=576004;
+$originalsize=596596;
 // --- EOF ---

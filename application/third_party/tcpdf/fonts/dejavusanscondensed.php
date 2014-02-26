@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='dejavusanscondensed.z';
-$originalsize=643852;
+$originalsize=664972;
 // --- EOF ---

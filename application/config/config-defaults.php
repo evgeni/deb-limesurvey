@@ -60,6 +60,7 @@ $config['timeOutTime']        =   60 * 10;          // Lock them out for 10 minu
 
 // Site Settings
 $config['dropdownthreshold']  =   '25';             // The number of answers to a list type question before it switches from Radio Buttons to List
+$config['printanswershonorsconditions'] = 1;        // If set to 1, only relevant answers to questions can be printed by user. If set to 0, also questions not shown are printed
 
 // Only applicable, of course, if you have chosen 'R' for $dropdowns and/or $lwcdropdowns
 $config['repeatheadings']     =   '25';             // The number of answers to show before repeating the headings in array (flexible) questions. Set to 0 to turn this feature off
@@ -83,9 +84,9 @@ $config['allowunblacklist']     =  'N';             // Allow participant to unbl
 $config['userideditable']     =  'N';               // Allow editing of user IDs
 $config['defaulttemplate']    =  'default';         // This setting specifys the default theme used for the 'public list' of surveys
 
-$config['allowedtemplateuploads'] = 'gif,ico,jpg,png';  // File types allowed to be uploaded in the templates section.
+$config['allowedtemplateuploads'] = 'gif,ico,jpg,png,css,js';  // File types allowed to be uploaded in the templates section.
 
-$config['allowedresourcesuploads'] = '7z,aiff,asf,avi,bmp,csv,doc,fla,flv,gif,gz,gzip,ico,jpeg,jpg,mid,mov,mp3,mp4,mpc,mpeg,mpg,ods,odt,pdf,png,ppt,pxd,qt,ram,rar,rm,rmi,rmvb,rtf,sdc,sitd,swf,sxc,sxw,tar,tgz,tif,tiff,txt,vsd,wav,wma,wmv,xls,xml,zip,pstpl,css,js';   // File types allowed to be uploaded in the resources sections, and with the HTML Editor
+$config['allowedresourcesuploads'] = '7z,aiff,asf,avi,bmp,csv,doc,fla,flv,gif,gz,gzip,ico,jpeg,jpg,mid,mov,mp3,mp4,mpc,mpeg,mpg,ods,odt,pdf,png,ppt,pxd,qt,ram,rar,rm,rmi,rmvb,rtf,sdc,sitd,swf,sxc,sxw,tar,tgz,tif,tiff,txt,vsd,wav,wma,wmv,xls,xml,zip,pstpl,css';   // File types allowed to be uploaded in the resources sections, and with the HTML Editor
 
 $config['memory_limit']        =  '32';   // This sets how much memory LimeSurvey can access in megabytes. 32 mb is the minimum recommended - if you are using PDF functions up to 64 mb may be needed
 

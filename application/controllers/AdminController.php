@@ -92,7 +92,7 @@ class AdminController extends LSYii_Controller
         $output .= '</div>'."\n";
         echo $output;
 
-        $this->_getAdminFooter('http://docs.limesurvey.org', $clang->gT('LimeSurvey online manual'));
+        $this->_getAdminFooter('http://manual.limesurvey.org', $clang->gT('LimeSurvey online manual'));
 
         die;
     }
@@ -419,8 +419,19 @@ class AdminController extends LSYii_Controller
         }
 
         $data['showupdate'] = (Yii::app()->session['USER_RIGHT_SUPERADMIN'] == 1 && getGlobalSetting("updatenotification")!='never' && getGlobalSetting("updateavailable")==1 && Yii::app()->getConfig("updatable") );
-        $data['updateversion'] = getGlobalSetting("updateversion");
-        $data['updatebuild'] = getGlobalSetting("updatebuild");
+        if($data['showupdate'])
+        {
+            $data['aUpdateVersions'] = json_decode(getGlobalSetting("updateversions"),true);
+            $aUpdateTexts=array();
+            if($data['aUpdateVersions'])
+            {
+                foreach ($data['aUpdateVersions'] as $aVersion)
+                {
+                   $aUpdateTexts[]=$aVersion['versionnumber'].'('.$aVersion['build'].')';
+                }
+            }
+            $data['sUpdateText']=implode(' '.$clang->gT('or').' ',$aUpdateTexts);
+        }
         $data['surveyid'] = $surveyid;
         $data['iconsize'] = Yii::app()->getConfig('adminthemeiconsize');
         $data['sImageURL'] = Yii::app()->getConfig('adminimageurl');

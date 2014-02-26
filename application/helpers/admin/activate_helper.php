@@ -15,7 +15,9 @@
 
 /**
 * fixes the numbering of questions
-* @param <type> $fixnumbering
+* This can happen if question 1 have subquestion code 1 and have question 11 in same survey and group (then same SGQA)
+* @param int $fixnumbering
+* @todo can call this function (no $_GET, but getParam) AND do it with Yii
 */
 function fixNumbering($fixnumbering, $iSurveyID)
 {
@@ -24,11 +26,10 @@ function fixNumbering($fixnumbering, $iSurveyID)
 
     LimeExpressionManager::RevertUpgradeConditionsToRelevance($iSurveyID);
     //Fix a question id - requires renumbering a question
-    $oldqid = $fixnumbering;
-    $query = "SELECT qid FROM {{questions}} ORDER BY qid DESC";
-    $result = dbSelectLimitAssoc($query, 1);
-    foreach ($result->readAll() as $row) {$lastqid=$row['qid'];}
+    $oldqid = (int) $fixnumbering;
+    $lastqid=Questions::model()->getMaxId();
     $newqid=$lastqid+1;
+
     $query = "UPDATE {{questions}} SET qid=$newqid WHERE qid=$oldqid";
     $result = db_execute_assosc($query);
     // Update subquestions
@@ -182,7 +183,8 @@ function checkQuestions($postsid, $iSurveyID, $qtypes)
     $conquery= "SELECT {{conditions}}.qid, cqid, {{questions}}.question, "
     . "{{questions}}.gid "
     . "FROM {{conditions}}, {{questions}}, {{groups}} "
-    . "WHERE {{conditions}}.qid={{questions}}.qid "
+    . "WHERE {{questions}}.sid={$iSurveyID} "
+    . "AND {{conditions}}.qid={{questions}}.qid "
     . "AND {{questions}}.gid={{groups}}.gid ORDER BY {{conditions}}.qid";
     $conresult=Yii::app()->db->createCommand($conquery)->query()->readAll();
     //2: Check each conditions cqid that it occurs later than the cqid
@@ -249,8 +251,6 @@ function checkQuestions($postsid, $iSurveyID, $qtypes)
 
 function activateSurvey($iSurveyID, $simulate = false)
 {
-
-
     $createsurvey='';
     $activateoutput='';
     $createsurveytimings='';
@@ -402,7 +402,7 @@ function activateSurvey($iSurveyID, $simulate = false)
         {
             if ($row['autonumber_start'] > 0)
             {
-                if (Yii::app()->db->driverName=='mssql' || Yii::app()->db->driverName=='sqlsrv') {
+                if (Yii::app()->db->driverName=='mssql' || Yii::app()->db->driverName=='sqlsrv' || Yii::app()->db->driverName=='dblib') {
                     mssql_drop_primary_index('survey_'.$iSurveyID);
                     mssql_drop_constraint('id','survey_'.$iSurveyID);
                     $autonumberquery = "alter table {{survey_{$iSurveyID}}} drop column id ";
@@ -461,7 +461,6 @@ function activateSurvey($iSurveyID, $simulate = false)
     }
     $acquery = "UPDATE {{surveys}} SET active='Y' WHERE sid=".$iSurveyID;
     $acresult = Yii::app()->db->createCommand($acquery)->query();
-
     return $aResult;
 }
 

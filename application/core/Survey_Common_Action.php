@@ -323,7 +323,7 @@ class Survey_Common_Action extends CAction
             Yii::app()->getController()->_loadEndScripts();
 
         if(!isset($aData['display']['footer']) || $aData['display']['footer'] !== false)
-            Yii::app()->getController()->_getAdminFooter('http://docs.limesurvey.org', $clang->gT('LimeSurvey online manual'));
+            Yii::app()->getController()->_getAdminFooter('http://manual.limesurvey.org', $clang->gT('LimeSurvey online manual'));
     }
 
     /**
@@ -729,11 +729,11 @@ class Survey_Common_Action extends CAction
         }
         if ($surveyinfo['emailnotificationto'] != '')
         {
-            $surveysummary2 .= $clang->gT("Basic email notification is sent to:") . " {$surveyinfo['emailnotificationto']}<br />\n";
+            $surveysummary2 .= $clang->gT("Basic email notification is sent to:") .' '. htmlspecialchars($surveyinfo['emailnotificationto'])."<br />\n";
         }
         if ($surveyinfo['emailresponseto'] != '')
         {
-            $surveysummary2 .= $clang->gT("Detailed email notification with response data is sent to:") . " {$surveyinfo['emailresponseto']}<br />\n";
+            $surveysummary2 .= $clang->gT("Detailed email notification with response data is sent to:") .' '. htmlspecialchars($surveyinfo['emailresponseto'])."<br />\n";
         }
 
         $dateformatdetails = getDateFormatData(Yii::app()->session['dateformat']);

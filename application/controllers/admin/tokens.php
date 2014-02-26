@@ -272,6 +272,13 @@ class tokens extends Survey_Common_Action
         {
             self::_newtokentable($iSurveyId);
         }
+
+	/* build JS variable to hide buttons forbidden for the current user */
+	$aData['showDelButton'] = hasSurveyPermission($iSurveyId, 'tokens', 'delete')?'true':'false';
+	$aData['showInviteButton'] = hasSurveyPermission($iSurveyId, 'tokens', 'update')?'true':'false';
+	$aData['showBounceButton'] = hasSurveyPermission($iSurveyId, 'tokens', 'update')?'true':'false';
+	$aData['showRemindButton'] = hasSurveyPermission($iSurveyId, 'tokens', 'update')?'true':'false';
+
         // Javascript
         $this->getController()->_js_admin_includes(Yii::app()->getConfig('adminscripts') . "tokens.js");
         $this->getController()->_js_admin_includes(Yii::app()->getConfig('generalscripts') . "jquery/jquery.multiselect.min.js");
@@ -313,37 +320,13 @@ class tokens extends Survey_Common_Action
         {
             $end = 0;
         }
+        $order = Yii::app()->request->getPost('order','tid');
+        $order = preg_replace('/[^_ a-z0-9-]/i', '', $order);
 
-        $sBaseLanguage = Survey::model()->findByPk($iSurveyId)->language;
         $aData['next'] = $next;
         $aData['last'] = $last;
         $aData['end'] = $end;
-        $limit = Yii::app()->request->getPost('limit');
-        $start = Yii::app()->request->getPost('start');
         $searchstring = Yii::app()->request->getPost('searchstring');
-        $order = Yii::app()->request->getPost('order');
-        $order = preg_replace('/[^_ a-z0-9-]/i', '', $order);
-        if ($order == '')
-        {
-            $order = 'tid';
-        }
-
-        $iquery = '';
-        if (!empty($searchstring))
-        {
-            $idata = array("firstname", "lastname", "email", "emailstatus", "token");
-            $iquery = array();
-            foreach ($idata as $k)
-                $iquery[] = $k . ' LIKE "' . $searchstring . '%"';
-            $iquery = '(' . implode(' OR ', $iquery) . ')';
-        }
-
-        $tokens = Tokens_dynamic::model($iSurveyId)->findAll(array('condition' => $iquery, 'limit' => $limit, 'offset' => $start, 'order' => $order));
-        $aData['bresult'] = array();
-        foreach ($tokens as $token)
-        {
-            $aData['bresult'][] = $token->attributes;
-        }
 
         $aData['thissurvey'] = getSurveyInfo($iSurveyId);
         $aData['searchstring'] = $searchstring;
@@ -490,7 +473,7 @@ class tokens extends Survey_Common_Action
             if(hasSurveyPermission($iSurveyId, 'tokens', 'update'))
                 $action .= viewHelper::getImageLink('edit_16.png', null, $clang->gT("Edit token entry"), null, 'imagelink token_edit');
             if(!empty($token['participant_id']) && $token['participant_id'] != "" && hasGlobalPermission('USER_RIGHT_PARTICIPANT_PANEL')) {
-                $action .= viewHelper::getImageLink('cpdb_16.png', "admin/participants/sa/displayParticipants/searchurl/participant_id||equal||" . $token['participant_id'], $clang->gT("View this person in the central participants database"), '_top');
+                $action .= viewHelper::getImageLink('cpdb_16.png', null, $clang->gT("View this person in the central participants database"), null, 'imagelink cpdb',array('onclick'=>"sendPost('".$this->getController()->createUrl('admin/participants/sa/displayParticipants')."','',['searchcondition'],['participant_id||equal||{$token['participant_id']}']);"));
             } else {
                 $action .= '<div style="width: 20px; height: 16px; float: left;"></div>';
             }
@@ -515,7 +498,12 @@ class tokens extends Survey_Common_Action
         return $this->getTokens_json($iSurveyId, $condition);
     }
 
-    function editToken($iSurveyId) // Used ? 2013-01-29
+    /**
+    * Called by jqGrid if a token is saved after editing
+    * 
+    * @param mixed $iSurveyId The Survey ID
+    */
+    function editToken($iSurveyId) 
     {
         $clang = $this->getController()->lang;
         if (!hasSurveyPermission($iSurveyId, 'tokens', 'update') && !hasSurveyPermission($iSurveyId, 'tokens', 'create'))
@@ -2315,6 +2303,7 @@ class tokens extends Survey_Common_Action
         if (Yii::app()->request->getQuery('createtable') == "Y")
         {
             createTokenTable($iSurveyId);
+            LimeExpressionManager::SetDirtyFlag();  // LimeExpressionManager needs to know about the new token table
             $this->_renderWrappedTemplate('token', array('message' =>array(
             'title' => $clang->gT("Token control"),
             'message' => $clang->gT("A token table has been created for this survey.") . " (\"" . Yii::app()->db->tablePrefix . "tokens_$iSurveyId\")<br /><br />\n"

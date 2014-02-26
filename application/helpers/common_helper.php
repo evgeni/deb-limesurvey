@@ -384,7 +384,7 @@ function getSurveyList($returnarray=false, $surveyid=false)
             }
         } // End Foreach
     }
-    
+
     //Only show each activesurvey group if there are some
     if ($activesurveys!='')
     {
@@ -682,18 +682,14 @@ function getGidNext($surveyid, $gid)
     if (!$surveyid) {$surveyid=returnGlobal('sid');}
     $s_lang = Survey::model()->findByPk($surveyid)->language;
 
-    //$gquery = "SELECT gid FROM ".db_table_name('groups')." WHERE sid=$surveyid AND language='{$s_lang}' ORDER BY group_order";
-
     $qresult = Groups::model()->findAllByAttributes(array('sid' => $surveyid, 'language' => $s_lang), array('order'=>'group_order'));
 
     $GidNext="";
     $i = 0;
-    $iNext = 1;
-
+    $iNext = 0;
     foreach ($qresult as $qrow)
     {
         $qrow = $qrow->attributes;
-
         if ($gid == $qrow['gid']) {$iNext = $i + 1;}
         $i += 1;
     }
@@ -716,19 +712,17 @@ function getQidNext($surveyid, $gid, $qid)
 {
     $clang = Yii::app()->lang;
     $s_lang = Survey::model()->findByPk($surveyid)->language;
+
     $qrows = Questions::model()->findAllByAttributes(array('gid' => $gid, 'sid' => $surveyid, 'language' => $s_lang, 'parent_qid' => 0), array('order'=>'question_order'));
-
-
     $i = 0;
-    $iNext = 1;
-    if (count($qrows) > 0)
+    $iNext = 0;
+
+    foreach ($qrows as $qrow)
     {
-        foreach ($qrows as $qrow)
-        {
-            if ($qid == $qrow->qid) {$iNext = $i + 1;}
-            $i += 1;
-        }
+        if ($qid == $qrow->qid && $qid) {$iNext = $i + 1;}
+        $i += 1;
     }
+
     if ($iNext < count($qrows)) {$QidNext = $qrows[$iNext]->qid;}
     else {$QidNext = "";}
     return $QidNext;
@@ -752,8 +746,8 @@ function convertGETtoPOST($url)
         $arrayParam[] = "'".$paramname."'";
         $arrayVal[] = substr($value, 0, 9) != "document." ? "'".$value."'" : $value;
     }
-    //	$Paramlist = "[" . implode(",",$arrayParam) . "]";
-    //	$Valuelist = "[" . implode(",",$arrayVal) . "]";
+    //    $Paramlist = "[" . implode(",",$arrayParam) . "]";
+    //    $Valuelist = "[" . implode(",",$arrayVal) . "]";
     $Paramlist = "new Array(" . implode(",",$arrayParam) . ")";
     $Valuelist = "new Array(" . implode(",",$arrayVal) . ")";
     $callscript = "sendPost('$calledscript','',$Paramlist,$Valuelist);";
@@ -1298,7 +1292,7 @@ function getUserList($outputformat='fullinfoarray')
         if (isset($myuid))
         {
             $sDatabaseType = Yii::app()->db->getDriverName();
-            if ($sDatabaseType=='mssql' || $sDatabaseType=="sqlsrv")
+            if ($sDatabaseType=='mssql' || $sDatabaseType=="sqlsrv" || $sDatabaseType=="dblib")
             {
                 $sSelectFields = 'users_name,uid,email,full_name,parent_id,create_survey,participant_panel,configurator,create_user,delete_user,superadmin,manage_template,manage_label,CAST(password as varchar) as password';
             }
@@ -1319,13 +1313,13 @@ function getUserList($outputformat='fullinfoarray')
             SELECT {$sSelectFields} from {{users}} v where v.parent_id={$myuid}
             UNION
             SELECT {$sSelectFields} from {{users}} v where uid={$myuid}";
-            
+
         }
         else
         {
             return array(); // Or die maybe
         }
-                                                        
+
     }
     else
     {
@@ -1436,10 +1430,10 @@ function getSurveyInfo($surveyid, $languagecode='')
             if (!isset($thissurvey['adminname'])) {$thissurvey['adminname']=Yii::app()->getConfig('siteadminemail');}
             if (!isset($thissurvey['adminemail'])) {$thissurvey['adminemail']=Yii::app()->getConfig('siteadminname');}
             if (!isset($thissurvey['urldescrip']) || $thissurvey['urldescrip'] == '' ) {$thissurvey['urldescrip']=$thissurvey['surveyls_url'];}
-        
+
             $staticSurveyInfo[$surveyid][$languagecode]=$thissurvey;
         }
-        
+
     }
 
     return $thissurvey;
@@ -1452,8 +1446,8 @@ function getSurveyInfo($surveyid, $languagecode='')
 * @param string $mode Escape mode for the translation function
 * @return array
 */
-function templateDefaultTexts($oLanguage, $mode='html'){
-    return array(
+function templateDefaultTexts($oLanguage, $mode='html', $sNewlines='text'){
+    $aDefaultTexts=array(
     'admin_detailed_notification_subject'=>$oLanguage->gT("Response submission for survey {SURVEYNAME} with results",$mode),
     'admin_detailed_notification'=>$oLanguage->gT("Hello,\n\nA new response was submitted for your survey '{SURVEYNAME}'.\n\nClick the following link to reload the survey:\n{RELOADURL}\n\nClick the following link to see the individual response:\n{VIEWRESPONSEURL}\n\nClick the following link to edit the individual response:\n{EDITRESPONSEURL}\n\nView statistics by clicking here:\n{STATISTICSURL}\n\n\nThe following answers were given by the participant:\n{ANSWERTABLE}",$mode),
     'admin_detailed_notification_css'=>'<style type="text/css">
@@ -1503,6 +1497,11 @@ function templateDefaultTexts($oLanguage, $mode='html'){
     'registration_subject'=>$oLanguage->gT("Survey registration confirmation",$mode),
     'registration'=>$oLanguage->gT("Dear {FIRSTNAME},\n\nYou, or someone using your email address, have registered to participate in an online survey titled {SURVEYNAME}.\n\nTo complete this survey, click on the following URL:\n\n{SURVEYURL}\n\nIf you have any questions about this survey, or if you did not register to participate and believe this email is in error, please contact {ADMINNAME} at {ADMINEMAIL}.",$mode)
     );
+    if ($sNewlines=='html')
+    {
+        $aDefaultTexts=array_map('nl2br',$aDefaultTexts);
+    }
+    return $aDefaultTexts;
 }
 
 /**
@@ -1602,15 +1601,16 @@ function fixMovedQuestionConditions($qid,$oldgid,$newgid) //Function rewrites th
 function returnGlobal($stringname,$bRestrictToString=false)
 {
     $urlParam=Yii::app()->request->getParam($stringname); 
-    if(!$urlParam && $aCookies=Yii::app()->request->getCookies() && $stringname!='sid')
+    if(!isset($urlParam) && $aCookies=Yii::app()->request->getCookies() && $stringname!='sid')
     {
         if(isset($aCookies[$stringname]))
         {
             $urlParam = $aCookies[$stringname];
         } 
     }
-    $bUrlParamIsArray=is_array($urlParam);
-    if ($urlParam && (!$bUrlParamIsArray || !$bRestrictToString))
+
+    $bUrlParamIsArray=is_array($urlParam);// Needed to array map or if $bRestrictToString
+    if (isset($urlParam) && $stringname!='' && (!$bUrlParamIsArray || !$bRestrictToString))
     {
         if ($stringname == 'sid' || $stringname == "gid" || $stringname == "oldqid" ||
         $stringname == "qid" || $stringname == "tid" ||
@@ -1754,6 +1754,10 @@ function getExtendedAnswer($iSurveyID, $sFieldCode, $sValue, $oLanguage)
             $fields = $fieldmap[$sFieldCode];
         else
             return false;
+
+        // If it is a comment field there is nothing to convert here
+        if ($fields['aid']=='comment') return $sValue; 
+            
         //Find out the question type
         $this_type = $fields['type'];
         switch($this_type)
@@ -1971,7 +1975,7 @@ function validateEmailAddress($email){
     $dot_atom_text_domain    = "(?:$atext_domain+(?:\\x2e$atext_domain+)*)";
 
 
-    $dot_atom    	   = "(?:$cfws?$dot_atom_text$cfws?)";
+    $dot_atom           = "(?:$cfws?$dot_atom_text$cfws?)";
     $dot_atom_domain   = "(?:$cfws?$dot_atom_text_domain$cfws?)";
 
 
@@ -2210,7 +2214,7 @@ function validateTemplateDir($sTemplateName)
                 case ";":  //ARRAY (Multi Flex) (Text)
                 case ":":  //ARRAY (Multi Flex) (Numbers)
                     $result = Questions::model()->getQuestionsForStatistics('title, question', "parent_qid=$flt[qid] AND language = '{$sLanguage}' AND scale_id = 0", 'question_order');
-                   
+
                     foreach($result as $row)
                     {
                         $fresult = Questions::model()->getQuestionsForStatistics('title, question', "parent_qid=$flt[qid] AND language = '{$sLanguage}' AND scale_id = 1", 'question_order');
@@ -2893,7 +2897,7 @@ function createTimingsFieldMap($surveyid, $style='full', $force_refresh=false, $
     $sLanguage = sanitize_languagecode($sQuestionLanguage);
     $surveyid = sanitize_int($surveyid);
     $clang = new Limesurvey_lang($sLanguage);
-    
+
     //checks to see if fieldmap has already been built for this page.
     if (isset($timingsFieldMap[$surveyid][$style][$clang->langcode]) && $force_refresh==false) {
         return $timingsFieldMap[$surveyid][$style][$clang->langcode];
@@ -3139,6 +3143,8 @@ function questionAttributes($returnByName=false)
     // help - a short explanation
 
     // If you insert a new attribute please do it in correct alphabetical order!
+    // Please also list the new attribute in the function &TSVSurveyExport($sid) in em_manager_helper.php,
+    // so your new attribute will not be "forgotten" when the survey is exported to Excel/CSV-format!
 
     $qattributes["alphasort"]=array(
     "types"=>"!LOWZ",
@@ -3678,34 +3684,34 @@ function questionAttributes($returnByName=false)
     "caption"=>$clang->gT('Numbers only')
     );
 
-    $qattributes['show_totals'] =	array(
-    'types' =>	';',
-    'category' =>	$clang->gT('Other'),
-    'sortorder' =>	151,
-    'inputtype'	=> 'singleselect',
-    'options' =>	array(
-    'X' =>	$clang->gT('Off'),
-    'R' =>	$clang->gT('Rows'),
-    'C' =>	$clang->gT('Columns'),
-    'B' =>	$clang->gT('Both rows and columns')
+    $qattributes['show_totals'] =    array(
+    'types' =>    ';',
+    'category' =>    $clang->gT('Other'),
+    'sortorder' =>    151,
+    'inputtype'    => 'singleselect',
+    'options' =>    array(
+    'X' =>    $clang->gT('Off'),
+    'R' =>    $clang->gT('Rows'),
+    'C' =>    $clang->gT('Columns'),
+    'B' =>    $clang->gT('Both rows and columns')
     ),
-    'default' =>	'X',
-    'help' =>	$clang->gT('Show totals for either rows, columns or both rows and columns'),
-    'caption' =>	$clang->gT('Show totals for')
+    'default' =>    'X',
+    'help' =>    $clang->gT('Show totals for either rows, columns or both rows and columns'),
+    'caption' =>    $clang->gT('Show totals for')
     );
 
-    $qattributes['show_grand_total'] =	array(
-    'types' =>	';',
-    'category' =>	$clang->gT('Other'),
-    'sortorder' =>	152,
-    'inputtype' =>	'singleselect',
-    'options' =>	array(
-    0 =>	$clang->gT('No'),
-    1 =>	$clang->gT('Yes')
+    $qattributes['show_grand_total'] =    array(
+    'types' =>    ';',
+    'category' =>    $clang->gT('Other'),
+    'sortorder' =>    152,
+    'inputtype' =>    'singleselect',
+    'options' =>    array(
+    0 =>    $clang->gT('No'),
+    1 =>    $clang->gT('Yes')
     ),
-    'default' =>	0,
-    'help' =>	$clang->gT('Show grand total for either columns or rows'),
-    'caption' =>	$clang->gT('Show grand total')
+    'default' =>    0,
+    'help' =>    $clang->gT('Show grand total for either columns or rows'),
+    'caption' =>    $clang->gT('Show grand total')
     );
 
     $qattributes["input_boxes"]=array(
@@ -3778,8 +3784,8 @@ function questionAttributes($returnByName=false)
     'i18n'=>true,
     'default'=>"",
     "help"=>$clang->gT('In the printable version replace the relevance equation with this explanation text.'),
-    "caption"=>$clang->gT("Relevance help for printable survey"));    
-    
+    "caption"=>$clang->gT("Relevance help for printable survey"));
+
     $qattributes["public_statistics"]=array(
     "types"=>"15ABCEFGHKLMNOPRWYZ!:*",
     'category'=>$clang->gT('Statistics'),
@@ -3801,8 +3807,8 @@ function questionAttributes($returnByName=false)
     //,2=>$clang->gT('Randomize once on survey start')  //Mdekker: commented out as code to handle this was removed in refactoring
     ),
     'default'=>0,
-    "help"=>$clang->gT('Present answers in random order'),
-    "caption"=>$clang->gT('Random answer order'));
+    "help"=>$clang->gT('Present subquestions/answer options in random order'),
+    "caption"=>$clang->gT('Random order'));
 
     /*
     $qattributes['relevance']=array(
@@ -4415,7 +4421,7 @@ function SendEmailMessage($body, $subject, $to, $from, $sitename, $ishtml=false,
         $subject=mb_convert_encoding($subject,$emailcharset,'utf-8');
         $sitename=mb_convert_encoding($sitename,$emailcharset,'utf-8');
     }
-    
+
     if (!is_array($to)){
         $to=array($to);
     }
@@ -4527,7 +4533,7 @@ function SendEmailMessage($body, $subject, $to, $from, $sitename, $ishtml=false,
         }
     }
     $mail->AddCustomHeader("X-Surveymailer: $sitename Emailer (LimeSurvey.sourceforge.net)");
-    if (get_magic_quotes_gpc() != "0")	{$body = stripcslashes($body);}
+    if (get_magic_quotes_gpc() != "0")    {$body = stripcslashes($body);}
     if ($ishtml) {
         $mail->IsHTML(true);
         $mail->Body = $body;
@@ -4729,7 +4735,7 @@ function getArrayFiltersForQuestion($qid)
                 foreach ($qresult->readAll() as $code)
                 {
                     if (Yii::app()->session[$fields[1].$code['title']] == "Y"
-                    || Yii::app()->session[$fields[1]] == $code['title'])			 array_push($selected,$code['title']);
+                    || Yii::app()->session[$fields[1]] == $code['title'])             array_push($selected,$code['title']);
                 }
 
                 //Now we also need to find out if (a) the question had "other" enabled, and (b) if that was selected
@@ -4779,7 +4785,7 @@ function getArrayFilterExcludesForQuestion($qid)
     static $cache = array();
 
     // TODO: Check list_filter values to make sure questions are previous?
-    //	$surveyid = Yii::app()->getConfig('sid');
+    //    $surveyid = Yii::app()->getConfig('sid');
     $surveyid=returnGlobal('sid');
     $qid=sanitize_int($qid);
 
@@ -5407,17 +5413,14 @@ function GetAttributeFieldNames($iSurveyID)
 /**
 * Returns the full list of attribute token fields including the properties for each field
 * Use this instead of plain Survey::model()->findByPk($iSurveyID)->tokenAttributes calls because Survey::model()->findByPk($iSurveyID)->tokenAttributes may contain old descriptions where the fields does not physically exist
-* 
+*
 * @param integer $iSurveyID The Survey ID
 */
 function GetParticipantAttributes($iSurveyID)
 {
     if (!tableExists("{{tokens_{$iSurveyID}}}") || !$table = Yii::app()->db->schema->getTable('{{tokens_'.$iSurveyID.'}}'))
         return Array();
-    $aFields= array_filter(array_keys($table->columns), 'filterForAttributes');
-    $aTokenAttributes=Survey::model()->findByPk($iSurveyID)->tokenAttributes;
-    if (count($aFields)==0) return  array();
-    return array_intersect_key($aTokenAttributes,array_flip($aFields));
+    return getTokenFieldsAndNames($iSurveyID,true);
 }
 
 
@@ -5457,50 +5460,50 @@ function getTokenFieldsAndNames($surveyid, $bOnlyAttributes = false)
             'description'=>$clang->gT('Last name'),
             'mandatory'=>'N',
             'showregister'=>'Y'
-        ),                                                
+        ),
         'email'=>array(
             'description'=>$clang->gT('Email address'),
             'mandatory'=>'N',
             'showregister'=>'Y'
-        ),                                                
+        ),
         'token'=>array(
             'description'=>$clang->gT('Token'),
             'mandatory'=>'N',
             'showregister'=>'Y'
-        ),                                                
+        ),
         'language'=>array(
             'description'=>$clang->gT('Language code'),
             'mandatory'=>'N',
             'showregister'=>'Y'
-        ),                                                
+        ),
         'sent'=>array(
             'description'=>$clang->gT('Invitation sent date'),
             'mandatory'=>'N',
             'showregister'=>'Y'
-        ),                                                
+        ),
         'remindersent'=>array(
             'description'=>$clang->gT('Last reminder sent date'),
             'mandatory'=>'N',
             'showregister'=>'Y'
-        ),                                                
+        ),
         'remindercount'=>array(
             'description'=>$clang->gT('Total numbers of sent reminders'),
             'mandatory'=>'N',
             'showregister'=>'Y'
-        ),                                                
+        ),
         'usesleft'=>array(
             'description'=>$clang->gT('Uses left'),
             'mandatory'=>'N',
             'showregister'=>'Y'
-        ),                                                
+        ),
     );
 
-    $aExtraTokenFields=getAttributeFieldNames($surveyid);  
+    $aExtraTokenFields=getAttributeFieldNames($surveyid);
     $aSavedExtraTokenFields = Survey::model()->findByPk($surveyid)->tokenAttributes;
 
     // Drop all fields that are in the saved field description but not in the table definition
     $aSavedExtraTokenFields=array_intersect_key($aSavedExtraTokenFields,array_flip($aExtraTokenFields));
-    
+
     // Now add all fields that are in the table but not in the field description
     foreach ($aExtraTokenFields as $sField)
     {
@@ -5659,7 +5662,7 @@ function getUpdateInfo()
 
     $http->timeout=0;
     $http->data_timeout=0;
-    $http->user_agent="Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)";
+    $http->user_agent="LimeSurvey ".Yii::app()->getConfig("versionnumber")." build ".Yii::app()->getConfig("buildnumber");
     $http->GetRequestArguments("http://update.limesurvey.org?build=".Yii::app()->getConfig("buildnumber").'&id='.md5(getGlobalSetting('SessionName')).'&crosscheck=true',$arguments);
 
     $updateinfo=false;
@@ -5698,53 +5701,61 @@ function getUpdateInfo()
 */
 function updateCheck()
 {
-    $updateinfo=getUpdateInfo();
-    if (count($updateinfo) && trim(Yii::app()->getConfig('buildnumber'))!='')
+    $aUpdateVersions=getUpdateInfo();
+    $clang = Yii::app()->lang;
+
+    if (isset($aUpdateVersions['errorcode'])) 
     {
-        setGlobalSetting('updateversions',json_encode($updateinfo));
+        Yii::app()->session['flashmessage'] = sprintf($clang->gT("Error when checking for new version: %s"),$aUpdateVersions['errorcode']).'<br>'.$aUpdateVersions['errorhtml'];
+        $aUpdateVersions=array(); 
+    }
+    if (count($aUpdateVersions) && trim(Yii::app()->getConfig('buildnumber'))!='')
+    {
         $sUpdateNotificationType = getGlobalSetting('updatenotification');
         switch ($sUpdateNotificationType)
         {
             case 'stable':
                 // Only show update if in stable (master) branch
-                if (isset($updateinfo['master'])) {
-                    $updateinfo=$updateinfo['master'];
-                } else {
-                    unset ($updateinfo);
-                }                    
+                if (isset($aUpdateVersions['master'])) {
+                    $aUpdateVersion=$aUpdateVersions['master'];
+                    $aUpdateVersions=array_intersect_key($aUpdateVersions,array('master'=>'1'));
+                }
                 break;
 
             case 'both':
                 // Show first available update
-                $updateinfo=reset($updateinfo);    
+                $aUpdateVersion=reset($aUpdateVersions);    
                 break;
                 
             default:
                 // Never show a notification
-                unset($updateinfo);
+                $aUpdateVersions=array();
                 break;
         }
-    } else {
-        unset($updateinfo);
     }
-    if (isset($updateinfo)) {
+    
+    setGlobalSetting('updateversions',json_encode($aUpdateVersions));
+    
+    
+    if (isset($aUpdateVersion)) {
         setGlobalSetting('updateavailable',1);
-        setGlobalSetting('updatebuild',$updateinfo['build']);
-        setGlobalSetting('updateversion',$updateinfo['versionnumber']);
+        setGlobalSetting('updatebuild',$aUpdateVersion['build']);
+        setGlobalSetting('updateversion',$aUpdateVersion['versionnumber']);
     } else {
         setGlobalSetting('updateavailable',0);    
-        $updateinfo = array();
+        $aUpdateVersions = array();
     }
+    
     setGlobalSetting('updatelastcheck',date('Y-m-d H:i:s'));
-    return $updateinfo;
+    return $aUpdateVersions;
 }
 
 /**
 * Return the goodchars to be used when filtering input for numbers.
 *
-* @param $lang 	string	language used, for localisation
-* @param $integer	bool	use only integer
-* @param $negative	bool	allow negative values
+* @param $lang     string    language used, for localisation
+* @param $integer    bool    use only integer
+* @param $negative    bool    allow negative values
 */
 function getNumericalFormat($lang = 'en', $integer = false, $negative = true) {
     $goodchars = "0123456789";
@@ -5757,12 +5768,12 @@ function getNumericalFormat($lang = 'en', $integer = false, $negative = true) {
 /**
 * Return array with token attribute.
 *
-* @param $surveyid 	int	the surveyid
-* @param $token	string	token code
+* @param $surveyid     int    the surveyid
+* @param $token    string    token code
 *
 * @return Array of token data
 */
-function getTokenData($surveyid, $token) 
+function getTokenData($surveyid, $token)
 {
     $thistoken = Tokens_dynamic::model($surveyid)->find('token = :token',array(':token' => $token));
     $thistokenarray=array(); // so has default value
@@ -5919,7 +5930,7 @@ function SSLRedirect($enforceSSLMode)
 {
     $url = 'http'.$enforceSSLMode.'://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
     if (!headers_sent())
-    {	// If headers not sent yet... then do php redirect
+    {    // If headers not sent yet... then do php redirect
         //ob_clean();
         header('Location: '.$url);
         //ob_flush();
@@ -6013,7 +6024,7 @@ function getQuotaCompletedCount($iSurveyId, $quotaid)
 * @param mixed $sLanguageCode
 * @param boolean $bHonorConditions Apply conditions
 */
-function getFullResponseTable($iSurveyID, $iResponseID, $sLanguageCode, $bHonorConditions=false)
+function getFullResponseTable($iSurveyID, $iResponseID, $sLanguageCode, $bHonorConditions=true)
 {
     $aFieldMap = createFieldMap($iSurveyID,'full',false,false,$sLanguageCode);
     $oLanguage = new Limesurvey_lang($sLanguageCode);
@@ -6026,7 +6037,7 @@ function getFullResponseTable($iSurveyID, $iResponseID, $sLanguageCode, $bHonorC
 
     foreach ($aFieldMap as $sKey=>$fname)
     {
-        if (LimeExpressionManager::QuestionIsRelevant($fname['qid']))
+        if (LimeExpressionManager::QuestionIsRelevant($fname['qid']) || $bHonorConditions==false)
         {
             $aRelevantFields[$sKey]=$fname;
         }
@@ -6052,7 +6063,7 @@ function getFullResponseTable($iSurveyID, $iResponseID, $sLanguageCode, $bHonorC
             if ($oldgid !== $fname['gid'])
             {
                 $oldgid = $fname['gid'];
-                if (LimeExpressionManager::GroupIsRelevant($fname['gid'])) {
+                if (LimeExpressionManager::GroupIsRelevant($fname['gid']) || $bHonorConditions==false) {
                     $aResultTable['gid_'.$fname['gid']]=array($fname['group_name']);
                 }
             }
@@ -6139,7 +6150,7 @@ function getQuotaInformation($surveyid,$language,$iQuotaID='all')
     {
         $aAttributes['id'] = $iQuotaID;
     }
-    
+
     $result = Quota::model()->with(array('languagesettings' => array('condition' => "quotals_language='$language'")))->findAllByAttributes($aAttributes);
     $quota_info = array();
     $x=0;
@@ -6797,24 +6808,24 @@ function fixLanguageConsistency($sid, $availlangs='')
 */
 function switchMSSQLIdentityInsert($table,$state)
 {
-    if (in_array(Yii::app()->db->getDriverName(), array('mssql', 'sqlsrv')))
+    if (in_array(Yii::app()->db->getDriverName(), array('mssql', 'sqlsrv', 'dblib')))
     {
         if ($state == true)
         {
             // This needs to be done directly on the PDO object because when using CdbCommand or similar it won't have any effect
-            Yii::app()->db->pdoInstance->exec('SET IDENTITY_INSERT '.Yii::app()->db->tablePrefix.$table.' ON');  
+            Yii::app()->db->pdoInstance->exec('SET IDENTITY_INSERT '.Yii::app()->db->tablePrefix.$table.' ON');
         }
         else
         {
             // This needs to be done directly on the PDO object because when using CdbCommand or similar it won't have any effect
-            Yii::app()->db->pdoInstance->exec('SET IDENTITY_INSERT '.Yii::app()->db->tablePrefix.$table.' OFF'); 
+            Yii::app()->db->pdoInstance->exec('SET IDENTITY_INSERT '.Yii::app()->db->tablePrefix.$table.' OFF');
         }
     }
 }
 
 /**
 * Retrieves the last Insert ID realiable for cross-DB applications
-* 
+*
 * @param string $sTableName Needed for Postgres and MSSQL
 */
 function getLastInsertID($sTableName)
@@ -7327,7 +7338,7 @@ function getLabelSets($languages = null)
     }
 
     $criteria = new CDbCriteria;
-    $criteria->order = "label_name";    
+    $criteria->order = "label_name";
     foreach ($languagesarray as $k => $item)
     {
         $criteria->params[':lang_like1_' . $k] = "% $item %";
@@ -7495,7 +7506,7 @@ function getDBTableUsage($surveyid){
         $hard_limit = 1600;
         $size_limit = 0;
     }
-    elseif ($arrCols['dbtype'] == 'mssql'){
+    elseif ($arrCols['dbtype'] == 'mssql' || $arrCols['dbtype'] == 'dblib'){ 
         $hard_limit = 1024;
         $size_limit = 0;
     }
@@ -7595,7 +7606,7 @@ function getSurveyUserList($bIncludeOwner=true, $bIncludeSuperAdmins=true,$surve
     $sSurveyIDQuery.= 'ORDER BY a.users_name';
     $oSurveyIDResult = Yii::app()->db->createCommand($sSurveyIDQuery)->query();  //Checked
     $aSurveyIDResult = $oSurveyIDResult->readAll();
-    
+
     $surveyselecter = "";
 
     if (Yii::app()->getConfig('usercontrolSameGroupPolicy') == true)
@@ -7756,11 +7767,11 @@ function arraySwapAssoc($key1, $key2, $array) {
 *
 * This public static function will strip tags from a string, split it at its max_length and ellipsize
 *
-* @param	string		string to ellipsize
-* @param	integer		max length of string
-* @param	mixed		int (1|0) or float, .5, .2, etc for position to split
-* @param	string		ellipsis ; Default '...'
-* @return	string		ellipsized string
+* @param    string        string to ellipsize
+* @param    integer        max length of string
+* @param    mixed        int (1|0) or float, .5, .2, etc for position to split
+* @param    string        ellipsis ; Default '...'
+* @return    string        ellipsized string
 */
 function ellipsize($str, $max_length, $position = 1, $ellipsis = '&hellip;')
 {
@@ -7840,9 +7851,9 @@ function getBrowserLanguage()
 
 /**
 * This function add string to css or js header for public surevy
-* @param	string		string to ellipsize
-* @param	string		max length of string
-* @return	array		array of string for js or css to be included
+* @param    string        string to ellipsize
+* @param    string        max length of string
+* @return    array        array of string for js or css to be included
 *
 */
 

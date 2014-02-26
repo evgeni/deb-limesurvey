@@ -871,37 +871,40 @@ function XMLImportGroup($sFullFilepath, $iNewSID)
 
 
     $results['questions']=0;
-    foreach ($xml->questions->rows->row as $row)
+    if (isset($xml->questions))
     {
-        $insertdata=array();
-        foreach ($row as $key=>$value)
+        foreach ($xml->questions->rows->row as $row)
         {
-            $insertdata[(string)$key]=(string)$value;
-        }
-        $iOldSID=$insertdata['sid'];
-        $insertdata['sid']=$iNewSID;
-        if (!isset($aGIDReplacements[$insertdata['gid']]) || trim($insertdata['title'])=='') continue; // Skip questions with invalid group id
-        $insertdata['gid']=$aGIDReplacements[$insertdata['gid']];
-        $oldqid=$insertdata['qid']; unset($insertdata['qid']); // save the old qid
+            $insertdata=array();
+            foreach ($row as $key=>$value)
+            {
+                $insertdata[(string)$key]=(string)$value;
+            }
+            $iOldSID=$insertdata['sid'];
+            $insertdata['sid']=$iNewSID;
+            if (!isset($aGIDReplacements[$insertdata['gid']]) || trim($insertdata['title'])=='') continue; // Skip questions with invalid group id
+            $insertdata['gid']=$aGIDReplacements[$insertdata['gid']];
+            $oldqid=$insertdata['qid']; unset($insertdata['qid']); // save the old qid
 
-        // now translate any links
-        $insertdata['title']=translateLinks('survey', $iOldSID, $iNewSID, $insertdata['title']);
-        $insertdata['question']=translateLinks('survey', $iOldSID, $iNewSID, $insertdata['question']);
-        $insertdata['help']=translateLinks('survey', $iOldSID, $iNewSID, $insertdata['help']);
-        // Insert the new question
-        if (isset($aQIDReplacements[$oldqid]))
-        {
-            $insertdata['qid']=$aQIDReplacements[$oldqid];
-        }
-        if (isset($insertdata['qid'])) switchMSSQLIdentityInsert('questions',true);
-        
-        $result = Yii::app()->db->createCommand()->insert('{{questions}}', $insertdata);
-        if (isset($insertdata['qid'])) switchMSSQLIdentityInsert('questions',false);
-        if (!isset($aQIDReplacements[$oldqid]))
-        {
-            $newqid=getLastInsertID('{{questions}}');
-            $aQIDReplacements[$oldqid]=$newqid; // add old and new qid to the mapping array
-            $results['questions']++;
+            // now translate any links
+            $insertdata['title']=translateLinks('survey', $iOldSID, $iNewSID, $insertdata['title']);
+            $insertdata['question']=translateLinks('survey', $iOldSID, $iNewSID, $insertdata['question']);
+            $insertdata['help']=translateLinks('survey', $iOldSID, $iNewSID, $insertdata['help']);
+            // Insert the new question
+            if (isset($aQIDReplacements[$oldqid]))
+            {
+                $insertdata['qid']=$aQIDReplacements[$oldqid];
+            }
+            if (isset($insertdata['qid'])) switchMSSQLIdentityInsert('questions',true);
+            
+            $result = Yii::app()->db->createCommand()->insert('{{questions}}', $insertdata);
+            if (isset($insertdata['qid'])) switchMSSQLIdentityInsert('questions',false);
+            if (!isset($aQIDReplacements[$oldqid]))
+            {
+                $newqid=getLastInsertID('{{questions}}');
+                $aQIDReplacements[$oldqid]=$newqid; // add old and new qid to the mapping array
+                $results['questions']++;
+            }
         }
     }
 
@@ -2720,12 +2723,9 @@ function CSVImportSurvey($sFullFilepath,$iDesiredSurveyId=NULL,$bTranslateLinks=
             unset($labelsetrowdata['lid']);
 
             $lblsets=Labelsets::model();
-            $lsiresult = $lblsets->insertRecords($labelsetrowdata);
-
-            $results['labelsets']++;
             // Get the new insert id for the labels inside this labelset
-            $newlid=Yii::app()->db->createCommand('Select LAST_INSERT_ID()')->query()->read();
-            $newlid=$newlid['LAST_INSERT_ID()'];
+            $newlid = $lblsets->insertRecords($labelsetrowdata);
+            $results['labelsets']++;
 
             if ($labelsarray) {
                 $count=0;
@@ -2844,13 +2844,12 @@ function CSVImportSurvey($sFullFilepath,$iDesiredSurveyId=NULL,$bTranslateLinks=
             if (isset($grouprowdata['gid'])) switchMSSQLIdentityInsert('groups',true);
 
 
-            $gres = Groups::model()->insertRecords($grouprowdata) or safeDie($clang->gT('Error').": Failed to insert group<br />\<br />\n");
+            $sInsertID = Groups::model()->insertRecords($grouprowdata) or safeDie($clang->gT('Error').": Failed to insert group<br />\<br />\n");
 
             if (isset($grouprowdata['gid'])) switchMSSQLIdentityInsert('groups',false);
             if (!isset($grouprowdata['gid']))
             {
-                $aGIDReplacements[$oldgid]=Yii::app()->db->createCommand('Select LAST_INSERT_ID()')->query()->read();
-                $aGIDReplacements[$oldgid]=$aGIDReplacements[$oldgid]['LAST_INSERT_ID()'];
+                $aGIDReplacements[$oldgid]=$sInsertID;
             }
         }
         // Fix sortorder of the groups  - if users removed groups manually from the csv file there would be gaps
@@ -2924,7 +2923,7 @@ function CSVImportSurvey($sFullFilepath,$iDesiredSurveyId=NULL,$bTranslateLinks=
             }
 
 
-            $qres = Questions::model()->insertRecords($questionrowdata) or safeDie ($clang->gT("Error").": Failed to insert question<br />");
+            $sInsertID = Questions::model()->insertRecords($questionrowdata) or safeDie ($clang->gT("Error").": Failed to insert question<br />");
 
             if (isset($questionrowdata['qid'])) {
                 switchMSSQLIdentityInsert('questions',false);
@@ -2932,9 +2931,7 @@ function CSVImportSurvey($sFullFilepath,$iDesiredSurveyId=NULL,$bTranslateLinks=
             }
             else
             {
-                $aQIDReplacements[$oldqid]=Yii::app()->db->createCommand('Select LAST_INSERT_ID()')->query()->read();
-                $aQIDReplacements[$oldqid]=$aQIDReplacements[$oldqid]['LAST_INSERT_ID()'];
-                $saveqid=$aQIDReplacements[$oldqid];
+                $saveqid=$aQIDReplacements[$oldqid]=$sInsertID;
             }
 
             // Now we will fix up old label sets where they are used as answers
@@ -2950,9 +2947,8 @@ function CSVImportSurvey($sFullFilepath,$iDesiredSurveyId=NULL,$bTranslateLinks=
 
                         if ($qtypes[$questionrowdata['type']]['subquestions']<2)
                         {
-                            $qinsert = "insert INTO {{answers}} (qid,code,answer,sortorder,language,assessment_value)
-                            VALUES ({$aQIDReplacements[$oldqid]},'".$labelrow['code']."','".$labelrow['title']."','".$labelrow['sortorder']."','".$labelrow['language']."','".$labelrow['assessment_value']."')";
-                            $qres = Yii::app()->db->createCommand($qinsert)->query() or safeDie ($clang->gT("Error").": Failed to insert answer (lid1) <br />\n$qinsert<br />\n");
+                            $aInsertData=array('qid'=>$aQIDReplacements[$oldqid],'code'=>$labelrow['code'],'answer'=>$labelrow['title'],'sortorder'=>$labelrow['sortorder'],'language'=>$labelrow['language'],'assessment_value'=>$labelrow['assessment_value']);
+                            Answers::model()->insertRecords($aInsertData) or safeDie($clang->gT("Error").": Failed to insert data [4]<br />");
                         }
                         else
                         {
@@ -3070,12 +3066,11 @@ function CSVImportSurvey($sFullFilepath,$iDesiredSurveyId=NULL,$bTranslateLinks=
                 if (isset($questionrowdata['qid'])) switchMSSQLIdentityInsert('questions',true);
                 if ($questionrowdata)
                     XSSFilterArray($questionrowdata);
-                $qres= Questions::model()->insertRecords($questionrowdata) or safeDie("Error: Failed to insert subquestion <br />");
+                $sInsertID= Questions::model()->insertRecords($questionrowdata) or safeDie("Error: Failed to insert subquestion <br />");
 
                 if (!isset($questionrowdata['qid']))
                 {
-                    $aSQIDReplacements[$answerrowdata['code'].$answerrowdata['qid']]=Yii::app()->db->createCommand('Select LAST_INSERT_ID()')->query()->read();
-                    $aSQIDReplacements[$answerrowdata['code'].$answerrowdata['qid']]=$aSQIDReplacements[$answerrowdata['code'].$answerrowdata['qid']]['LAST_INSERT_ID()'];
+                    $aSQIDReplacements[$answerrowdata['code'].$answerrowdata['qid']]=$sInsertID;
                 }
                 else
                 {
@@ -3177,9 +3172,8 @@ function CSVImportSurvey($sFullFilepath,$iDesiredSurveyId=NULL,$bTranslateLinks=
             $oldid = $asrowdata["id"];
             unset($asrowdata["id"]);
             $quotadata[]=$asrowdata; //For use later if needed
-            $result=Quota::model()->insertRecords($asrowdata) or safeDie ("Couldn't insert quota<br />");
-            $aQuotaReplacements[$oldid]=Yii::app()->db->createCommand('Select LAST_INSERT_ID()')->query()->read();
-            $aQuotaReplacements[$oldid]=$aQuotaReplacements[$oldid]['LAST_INSERT_ID()'];
+            $sInsertID=Quota::model()->insertRecords($asrowdata) or safeDie ("Couldn't insert quota<br />");
+            $aQuotaReplacements[$oldid]=$sInsertID;
         }
     }
 
@@ -4385,21 +4379,32 @@ function TSVImportSurvey($sFullFilepath)
                 // insert group
                 $insertdata = array();
                 $insertdata['sid'] = $iNewSID;
-                $gname = ((isset($row['name']) ? $row['name'] : 'G' . $gseq));
+                $gname = ((!empty($row['name']) ? $row['name'] : 'G' . $gseq));
+                $glang = (!empty($row['language']) ? $row['language'] : $baselang);
+                // when a multi-lang tsv-file without information on the group id/number (old style) is imported,
+                // we make up this information by giving a number 0..[numberofgroups-1] per language.
+                // the number and order of groups per language should be the same, so we can also import these files 
+                if ($lastglang!=$glang)    //reset couner on language change
+                {
+                    $iGroupcounter=0;
+                }
+                $lastglang=$glang;
+                //use group id/number from file. if missing, use an increasing number (s.a.)
+                $sGroupseq=(!empty($row['type/scale']) ? $row['type/scale'] : 'G'.$iGroupcounter++);
                 $insertdata['group_name'] = $gname;
                 $insertdata['grelevance'] = (isset($row['relevance']) ? $row['relevance'] : '');
                 $insertdata['description'] = (isset($row['text']) ? $row['text'] : '');
-                $insertdata['language'] = (isset($row['language']) ? $row['language'] : $baselang);
-                // For multi numeric survey : same title
-                if (isset($ginfo[$gname]))
+                $insertdata['language'] = $glang;
+
+                // For multi language survey: same gid/sort order across all languages
+                if (isset($ginfo[$sGroupseq]))
                 {
-                    $gseq = $ginfo[$gname]['group_order'];
-                    $gid = $ginfo[$gname]['gid'];
+                    $gid = $ginfo[$sGroupseq]['gid'];
                     $insertdata['gid'] = $gid;
-                    $insertdata['group_order'] = $gseq;
+                    $insertdata['group_order'] = $ginfo[$sGroupseq]['group_order'];
                 }
                 else
-                {
+                { 
                     $insertdata['group_order'] = $gseq;
                 }
                 $newgid = Groups::model()->insertRecords($insertdata);
@@ -4407,12 +4412,12 @@ function TSVImportSurvey($sFullFilepath)
                     $results['error'][] = $clang->gT("Error")." : ".$clang->gT("Failed to insert group").". ".$clang->gT("Text file row number ").$rownumber." (".$gname.")";
                     break;
                 }
-                if (!isset($ginfo[$gname]))
+                if (!isset($ginfo[$sGroupseq]))
                 {
                     $results['groups']++;
-                    $gid=$newgid; // save this for later
-                    $ginfo[$gname]['gid'] = $gid;
-                    $ginfo[$gname]['group_order'] = $gseq++;
+                    $gid=$newgid;
+                    $ginfo[$sGroupseq]['gid']=$gid;
+                    $ginfo[$sGroupseq]['group_order']=$gseq++;
                 }
                 $qseq=0;    // reset the question_order
                 break;
@@ -4560,7 +4565,7 @@ function TSVImportSurvey($sFullFilepath)
                     $insertdata['mandatory'] = (isset($row['mandatory']) ? $row['mandatory'] : '');
                     $insertdata['scale_id'] = $scale_id;
                     // For multi nueric language, qid is needed, why not gid. name is not unique.
-                    $fullsqname = "G{$gid}Q{$qid}_{$sqname}";
+                    $fullsqname = "G{$gid}Q{$qid}_{$scale_id}_{$sqname}";
                     if (isset($sqinfo[$fullsqname]))
                     {
                         $qseq = $sqinfo[$fullsqname]['question_order'];

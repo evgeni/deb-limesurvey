@@ -35,7 +35,8 @@ class UploaderController extends AdminController {
         $clang = SetSurveyLanguage( $surveyid, $sLanguage);
 		$uploaddir = Yii::app()->getConfig("uploaddir");
 		$tempdir = Yii::app()->getConfig("tempdir");
-
+		$aSurveyInfo=getSurveyInfo($surveyid,$sLanguage);
+		$sTemplateUrl = getTemplateURL($aSurveyInfo['templatedir'])."/";
 		Yii::app()->loadHelper("database");
         $param = $_REQUEST;
 
@@ -110,13 +111,12 @@ class UploaderController extends AdminController {
 		    $filename = $_FILES['uploadfile']['name'];
 		    $size = 0.001 * $_FILES['uploadfile']['size'];
 		    $valid_extensions = strtolower($_POST['valid_extensions']);
-		    $maxfilesize = (int) $_POST['max_filesize'];
 		    $preview = $_POST['preview'];
 		    $fieldname = $_POST['fieldname'];
             $aFieldMap = createFieldMap($surveyid,'short',false,false,$_SESSION['survey_'.$surveyid]['s_lang']);
 		    if (!isset($aFieldMap[$fieldname])) die();
 		    $aAttributes=getQuestionAttributeValues($aFieldMap[$fieldname]['qid'],$aFieldMap[$fieldname]['type']);
-
+		    $maxfilesize = (int) $aAttributes['max_filesize'];
 		    $valid_extensions_array = explode(",", $aAttributes['allowed_filetypes']);
 		    $valid_extensions_array = array_map('trim',$valid_extensions_array);
 
@@ -271,8 +271,9 @@ class UploaderController extends AdminController {
 		    </script>\n";
 		$meta .='<script type="text/javascript" src="'.Yii::app()->getConfig("generalscripts").'/ajaxupload.js"></script>
 		<script type="text/javascript" src="'.Yii::app()->getConfig("generalscripts").'/uploader.js"></script>
-		<link type="text/css" href="'.Yii::app()->getConfig("publicstyleurl").'uploader.css" rel="stylesheet" />';
-
+		<script type="text/javascript" src="'.$sTemplateUrl.'template.js"></script>
+		<link type="text/css" href="'.Yii::app()->getConfig("publicstyleurl").'uploader.css" rel="stylesheet" />
+		<link type="text/css" href="'.$sTemplateUrl.'template.css" rel="stylesheet" />';
 		$header = getHeader($meta);
 
 		echo $header;

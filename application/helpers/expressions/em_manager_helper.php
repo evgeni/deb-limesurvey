@@ -1,7 +1,7 @@
 <?php
     /**
     * LimeSurvey
-    * Copyright (C) 2007-2011 The LimeSurvey Project Team / Carsten Schmitz
+    * Copyright (C) 2007-2013 The LimeSurvey Project Team / Carsten Schmitz
     * All rights reserved.
     * License: GNU/GPL License v2 or later, see LICENSE.php
     * LimeSurvey is free software. This version may have been modified pursuant
@@ -10,13 +10,13 @@
     * other free or open source software licenses.
     * See COPYRIGHT.php for copyright notices and details.
     *
-    *	$Id$
     */
     /**
     * Description of LimeExpressionManager
     * This is a wrapper class around ExpressionManager that implements a Singleton and eases
     * passing of LimeSurvey variable values into ExpressionManager
     *
+    * @author LimeSurvey Team (limesurvey.org)
     * @author Thomas M. White (TMSWhite)
     */
     include_once('em_core_helper.php');
@@ -58,9 +58,17 @@
         private $debugLevel=0;
          /**
         * sPreviewMode used for relevance equation force to 1 in preview mode
+        * Maybe we can set it public
         * @var string
         */
         private $sPreviewMode=false;
+        /**
+         /**
+        * bProcessPost save value to DB
+        * Maybe we can set it public
+        * @var bool
+        */
+        private $bProcessPost=true;
         /**
         * Collection of variable attributes, indexed by SGQA code
         *
@@ -3458,10 +3466,10 @@
             $grel = (isset($_SESSION[$LEM->sessid]['relevanceStatus']['G' . $gseq]) ? $_SESSION[$LEM->sessid]['relevanceStatus']['G' . $gseq] : 1);   // group-level relevance based upon grelevance equation
             return ($grel && $qrel);
         }
-        
+
         /**
          * Returns true if the group is relevant and should be shown
-         * 
+         *
          * @param int $gid
          * @return boolean
          */
@@ -4100,6 +4108,7 @@
                     while (true)
                     {
                         $LEM->currentQset = array();    // reset active list of questions
+                        if (is_null($LEM->currentGroupSeq)) {$LEM->currentGroupSeq=0;} // If moving backwards in preview mode and a question was removed then $LEM->currentGroupSeq is NULL and an endless loop occurs.
                         if (--$LEM->currentGroupSeq < 0)
                         {
                             $message .= $LEM->_UpdateValuesInDatabase($updatedValues,false);
@@ -4440,7 +4449,7 @@
             $updatedValues = $this->updatedValues;
             $message = '';
             $_SESSION[$this->sessid]['datestamp']=dateShift(date("Y-m-d H:i:s"), "Y-m-d H:i:s", $this->surveyOptions['timeadjust']);
-            if ($this->surveyOptions['active'] && !isset($_SESSION[$this->sessid]['srid']))
+            if ($this->surveyOptions['active'] && !isset($_SESSION[$this->sessid]['srid']) && $this->bProcessPost)
             {
                 // Create initial insert row for this record
                 $today = dateShift(date("Y-m-d H:i:s"), "Y-m-d H:i:s", $this->surveyOptions['timeadjust']);
@@ -4471,8 +4480,8 @@
                 $sdata = array_filter($sdata);
                 Survey_dynamic::sid($this->sid);
                 $oSurvey = new Survey_dynamic;
-                
-                $iNewID = $oSurvey->insertRecords($sdata); 
+
+                $iNewID = $oSurvey->insertRecords($sdata);
                 if ($iNewID)    // Checked
                 {
                     $srid = $iNewID;
@@ -4486,13 +4495,13 @@
                 if ($this->surveyOptions['savetimings']) {
                     Survey_timings::sid($this->sid);
                     $oSurveyTimings = new Survey_timings;
-                    
+
                     $tdata = array(
                     'id'=>$srid,
                     'interviewtime'=>0
                     );
                     switchMSSQLIdentityInsert("survey_{$this->sid}_timings", true);
-                    $iNewID = $oSurveyTimings->insertRecords($tdata); 
+                    $iNewID = $oSurveyTimings->insertRecords($tdata);
                     switchMSSQLIdentityInsert("survey_{$this->sid}_timings", false);
                 }
             }
@@ -4569,7 +4578,7 @@
                     $query .= $_SESSION[$this->sessid]['srid'];
 
                     if (!dbExecuteAssoc($query))
-                    {                 
+                    {
                         echo submitfailed('');  // TODO - report SQL error?
 
                         if (($this->debugLevel & LEM_DEBUG_VALIDATION_SUMMARY) == LEM_DEBUG_VALIDATION_SUMMARY) {
@@ -4665,7 +4674,10 @@
         static function JumpTo($seq,$preview=false,$processPOST=true,$force=false,$changeLang=false) {
             $now = microtime(true);
             $LEM =& LimeExpressionManager::singleton();
-
+            if(!$preview)
+                $preview=$LEM->sPreviewMode;
+            if(!$processPOST || $preview)
+                $LEM->bProcessPost=false;
             if ($changeLang)
             {
                 $LEM->setVariableAndTokenMappingsForExpressionManager($LEM->sid,true,$LEM->surveyOptions['anonymized'],$LEM->allOnOnePage);
@@ -6128,6 +6140,8 @@
                     if (!$LEM->allOnOnePage && $LEM->currentGroupSeq != $arg['gseq']) {
                         continue;
                     }
+                    if ($arg['hidden'] && $arg['type']!="*")// No dynamic for hidden attribute (except for equation, child of bug #08315).
+                        continue;
                     $gseqList[$arg['gseq']] = $arg['gseq'];    // so keep them in order
                     // First check if there is any tailoring  and construct the tailoring JavaScript if needed
                     $tailorParts = array();
@@ -6203,10 +6217,12 @@
                     if (($relevance == '' || $relevance == '1' || ($arg['result'] == true && $arg['numJsVars']==0)) && count($tailorParts) == 0 && count($subqParts) == 0 && count($subqValidations) == 0 && count($validationEqns) == 0)
                     {
                         // Only show constitutively true relevances if there is tailoring that should be done.
+                        // After we can assign var with EM and change again relevance : then doing it second time (see bug #08315).
                         $relParts[] = "$('#relevance" . $arg['qid'] . "').val('1');  // always true\n";
                         $GalwaysRelevant[$arg['gseq']] = true;
                         continue;
                     }
+
                     $relevance = ($relevance == '' || ($arg['result'] == true && $arg['numJsVars']==0)) ? '1' : $relevance;
                     $relParts[] = "\nif (" . $relevance . ")\n{\n";
                     ////////////////////////////////////////////////////////////////////////
@@ -6492,14 +6508,22 @@
                         {
                             $dynamicQinG[$arg['gseq']] = array();
                         }
-                        $dynamicQinG[$arg['gseq']][$arg['qid']]=true;
+                        if( !($arg['hidden'] && $arg['type']=="*"))// Equation question type don't update visibility of group if hidden ( child of bug #08315).
+                            $dynamicQinG[$arg['gseq']][$arg['qid']]=true;
                         $relParts[] = "else {\n";
                         $relParts[] = "  $('#question" . $arg['qid'] . "').hide();\n";
                         $relParts[] = "  if ($('#relevance" . $arg['qid'] . "').val()=='1') { relChange" . $arg['qid'] . "=true; }\n";  // only propagate changes if changing from relevant to irrelevant
                         $relParts[] = "  $('#relevance" . $arg['qid'] . "').val('0');\n";
                         $relParts[] = "}\n";
                     }
-
+                    else
+                    {
+                        // Second time : now if relevance is true: Group is allways visible (see bug #08315).
+                        $relParts[] = "$('#relevance" . $arg['qid'] . "').val('1');  // always true\n";
+                        if( !($arg['hidden'] && $arg['type']=="*"))// Equation question type don't update visibility of group if hidden ( child of bug #08315).
+                            $GalwaysRelevant[$arg['gseq']] = true;
+                        // Do if after : else can break jsvarused
+                    }
                     $vars = explode('|',$arg['relevanceVars']);
                     if (is_array($vars))
                     {
@@ -7251,7 +7275,7 @@ EOD;
             ." c.cqid = 0 and c.qid = q.qid";
 
             $databasetype = Yii::app()->db->getDriverName();
-            if ($databasetype=='mssql')
+            if ($databasetype=='mssql' || $databasetype=='dblib')
             {
                 $query .= " order by sid, c.qid, scenario, cqid, cfieldname, value";
             }
@@ -7343,7 +7367,7 @@ EOD;
             }
 
             $databasetype = Yii::app()->db->getDriverName();
-            if ($databasetype=='mssql' || $databasetype=="sqlsrv")
+            if ($databasetype=='mssql' || $databasetype=="sqlsrv" || $databasetype == 'dblib')
             {
                 $query = "select distinct a.qid, a.attribute, CAST(a.value as varchar(max)) as value";
             }
@@ -7457,7 +7481,7 @@ EOD;
                     'grelevance' => (!($this->sPreviewMode=='question' || $this->sPreviewMode=='group')) ? $d['grelevance']:1,
                  );
                 $qinfo[$_order] = $gid[$d['gid']];
-                ++$_order;                    
+                ++$_order;
             }
             if (isset($_SESSION['survey_'.$surveyid]) && isset($_SESSION['survey_'.$surveyid]['grouplist'])) {
                 $_order=0;
@@ -8026,8 +8050,8 @@ EOD;
             // End Message
 
             $LEM =& LimeExpressionManager::singleton();
-            
-            $aSurveyInfo=getSurveyInfo($sid);
+
+            $aSurveyInfo=getSurveyInfo($sid, $_SESSION['LEMlang']);
 
             $allErrors = array();
             $warnings = 0;
@@ -8105,7 +8129,7 @@ EOD;
                 }
             }
 
-            $out .= "<tr><th>#</th><th>".$LEM->gT('Name [ID]')."</th><th>".$LEM->gT('Relevance [Validation] (Default)')."</th><th>".$LEM->gT('Text [Help] (Tip)')."</th></tr>\n";
+            $out .= "<tr><th>#</th><th>".$LEM->gT('Name [ID]')."</th><th>".$LEM->gT('Relevance [Validation] (Default value)')."</th><th>".$LEM->gT('Text [Help] (Tip)')."</th></tr>\n";
 
             $_gseq=-1;
             foreach ($LEM->currentQset as $q) {
@@ -8157,7 +8181,7 @@ EOD;
                     if ($LEM->em->HasErrors()) {
                         ++$errorCount;
                     }
-                    $default = '<br />(' . $LEM->gT('Default:') . '  ' . $_default . ')';
+                    $default = '<br />(' . $LEM->gT('Default:') . '  ' . htmlspecialchars($_default) . ')';
                 }
                 else
                 {
@@ -8570,21 +8594,27 @@ EOD;
             'answer_width',
             'array_filter',
             'array_filter_exclude',
+            'array_filter_style',
             'assessment_value',
             'category_separator',
+            'choice_title',
+            'code_filter',
+            'date_format',
             'display_columns',
             'display_rows',
-            'dropdown_dates_year_min',
             'dropdown_dates',
+            'dropdown_dates_minute_step',
+            'dropdown_dates_month_style',
             'dropdown_dates_year_max',
+            'dropdown_dates_year_min',
             'dropdown_prefix',
             'dropdown_prepostfix',
             'dropdown_separators',
             'dropdown_size',
             'dualscale_headerA',
             'dualscale_headerB',
-            'em_validation_q_tip',
             'em_validation_q',
+            'em_validation_q_tip',
             'em_validation_sq',
             'em_validation_sq_tip',
             'equals_num_value',
@@ -8623,16 +8653,23 @@ EOD;
             'other_numbers_only',
             'other_replace_text',
             'page_break',
+            'parent_order',
             'prefix',
+            'printable_help',
             'public_statistics',
             'random_group',
             'random_order',
+            'rank_title',
+            'repeat_headings',
             'reverse',
+            'samechoiceheight',
+            'samelistheight',
             'scale_export',
             'show_comment',
             'show_grand_total',
             'show_title',
             'show_totals',
+            'showpopups',
             'slider_accuracy',
             'slider_default',
             'slider_layout',
@@ -8642,8 +8679,12 @@ EOD;
             'slider_rating',
             'slider_separator',
             'slider_showminmax',
+            'statistics_graphtype',
+            'statistics_showgraph',
+            'statistics_showmap',
             'suffix',
             'text_input_width',
+            'time_limit',
             'time_limit_action',
             'time_limit_countdown_message',
             'time_limit_disable_next',
@@ -8652,16 +8693,16 @@ EOD;
             'time_limit_message_delay',
             'time_limit_message_style',
             'time_limit_timer_style',
+            'time_limit_warning',
+            'time_limit_warning_2',
             'time_limit_warning_2_display_time',
             'time_limit_warning_2_message',
             'time_limit_warning_2_style',
-            'time_limit_warning_2',
-            'time_limit_warning',
-            'time_limit',
             'time_limit_warning_display_time',
             'time_limit_warning_message',
             'time_limit_warning_style',
             'use_dropdown',
+            'value_range_allows_missing',
             );
 
             $rows = array();
@@ -8758,6 +8799,8 @@ EOD;
 
                         $row = array();
                         $row['class'] = 'G';
+                        //create a group code to allow proper importing of multi-lang survey TSVs
+                        $row['type/scale']='G'.$gseq;
                         $row['name'] = $ginfo['group_name'];
                         $row['relevance'] = $grelevance;
                         $row['text'] = $gtext;
@@ -8946,7 +8989,7 @@ EOD;
                             }
                             $row['type/scale'] = $_scale;
                             $row['name'] = $ansInfo[1];
-                            $row['relevance'] = $valInfo[0];    // TODO - true? - what if it isn't an assessment value?
+                            $row['relevance'] = $assessments==true ? $valInfo[0] : '';
                             $row['text'] = $valInfo[1];
                             $row['language'] = $lang;
                             $rows[] = $row;
@@ -8970,15 +9013,15 @@ EOD;
             }
             return $out;
         }
-        
-        /** 
+
+        /**
         * Returns the survey ID of the EM singleton
         */
         public static function getLEMsurveyId() {
                 $LEM =& LimeExpressionManager::singleton();
                 return $LEM->sid;
-        }  
-        
+        }
+
     }
 
     /**
@@ -9003,6 +9046,6 @@ EOD;
         }
         return ($a['qseq'] < $b['qseq']) ? -1 : 1;
     }
-  
-  
+
+
 ?>

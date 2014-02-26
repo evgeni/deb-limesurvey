@@ -99,7 +99,11 @@ $(document).ready(function() {
         $('#searchtable tr:last').after(html);
     });
 
-    var searchconditions = {};
+    
+    if(typeof searchconditions === "undefined") {
+            searchconditions = {};
+        }
+
     var field;
     $('#searchbutton').click(function(){
     });
@@ -115,6 +119,7 @@ $(document).ready(function() {
         editurl: editUrl,
         datatype: "json",
         mtype: "post",
+        postData: {searchcondition:searchconditions},
         colNames : jQuery.parseJSON(colNames),
         colModel: jQuery.parseJSON(colModels),
         height: "100%",
@@ -435,7 +440,9 @@ $(document).ready(function() {
             onClickButton:function() {
                 $.post(
                     exporttocsvcount,
-                    { searchcondition: jQuery('#displayparticipants').jqGrid('getGridParam', 'url')},
+                    { searchcondition: searchconditions,
+                      searchURL: jQuery('#displayparticipants').jqGrid('getGridParam', 'url')
+                    },
                     function(data) {
                         titlemsg = data;
                         var dialog_buttons={};
@@ -445,7 +452,7 @@ $(document).ready(function() {
                         dialog_buttons[exportBtn]=function(){
                             //$.load(exporttocsv+"/"+$('#attributes').val(),{ } );
                             var url = jQuery('#displayparticipants').jqGrid('getGridParam', 'url');
-                            $.download(exporttocsv+"/"+$('#attributes').val(),'searchcondition='+url );
+                            $.download(exporttocsv+"/"+$('#attributes').val(),'searchcondition='+searchconditions+'&searchURL='+url );
                             $(this).dialog("close");
                         };
                         /* End of building array for button functions */
@@ -456,7 +463,7 @@ $(document).ready(function() {
                             width : 400,
                             height : 400,
                             open: function(event, ui) {
-                                $('#attributes').multiselect({ noneSelectedText: 'Select Attributes',autoOpen:true}).multiselectfilter();
+                                $('#attributes').multiselect({ noneSelectedText: 'Select Attributes',autoOpen:true, height:150 }).multiselectfilter();
                             }
                         });
                     }

@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='dejavusansmono.z';
-$originalsize=334296;
+$originalsize=335068;
 // --- EOF ---

@@ -31,7 +31,7 @@
             }
             $query .="AND {{saved_control}}.identifier = '".autoEscape($_SESSION['survey_'.$surveyid]['holdname'])."' ";
 
-            if (in_array(Yii::app()->db->getDriverName(), array('mssql', 'sqlsrv')))
+            if (in_array(Yii::app()->db->getDriverName(), array('mssql', 'sqlsrv', 'dblib')))
             {
                 $query .="AND CAST({{saved_control}}.access_code as varchar(32))= '".md5(autoUnescape($_SESSION['survey_'.$surveyid]['holdpass']))."'\n";
             }
@@ -52,7 +52,6 @@
         $aRow = Yii::app()->db->createCommand($query)->queryRow();
         if (!$aRow)
         {
-            safeDie($clang->gT("There is no matching saved survey")."<br />\n");
             return false;
         }
         else
@@ -250,7 +249,7 @@
             return false;
         }
 
-    }                                                                   
+    }
 
     /**
     * This function creates the language selector for the public survey index page
@@ -960,15 +959,17 @@
                 if(!empty($participant_id))
                 {
                     $slquery = Survey_links::model()->find('participant_id = :pid AND survey_id = :sid AND token_id = :tid', array(':pid'=>$participant_id, ':sid'=>$surveyid, ':tid'=>$oTokenInformation->tid));
-                    
-                    if (isTokenCompletedDatestamped($thissurvey))
+                    if ($slquery)
                     {
-                        $slquery->date_completed = $today;
-                    } else {
-                        // Update the survey_links table if necessary, to protect anonymity, use the date_created field date
-                        $slquery->date_completed = $slquery->date_created;
+                        if (isTokenCompletedDatestamped($thissurvey))
+                        {
+                            $slquery->date_completed = $today;
+                        } else {
+                            // Update the survey_links table if necessary, to protect anonymity, use the date_created field date
+                            $slquery->date_completed = $slquery->date_created;
+                        }
+                        $slquery->save();
                     }
-                    $slquery->save();
                 }
             }
             $oTokenInformation->usesleft = $oTokenInformation->usesleft-1;
@@ -995,7 +996,7 @@
                     // added survey url in replacement vars
                     $surveylink = Yii::app()->createAbsoluteUrl("/survey/index/sid/{$surveyid}",array('lang'=>$_SESSION['survey_'.$surveyid]['s_lang'],'token'=>$clienttoken));
                     $aReplacementVars['SURVEYURL'] = $surveylink;
-                    
+
                     $attrfieldnames=getAttributeFieldNames($surveyid);
                     foreach ($attrfieldnames as $attr_name)
                     {
@@ -1051,12 +1052,12 @@
     {
         // @todo: Remove globals
         global $thissurvey, $maildebug, $tokensexist;
-        
+
         if (trim($thissurvey['adminemail'])=='')
         {
             return;
         }
-        
+
         $homeurl=Yii::app()->createAbsoluteUrl('/admin');
         $clang = Yii::app()->lang;
         $sitename = Yii::app()->getConfig("sitename");
@@ -1177,13 +1178,13 @@
         }
 
         $sFrom = $thissurvey['adminname'].' <'.$thissurvey['adminemail'].'>';
-    
-        
+
+
         $redata=compact(array_keys(get_defined_vars()));
         if (count($aEmailNotificationTo)>0)
         {
-            $sMessage=templatereplace($thissurvey['email_admin_notification'],$aReplacementVars,$redata,'frontend_helper[1398]',($thissurvey['anonymized'] == "Y"));
-            $sSubject=templatereplace($thissurvey['email_admin_notification_subj'],$aReplacementVars,$redata,'frontend_helper[1399]',($thissurvey['anonymized'] == "Y"));
+            $sMessage=templatereplace($thissurvey['email_admin_notification'],$aReplacementVars,$redata,'frontend_helper[1398]',($thissurvey['anonymized'] == "Y"),NULL, array(), true);
+            $sSubject=templatereplace($thissurvey['email_admin_notification_subj'],$aReplacementVars,$redata,'frontend_helper[1399]',($thissurvey['anonymized'] == "Y"),NULL, array(), true);
             foreach ($aEmailNotificationTo as $sRecipient)
             {
                 if (!SendEmailMessage($sMessage, $sSubject, $sRecipient, $sFrom, $sitename, true, getBounceEmail($surveyid)))
@@ -1267,15 +1268,13 @@
         global $secerror, $clienttoken;
         global $tokensexist;
         //global $surveyid;
-        global $templang, $move, $rooturl;
+        global $move, $rooturl;
 
         $clang = Yii::app()->lang;
+        $sLangCode=$clang->langcode;
+        $languagechanger=makeLanguageChangerSurvey($sLangCode);
 
-        $thissurvey = getSurveyInfo($surveyid);
-        if (empty($templang))
-        {
-            $templang=$clang->langcode;
-        }
+        $thissurvey = getSurveyInfo($surveyid,$sLangCode);
 
         $_SESSION['survey_'.$surveyid]['templatename']=validateTemplateDir($thissurvey['template']);
         $_SESSION['survey_'.$surveyid]['templatepath']=getTemplatePath($_SESSION['survey_'.$surveyid]['templatename']).DIRECTORY_SEPARATOR;
@@ -1312,7 +1311,7 @@
                 <tr>
                 <td align='right' valign='middle'>
                 <input type='hidden' name='sid' value='".$surveyid."' id='sid' />
-                <input type='hidden' name='lang' value='".$templang."' id='lang' />";
+                <input type='hidden' name='lang' value='".$sLangCode."' id='lang' />";
                 // In case we this is a direct Reload previous answers URL, then add hidden fields
                 if (isset($_GET['loadall']) && isset($_GET['scid'])
                 && isset($_GET['loadname']) && isset($_GET['loadpass']))
@@ -1386,7 +1385,7 @@
             <label for='token'><?php $clang->eT("Token:");?></label><input class='text <?php echo $kpclass?>' id='token' type='password' name='token' value='' />
             <?php
             echo "<input type='hidden' name='sid' value='".$surveyid."' id='sid' />
-            <input type='hidden' name='lang' value='".$templang."' id='lang' />";
+            <input type='hidden' name='lang' value='".$sLangCode."' id='lang' />";
             if (isset($_GET['newtest']) && $_GET['newtest'] == "Y")
             {
                 echo "  <input type='hidden' name='newtest' value='Y' id='newtest' />";
@@ -1433,9 +1432,9 @@
         //check if token actually does exist
         // check also if it is allowed to change survey after completion
         if ($thissurvey['alloweditaftercompletion'] == 'Y' ) {
-            $oTokenEntry = Tokens_dynamic::model($surveyid)->find('token=:token', array(':token'=>trim(strip_tags($clienttoken))));
+            $oTokenEntry = Tokens_dynamic::model($surveyid)->find('token=:token', array(':token'=>$clienttoken));
         } else {
-            $oTokenEntry = Tokens_dynamic::model($surveyid)->find("token=:token AND (completed = 'N' or completed='')", array(':token'=>trim(strip_tags($clienttoken))));
+            $oTokenEntry = Tokens_dynamic::model($surveyid)->find("token=:token AND (completed = 'N' or completed='')", array(':token'=>$clienttoken));
         }
 
         if (is_null($oTokenEntry) ||  ($areTokensUsed && $thissurvey['alloweditaftercompletion'] != 'Y') )
@@ -1543,7 +1542,7 @@
                         <ul>
                         <li>
                         <input type='hidden' name='sid' value='".$surveyid."' id='sid' />
-                        <input type='hidden' name='lang' value='".$templang."' id='lang' />";
+                        <input type='hidden' name='lang' value='".$sLangCode."' id='lang' />";
                         if (isset($_GET['loadall']) && isset($_GET['scid'])
                         && isset($_GET['loadname']) && isset($_GET['loadpass']))
                         {
@@ -1562,7 +1561,7 @@
                     <ul>
                     <li>
                     <input type='hidden' name='sid' value='".$surveyid."' id='sid' />
-                    <input type='hidden' name='lang' value='".$templang."' id='lang' />";
+                    <input type='hidden' name='lang' value='".$sLangCode."' id='lang' />";
                     if (isset($_GET['loadall']) && isset($_GET['scid'])
                     && isset($_GET['loadname']) && isset($_GET['loadpass']))
                     {
@@ -1621,7 +1620,8 @@
     if (returnGlobal('lang'))
     {
         $language_to_set=returnGlobal('lang',true);
-    } elseif (isset($tklanguage))
+    }
+    elseif (isset($tklanguage))
     {
         $language_to_set=$tklanguage;
     }
@@ -1656,7 +1656,7 @@
     ." AND parent_qid=0")->read();
 
     $_SESSION['survey_'.$surveyid]['totalquestions'] = $totalquestions - (int) reset($iNumberofQuestions);
-	
+
     //2. SESSION VARIABLE: totalsteps
     //The number of "pages" that will be presented in this survey
     //The number of pages to be presented will differ depending on the survey format
@@ -1705,7 +1705,7 @@
     //An array containing information about used to insert the data into the db at the submit stage
     //4. SESSION VARIABLE - fieldarray
     //See rem at end..
-    
+
     if ($tokensexist == 1 && $clienttoken)
     {
         $_SESSION['survey_'.$surveyid]['token'] = $clienttoken;
@@ -1762,7 +1762,7 @@
             if (isset($aField['gid']))
             {
                 $GroupFieldMap[$aField['gid']][]=$aField;
-            } 
+            }
             else{
                 $GroupFieldMap['other'][]=$aField;
             }
@@ -1796,7 +1796,7 @@
 
     // Find all defined randomization groups through question attribute values
     $randomGroups=array();
-    if (in_array(Yii::app()->db->getDriverName(), array('mssql', 'sqlsrv')))
+    if (in_array(Yii::app()->db->getDriverName(), array('mssql', 'sqlsrv', 'dblib')))
     {
         $rgquery = "SELECT attr.qid, CAST(value as varchar(255)) as value FROM {{question_attributes}} as attr right join {{questions}} as quests on attr.qid=quests.qid WHERE attribute='random_group' and CAST(value as varchar(255)) <> '' and sid=$surveyid GROUP BY attr.qid, CAST(value as varchar(255))";
     }
@@ -1909,7 +1909,7 @@
         $_SESSION['survey_'.$surveyid]['fieldmap-' . $surveyid . $_SESSION['survey_'.$surveyid]['s_lang']] = $fieldmap;
         $_SESSION['survey_'.$surveyid]['fieldmap-' . $surveyid . '-randMaster'] = 'fieldmap-' . $surveyid . $_SESSION['survey_'.$surveyid]['s_lang'];
     }
-    
+
     // TMSW Conditions->Relevance:  don't need hasconditions, or usedinconditions
 
     $_SESSION['survey_'.$surveyid]['fieldmap']=$fieldmap;
@@ -1998,8 +1998,8 @@
     if (isset($_SESSION['survey_'.$surveyid]['fieldarray'])) $_SESSION['survey_'.$surveyid]['fieldarray']=array_values($_SESSION['survey_'.$surveyid]['fieldarray']);
 
     //Check if a passthru label and value have been included in the query url
-    $oResult=Survey_url_parameters::model()->getParametersForSurvey($surveyid);
-    foreach($oResult->readAll() as $aRow)
+    $oResult=Survey_url_parameters::model()->getParametersForSurvey($surveyid)->readAll();
+    foreach($oResult as $aRow)
     {
         if(isset($_GET[$aRow['parameter']]) && !$preview)
         {
@@ -2222,13 +2222,13 @@ function doAssessment($surveyid, $returndataonly=false)
                         if ($val >= $assessed['min'] && $val <= $assessed['max'] && $returndataonly===false)
                         {
                             $assessments .= "\t<!-- GROUP ASSESSMENT: Score: $val Min: ".$assessed['min']." Max: ".$assessed['max']."-->
-                            <table class='assessments' align='center'>
+                            <table class='assessments'>
                             <tr>
                             <th>".str_replace(array("{PERC}", "{TOTAL}"), array($val, $total), $assessed['name'])."
                             </th>
                             </tr>
                             <tr>
-                            <td align='center'>".str_replace(array("{PERC}", "{TOTAL}"), array($val, $total), $assessed['message'])."
+                            <td>".str_replace(array("{PERC}", "{TOTAL}"), array($val, $total), $assessed['message'])."
                             </td>
                             </tr>
                             </table><br />\n";
@@ -2245,10 +2245,13 @@ function doAssessment($surveyid, $returndataonly=false)
                 if ($total >= $assessed['min'] && $total <= $assessed['max'] && $returndataonly===false)
                 {
                     $assessments .= "\t\t\t<!-- TOTAL ASSESSMENT: Score: $total Min: ".$assessed['min']." Max: ".$assessed['max']."-->
-                    <table class='assessments' align='center'><tr><th>".str_replace(array("{PERC}", "{TOTAL}"), array($val, $total), stripslashes($assessed['name']))."
-                    </th></tr>
+                    <table class='assessments'>
                     <tr>
-                    <td align='center'>".str_replace(array("{PERC}", "{TOTAL}"), array($val, $total), stripslashes($assessed['message']))."
+                    <th>".str_replace(array("{PERC}", "{TOTAL}"), array($val, $total), stripslashes($assessed['name']))."
+                    </th>
+                    </tr>
+                    <tr>
+                    <td>".str_replace(array("{PERC}", "{TOTAL}"), array($val, $total), stripslashes($assessed['message']))."
                     </td>
                     </tr>
                     </table>\n";
@@ -2281,20 +2284,20 @@ function UpdateGroupList($surveyid, $language)
     foreach ($result->readAll() as $row)
     {
         $group = array(
-            'gid'         => $row['gid'], 
+            'gid'         => $row['gid'],
             'group_name'  => $row['group_name'],
             'description' =>  $row['description']);
         $groupList[] = $group;
         $gidList[$row['gid']] = $group;
     }
-    
+
     if (isset($_SESSION['survey_'.$surveyid]['groupReMap']) && count($_SESSION['survey_'.$surveyid]['groupReMap'])>0)
     {
         // Now adjust the grouplist
         $groupRemap = $_SESSION['survey_'.$surveyid]['groupReMap'];
         $groupListCopy = $groupList;
         foreach ($groupList as $gseq => $info) {
-            $gid = $info['gid']; 
+            $gid = $info['gid'];
             if (isset($groupRemap[$gid])) {
                 $gid = $groupRemap[$gid];
             }
@@ -2302,7 +2305,7 @@ function UpdateGroupList($surveyid, $language)
         }
         $groupList = $groupListCopy;
      }
-     
+
      $_SESSION['survey_'.$surveyid]['grouplist'] = $groupList;
 }
 
@@ -2326,7 +2329,7 @@ function UpdateFieldArray()
 
             $query = "SELECT title, question FROM {{questions}} WHERE qid=".$questionarray[0]." AND language='".$_SESSION['survey_'.$surveyid]['s_lang']."'";
             $usrow = Yii::app()->db->createCommand($query)->queryRow();
-            if ($usrow) 
+            if ($usrow)
             {
                 $questionarray[2]=$usrow['title'];
                 $questionarray[3]=$usrow['question'];
@@ -2686,7 +2689,7 @@ function killSurveySession($iSurveyID)
     // Unset the session
     unset($_SESSION['survey_'.$iSurveyID]);
     // Force EM to refresh
-    LimeExpressionManager::SetDirtyFlag();    
+    LimeExpressionManager::SetDirtyFlag();
 }
 
 

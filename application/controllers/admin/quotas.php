@@ -62,19 +62,31 @@ class quotas extends Survey_Common_Action
 
     private function _checkPermissions($iSurveyId, $sPermission)
     {
+        $clang=$this->getController()->lang;
         if (!empty($sPermission) && !hasSurveyPermission($iSurveyId, 'quotas', $sPermission)) {
-            die();
+            Yii::app()->session['flashmessage'] = $clang->gT('Access denied!');
+            $this->_redirectToIndex($iSurveyId);
         }
     }
 
     function _redirectToIndex($iSurveyId)
     {
-        $this->getController()->redirect($this->getController()->createUrl("/admin/quotas/sa/index/surveyid/$iSurveyId"));
+        $clang=$this->getController()->lang;
+        if(hasSurveyPermission($iSurveyId, 'quotas','read'))
+        {
+            $this->getController()->redirect($this->getController()->createUrl("/admin/quotas/sa/index/surveyid/$iSurveyId"));
+        }
+        else
+        {
+            Yii::app()->session['flashmessage'] = $clang->gT('Access denied!');
+            $this->getController()->redirect($this->getController()->createUrl("admin/survey/sa/view/surveyid/$iSurveyId"));
+        }
     }
 
     function index($iSurveyId, $quickreport = false)
     {
         $iSurveyId = sanitize_int($iSurveyId);
+        $this->_checkPermissions($iSurveyId, 'read');
         $aData = $this->_getData($iSurveyId);
         $aViewUrls = array();
 
@@ -217,6 +229,7 @@ class quotas extends Survey_Common_Action
         self::_redirectToIndex($iSurveyId);
     }
 
+    /* seems deprecated */
     function modifyquota($iSurveyId)
     {
         $iSurveyId = sanitize_int($iSurveyId);
@@ -271,7 +284,7 @@ class quotas extends Survey_Common_Action
     function insertquotaanswer($iSurveyId)
     {
         $iSurveyId = sanitize_int($iSurveyId);
-        $this->_checkPermissions($iSurveyId, 'create');
+        $this->_checkPermissions($iSurveyId, 'update');
 
         $oQuotaMembers = new Quota_members('create');  // Trigger the 'create' rules
         $oQuotaMembers->sid = $iSurveyId;
@@ -302,7 +315,7 @@ class quotas extends Survey_Common_Action
     function delans($iSurveyId)
     {
         $iSurveyId = sanitize_int($iSurveyId);
-        $this->_checkPermissions($iSurveyId, 'delete');
+        $this->_checkPermissions($iSurveyId, 'update');
 
         Quota_members::model()->deleteAllByAttributes(array(
             'id' => Yii::app()->request->getPost('quota_member_id'),
@@ -337,7 +350,8 @@ class quotas extends Survey_Common_Action
         $aQuotaInfo = Quota::model()->findByPk(Yii::app()->request->getPost('quota_id'));
         $aData['quotainfo'] = $aQuotaInfo;
 
-        $aViewUrls[] = 'editquota_view';
+
+        //$aViewUrls[] = 'editquota_view';
         
 
         $first=true;
@@ -351,19 +365,20 @@ class quotas extends Survey_Common_Action
             }
             $aData['langquotainfo'] = Quota_languagesettings::model()->findByAttributes(array('quotals_quota_id' => Yii::app()->request->getPost('quota_id'), 'quotals_language' => $sLanguage));
             $aData['lang'] = $sLanguage;
-            $aViewUrls['editquotalang_view'][] = $aData;
+            //$aViewUrls['editquotalang_view'][] = $aData;
+            $aTabContents[$sLanguage] = $this->getController()->render('/admin/quotas/editquotalang_view', $aData, true);
         }
         $aData['aTabTitles']=$aTabTitles;
-
-        $aViewUrls[] = 'editquotafooter_view';
-
+        $aData['aTabContents']=$aTabContents;
+        //$aViewUrls[] = 'editquotafooter_view';
+        $aViewUrls[] = 'editquota_view';
         $this->_renderWrappedTemplate('quotas', $aViewUrls, $aData);
     }
 
     function new_answer($iSurveyId, $sSubAction = 'new_answer')
     {
         $iSurveyId = sanitize_int($iSurveyId);
-        $this->_checkPermissions($iSurveyId, 'create');
+        $this->_checkPermissions($iSurveyId, 'update');
         $aData = $this->_getData($iSurveyId);
         $sBaseLang = $aData['sBaseLang'];
         $clang = $aData['clang'];
@@ -443,7 +458,7 @@ class quotas extends Survey_Common_Action
         $aData       = $this->_getData($iSurveyId);
         $sBaseLang   = $aData['sBaseLang'];
         $clang       = $aData['clang'];
-
+        $this->_checkPermissions($iSurveyId, 'read');
         $aQuestion = Questions::model()->findByPk(array('qid' => $iQuestionId, 'language' => $sBaseLang));
         $aQuestionType = $aQuestion['type'];
 

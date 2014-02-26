@@ -10,7 +10,7 @@
 * other free or open source software licenses.
 * See COPYRIGHT.php for copyright notices and details.
 *
-*	$Id$
+*    $Id$
 */
 /**
 * This function replaces keywords in a text and is mainly intended for templates
@@ -23,9 +23,10 @@
 * @param mixed $replacements Array of replacements:  Array( <stringtosearch>=><stringtoreplacewith>
 * @param boolean $anonymized Determines if token data is being used or just replaced with blanks
 * @param questionNum - needed to support dynamic JavaScript-based tailoring within questions
+* @param bStaticReplacement - Default off, forces non-dynamic replacements without <SPAN> tags (e.g. for the Completed page)
 * @return string  Text with replaced strings
 */
-function templatereplace($line, $replacements = array(), &$redata = array(), $debugSrc = 'Unspecified', $anonymized = false, $questionNum = NULL, $registerdata = array())
+function templatereplace($line, $replacements = array(), &$redata = array(), $debugSrc = 'Unspecified', $anonymized = false, $questionNum = NULL, $registerdata = array(), $bStaticReplacement = false)
 {
     /*
     global $clienttoken,$token,$sitename,$move,$showxquestions,$showqnumcode,$questioncode;
@@ -150,9 +151,9 @@ function templatereplace($line, $replacements = array(), &$redata = array(), $de
             $template_jqueryui_css="";
         }
         if($css_header_includes){
-                        foreach ($css_header_includes as $cssinclude)
+            foreach ($css_header_includes as $cssinclude)
             {
-                if (substr($cssinclude,0,4) == 'http' || substr($cssinclude,0,strlen(Yii::app()->getConfig('publicurl'))) == Yii::app()->getConfig('publicurl'))
+                if (substr($cssinclude,0,4) == 'http' || substr($cssinclude,0,1) == '/' || substr($cssinclude,0,strlen(Yii::app()->getConfig('publicurl'))) == Yii::app()->getConfig('publicurl'))
                 {
                     $_templatecss .= "<link rel='stylesheet' type='text/css' media='all' href='".$cssinclude."' />\n";
                 }
@@ -186,7 +187,7 @@ function templatereplace($line, $replacements = array(), &$redata = array(), $de
         if($js_header_includes){
             foreach ($js_header_includes as $jsinclude)
             {
-                if (substr($jsinclude,0,4) == 'http' || substr($jsinclude,0,strlen(Yii::app()->getConfig('publicurl'))) == Yii::app()->getConfig('publicurl'))
+                if (substr($jsinclude,0,4) == 'http' || substr($jsinclude,0,2) == '/' || substr($jsinclude,0,strlen(Yii::app()->getConfig('publicurl'))) == Yii::app()->getConfig('publicurl'))
                 {
                     $_templatejs .= "<script type='text/javascript' src='{$jsinclude}'></script>\n";
                 }
@@ -788,7 +789,7 @@ EOD;
 
     // Set the array of replacement variables here - don't include curly braces
     $coreReplacements = array();
-	$coreReplacements['ACTIVE'] = (isset($thissurvey['active']) && !($thissurvey['active'] != "Y"));
+    $coreReplacements['ACTIVE'] = (isset($thissurvey['active']) && !($thissurvey['active'] != "Y"));
     $coreReplacements['AID'] = isset($questiondetails['aid']) ? $questiondetails['aid'] : '';
     $coreReplacements['ANSWER'] = isset($answer) ? $answer : '';  // global
     $coreReplacements['ANSWERSCLEARED'] = $clang->gT("Answers cleared");
@@ -800,7 +801,7 @@ EOD;
     $coreReplacements['CLOSEWINDOW']  =  "<a href='javascript:%20self.close()'>".$clang->gT("Close this window")."</a>";
     $coreReplacements['COMPLETED'] = isset($redata['completed']) ? $redata['completed'] : '';    // global
     $coreReplacements['DATESTAMP'] = $_datestamp;
-	$coreReplacements['ENDTEXT'] = $_endtext;
+    $coreReplacements['ENDTEXT'] = $_endtext;
     $coreReplacements['EXPIRY'] = $_dateoutput;
     $coreReplacements['GID'] = isset($questiondetails['gid']) ? $questiondetails['gid']: '';
     $coreReplacements['GOOGLE_ANALYTICS_API_KEY'] = $_googleAnalyticsAPIKey;
@@ -880,48 +881,12 @@ EOD;
     }
 
     // Now do all of the replacements - In rare cases, need to do 3 deep recursion, that that is default
-    $line = LimeExpressionManager::ProcessString($line, $questionNum, $doTheseReplacements, false, 3, 1);
+    $line = LimeExpressionManager::ProcessString($line, $questionNum, $doTheseReplacements, false, 3, 1, false, true, $bStaticReplacement);
+    
     return $line;
 
 }
 
-/**
-* insertAnsReplace() takes a string and looks for any {INSERTANS:xxxx} variables
-*  which it then, one by one, substitutes the SGQA code with the relevant answer
-*  from the session array containing responses
-*
-*  The operations of this function were previously in the templatereplace function
-*  but have been moved to a function of their own to make it available
-*  to other areas of the script.
-*
-* @param mixed $line   string - the string to iterate, and then return
-*
-* @return string This string is returned containing the substituted responses
-*
-*/
-function insertansReplace($line)
-{
-    return $line;
-}
-
-/**
-* tokenReplace() takes a string and looks for any {TOKEN:xxxx} variables
-*  which it then, one by one, substitutes the TOKEN code with the relevant token
-*  from the session array containing token information
-*
-*  The operations of this function were previously in the templatereplace function
-*  but have been moved to a function of their own to make it available
-*  to other areas of the script.
-*
-* @param mixed $line   string - the string to iterate, and then return
-*
-* @return string This string is returned containing the substituted responses
-*
-*/
-function tokenReplace($line)
-{
-    return $line;
-}
 
 // This function replaces field names in a text with the related values
 // (e.g. for email and template functions)
@@ -979,12 +944,6 @@ function PassthruReplace($line, $thissurvey)
     }
 
     return $line;
-}
-
-function dTexts__run($text,$questionNum=NULL)
-{
-    //    return LimeExpressionManager::ProcessString($text,$questionNum,NULL,true);
-    return $text;
 }
 
 // Closing PHP tag intentionally omitted - yes, it is okay

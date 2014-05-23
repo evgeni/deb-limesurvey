@@ -11,8 +11,7 @@
     * other free or open source software licenses.
     * See COPYRIGHT.php for copyright notices and details.
     *
-    *	$Id$
-    */
+       */
 
 
     /*
@@ -471,6 +470,20 @@
         $supportedLanguages['fa']['dateformat'] = 6;
         $supportedLanguages['fa']['radixpoint'] = 0;
 
+        // Papiamento (Aruba)
+        $supportedLanguages['pap-AW']['description'] = $clang->gT('Papiamento (Aruba)');
+        $supportedLanguages['pap-AW']['nativedescription'] = 'Papiamento';
+        $supportedLanguages['pap-AW']['rtl'] = false;
+        $supportedLanguages['pap-AW']['dateformat'] = 2;
+        $supportedLanguages['pap-AW']['radixpoint'] = 1;
+
+        // Papiamento (Curaçao and Bonaire)
+        $supportedLanguages['pap-CW']['description'] = $clang->gT('Papiamento (Curaçao and Bonaire)');
+        $supportedLanguages['pap-CW']['nativedescription'] = 'Papiamentu';
+        $supportedLanguages['pap-CW']['rtl'] = false;
+        $supportedLanguages['pap-CW']['dateformat'] = 2;
+        $supportedLanguages['pap-CW']['radixpoint'] = 1;
+
         // Polish
         $supportedLanguages['pl']['description'] = $clang->gT('Polish');
         $supportedLanguages['pl']['nativedescription'] = 'Polski';
@@ -633,6 +646,13 @@
         $supportedLanguages['vi']['dateformat'] = 5;
         $supportedLanguages['vi']['radixpoint'] = 1;
 
+        // Zulu
+        $supportedLanguages['zu']['description'] = $clang->gT('Zulu');
+        $supportedLanguages['zu']['nativedescription'] = 'isiZulu';
+        $supportedLanguages['zu']['rtl'] = false;
+        $supportedLanguages['zu']['dateformat'] = 5;
+        $supportedLanguages['zu']['radixpoint'] = 1;
+
         if ($bOrderByNative)
         {
             uasort($supportedLanguages,"userSortNative");
@@ -649,7 +669,7 @@
 
 
     /**
-    *  Returns avaliable formats for Radix Points (Decimal Seperators) or returns
+    *  Returns avaliable formats for Radix Points (Decimal Separators) or returns
     *  radix point info about a specific format.
     *
     *  @param int $format Format ID/Number [optional]
@@ -658,8 +678,8 @@
     {
         $clang = Yii::app()->lang;
         $aRadixFormats = array (
-        0=>array('seperator'=> '.', 'desc'=> $clang->gT('Dot (.)')),
-        1=>array('seperator'=> ',', 'desc'=> $clang->gT('Comma (,)'))
+        0=>array('separator'=> '.', 'desc'=> $clang->gT('Dot (.)')),
+        1=>array('separator'=> ',', 'desc'=> $clang->gT('Comma (,)'))
         );
 
         // hack for fact that null sometimes sent to this function
@@ -741,7 +761,7 @@
     function getJSDateFromDateFormat($sDateformat)
     {
         // The only difference from dateformat is that Jsdate does not support truncated years
-        return str_replace(array('yy', 'MM','M'), array('y','NN','NN'), $sDateformat);
+        return str_replace(array('yy'), array('y'), $sDateformat);
     }
 
 
@@ -788,7 +808,7 @@
         {
             $languagecode=Survey::model()->findByPk($surveyid)->language;
         }
-        $data = Surveys_languagesettings::model()->getDateFormat($surveyid,$languagecode);
+        $data = SurveyLanguageSetting::model()->getDateFormat($surveyid,$languagecode);
 
         if(empty($data))
         {

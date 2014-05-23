@@ -159,6 +159,7 @@ CREATE TABLE `prefix_participant_attribute_names_lang` (
 CREATE TABLE `prefix_participant_attribute_names` (
   `attribute_id` int(11) NOT NULL AUTO_INCREMENT,
   `attribute_type` varchar(4) NOT NULL,
+  `defaultname` varchar(50) NOT NULL,
   `visible` varchar(5) NOT NULL,
   PRIMARY KEY  (`attribute_id`,`attribute_type`)
 ) ENGINE=MYISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
@@ -194,12 +195,60 @@ CREATE TABLE `prefix_participants` (
   `participant_id` varchar(50) NOT NULL,
   `firstname` varchar(40) DEFAULT NULL,
   `lastname` varchar(40) DEFAULT NULL,
-  `email` varchar(80) DEFAULT NULL,
+  `email` varchar(254) DEFAULT NULL,
   `language` varchar(40) DEFAULT NULL,
   `blacklisted` varchar(1) NOT NULL,
   `owner_uid` int(11) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `created` datetime,
+  `modified` datetime,
   PRIMARY KEY  (`participant_id`)
 ) ENGINE=MYISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
+
+--
+-- Table structure for table permissions
+--
+CREATE TABLE `prefix_permissions` (
+    `id` int(11) NOT NULL auto_increment,
+	`entity` varchar(50) NOT NULL,
+	`entity_id` int(11) NOT NULL,
+	`uid` int(11) NOT NULL,
+	`permission` varchar(100) NOT NULL,
+	`create_p` int(11) NOT NULL default '0',
+    `read_p` int(11) NOT NULL default '0',
+	`update_p` int(11) NOT NULL default '0',
+	`delete_p` int(11) NOT NULL default '0',
+    `import_p` int(11) NOT NULL default '0',
+    `export_p` int(11) NOT NULL default '0',
+	PRIMARY KEY (id),
+    UNIQUE KEY `idxPermissions` (`entity_id`,`entity`,`permission`,`uid`)
+) ENGINE=MYISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
+
+--
+-- Table structure for table plugins
+--
+CREATE TABLE `prefix_plugins` (
+  `id` int(11) NOT NULL auto_increment,
+  `name` varchar(50) NOT NULL,
+  `active` int(1) NOT NULL default '0',
+  PRIMARY KEY  (`id`)
+) ENGINE=MYISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
+
+--
+-- Table structure for table plugin_settings
+--
+CREATE TABLE `prefix_plugin_settings` (
+  `id` int(11) NOT NULL auto_increment,
+  `plugin_id` int(11) NOT NULL,
+  `model` varchar(50) NULL,
+  `model_id` int(11) NULL,
+  `key` varchar(50) NOT NULL,
+  `value` text NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MYISAM AUTO_INCREMENT=1 CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 
 --
@@ -292,7 +341,7 @@ CREATE TABLE `prefix_saved_control` (
   `srid` int(11) NOT NULL default '0',
   `identifier` text NOT NULL,
   `access_code` text NOT NULL,
-  `email` varchar(320),
+  `email` varchar(254),
   `ip` text NOT NULL,
   `saved_thisstep` text NOT NULL,
   `status` varchar(1) NOT NULL default '',
@@ -308,7 +357,7 @@ CREATE TABLE `prefix_saved_control` (
 CREATE TABLE `prefix_sessions`(
       `id` varchar(32) NOT NULL,
       `expire` int(11) DEFAULT NULL,
-      `data` longtext,
+      `data` longblob,
       PRIMARY KEY (`id`)
 ) ENGINE=MYISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
@@ -338,23 +387,6 @@ CREATE TABLE `prefix_survey_links` (
 
 
 --
--- Table structure for table survey_permissions
---
-CREATE TABLE `prefix_survey_permissions` (
-	`sid` int(11) NOT NULL,
-	`uid` int(11) NOT NULL,
-	`permission` varchar(20) NOT NULL,
-	`create_p` int(11) NOT NULL default '0',
-    `read_p` int(11) NOT NULL default '0',
-	`update_p` int(11) NOT NULL default '0',
-	`delete_p` int(11) NOT NULL default '0',
-    `import_p` int(11) NOT NULL default '0',
-    `export_p` int(11) NOT NULL default '0',
-	PRIMARY KEY (sid, uid, permission)
-) ENGINE=MYISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
-
-
---
 -- Table structure for table survey_url_parameters
 --
 CREATE TABLE `prefix_survey_url_parameters` (
@@ -377,7 +409,7 @@ CREATE TABLE `prefix_surveys` (
   `active` varchar(1) NOT NULL default 'N',
   `expires` datetime default NULL,
   `startdate` datetime default NULL,
-  `adminemail` varchar(320) default NULL,
+  `adminemail` varchar(254) default NULL,
   `anonymized` varchar(1) NOT NULL default 'N',
   `faxto` varchar(20) default NULL,
   `format` varchar(1) default NULL,
@@ -405,7 +437,7 @@ CREATE TABLE `prefix_surveys` (
   `assessments` varchar(1) NOT NULL default 'N',
   `usecaptcha` varchar(1) NOT NULL default 'N',
   `usetokens` varchar(1) NOT NULL default 'N',
-  `bounce_email` varchar(320) default NULL,
+  `bounce_email` varchar(254) default NULL,
   `attributedescriptions` text,
   `emailresponseto` text default NULL,
   `emailnotificationto` text default NULL,
@@ -423,7 +455,7 @@ CREATE TABLE `prefix_surveys` (
   `bounceaccountuser` varchar(200),
   `showwelcome` varchar(1) default 'Y',
   `showprogress` varchar(1) default 'Y',
-  `allowjumps` varchar(1) default 'N',
+  `questionindex` int(11) default '0' NOT NULL,
   `navigationdelay` int(11) NOT NULL default '0',
   `nokeyboard` varchar(1) default 'N',
   `alloweditaftercompletion` varchar(1) default 'N',
@@ -443,7 +475,7 @@ CREATE TABLE `prefix_surveys_languagesettings` (
   `surveyls_description` TEXT NULL,
   `surveyls_welcometext` TEXT NULL,
   `surveyls_endtext` TEXT NULL,
-  `surveyls_url` varchar(255) NULL,
+  `surveyls_url` TEXT NULL,
   `surveyls_urldescription` varchar(255) NULL,
   `surveyls_email_invite_subj` varchar(255) NULL,
   `surveyls_email_invite` TEXT NULL,
@@ -460,7 +492,7 @@ CREATE TABLE `prefix_surveys_languagesettings` (
   `email_admin_responses_subj` varchar(255) NULL,
   `email_admin_responses` TEXT NULL,
   `surveyls_numberformat` INT NOT NULL DEFAULT 0,
-
+  `attachments` text DEFAULT NULL,
   PRIMARY KEY (`surveyls_survey_id`, `surveyls_language`)
 ) ENGINE = MYISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
@@ -496,20 +528,14 @@ CREATE TABLE `prefix_users` (
   `full_name` varchar(50) NOT NULL,
   `parent_id` int(11) NOT NULL,
   `lang` varchar(20),
-  `email` varchar(320),
-  `create_survey` int(11) NOT NULL default '0',
-  `create_user` int(11) NOT NULL default '0',
-  `participant_panel` int(11) NOT NULL default '0',
-  `delete_user` int(11) NOT NULL default '0',
-  `superadmin` int(11) NOT NULL default '0',
-  `configurator` int(11) NOT NULL default '0',
-  `manage_template` int(11) NOT NULL default '0',
-  `manage_label` int(11) NOT NULL default '0',
+  `email` varchar(254),
   `htmleditormode` varchar(7) default 'default',
   `templateeditormode` varchar(7) NOT NULL default 'default',
   `questionselectormode` varchar(7) NOT NULL default 'default',
   `one_time_pw` BLOB,
-  `dateformat` INT NOT NULL DEFAULT 1
+  `dateformat` INT NOT NULL DEFAULT 1,
+  `created` datetime,
+  `modified` datetime
 ) ENGINE=MYISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 
@@ -556,4 +582,4 @@ create index `parent_qid_idx` on `prefix_questions` (`parent_qid`);
 --
 -- Version Info
 --
-INSERT INTO `prefix_settings_global` VALUES ('DBVersion', '164');
+INSERT INTO `prefix_settings_global` VALUES ('DBVersion', '177');

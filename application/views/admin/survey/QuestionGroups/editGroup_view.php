@@ -1,7 +1,7 @@
 <?php echo PrepareEditorScript(false, $this);?>
 
 <div class='header ui-widget-header'><?php $clang->eT("Edit Group"); ?></div>
-<?php echo CHtml::form(array("admin/questiongroup/sa/update/gid/{$gid}"), 'post', array('id'=>'frmeditgroup', 'name'=>'frmeditgroup', 'class'=>'form30')); ?>
+<?php echo CHtml::form(array("admin/questiongroups/sa/update/gid/{$gid}"), 'post', array('id'=>'frmeditgroup', 'name'=>'frmeditgroup', 'class'=>'form30')); ?>
     <div id='tabs'>
         <ul>
             <?php foreach ($tabtitles as $i=>$eachtitle){?>
@@ -14,7 +14,7 @@
 
             <div id='editgrp_<?php echo $i;?>'>
                 <ul><li><label for='group_name_<?php echo $aGroupData[$i]['language']; ?>'><?php $clang->eT("Title"); ?>:</label>
-                        <input type='text' maxlength='100' size='80' name='group_name_<?php echo $aGroupData[$i]['language']; ?>' id='group_name_<?php echo $aGroupData[$i]['language']; ?>' value="<?php echo $aGroupData[$i]['group_name']; ?>" />
+                        <input type='text' maxlength='100' size='80' name='group_name_<?php echo $aGroupData[$i]['language']; ?>' id='group_name_<?php echo $aGroupData[$i]['language']; ?>' value="<?php echo htmlspecialchars($aGroupData[$i]['group_name']); ?>" />
                     </li>
                     <li><label for='description_<?php echo $aGroupData[$i]['language']; ?>'><?php $clang->eT("Description:"); ?></label>
                         <div class="htmleditor">

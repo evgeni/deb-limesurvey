@@ -10,7 +10,6 @@
  * other free or open source software licenses.
  * See COPYRIGHT.php for copyright notices and details.
  *
- *	$Id$
  */
 
 /**
@@ -56,12 +55,12 @@ class responses extends Survey_Common_Action
         if(!$thissurvey)// Already done in Survey_Common_Action
         {
             Yii::app()->session['flashmessage'] = $clang->gT("Invalid survey ID");
-            $this->getController()->redirect($this->getController()->createUrl("admin/index"));
+            $this->getController()->redirect(array("admin/index"));
         }
         elseif($thissurvey['active'] != 'Y')
         {
             Yii::app()->session['flashmessage'] = $clang->gT("This survey has not been activated. There are no results to browse.");
-            $this->getController()->redirect($this->getController()->createUrl("/admin/survey/sa/view/surveyid/{$iSurveyId}"));
+            $this->getController()->redirect(array("/admin/survey/sa/view/surveyid/{$iSurveyId}"));
         }
 
         //OK. IF WE GOT THIS FAR, THEN THE SURVEY EXISTS AND IT IS ACTIVE, SO LETS GET TO WORK.
@@ -93,7 +92,7 @@ class responses extends Survey_Common_Action
 
     public function view($iSurveyID, $iId, $sBrowseLang = '')
     {
-        if(hasSurveyPermission($iSurveyID,'responses','read'))
+        if(Permission::model()->hasSurveyPermission($iSurveyID,'responses','read'))
         {
             $aData = $this->_getData(array('iId' => $iId, 'iSurveyId' => $iSurveyID, 'browselang' => $sBrowseLang));
             $oBrowseLanguage = new Limesurvey_lang($aData['language']);
@@ -106,14 +105,14 @@ class responses extends Survey_Common_Action
             $fieldmap = createFieldMap($iSurveyID, 'full', false, false, $aData['language']);
 
             //add token to top of list if survey is not private
-            if ($aData['surveyinfo']['anonymized'] == "N" && tableExists('tokens_' . $iSurveyID) && hasSurveyPermission($iSurveyID,'tokens','read'))
+            if ($aData['surveyinfo']['anonymized'] == "N" && tableExists('tokens_' . $iSurveyID) && Permission::model()->hasSurveyPermission($iSurveyID,'tokens','read'))
             {
-                $fnames[] = array("token", "Token", $clang->gT("Token ID"), 0);
-                $fnames[] = array("firstname", "First name", $clang->gT("First name"), 0);
-                $fnames[] = array("lastname", "Last name", $clang->gT("Last name"), 0);
-                $fnames[] = array("email", "Email", $clang->gT("Email"), 0);
+                $fnames[] = array("token", $clang->gT("Token ID"), 'code'=>'token');
+                $fnames[] = array("firstname", $clang->gT("First name"), 'code'=>'firstname');// or token:firstname ?
+                $fnames[] = array("lastname", $clang->gT("Last name"), 'code'=>'lastname');
+                $fnames[] = array("email", $clang->gT("Email"), 'code'=>'email');
             }
-            $fnames[] = array("submitdate", $clang->gT("Submission date"), $clang->gT("Completed"), "0", 'D');
+            $fnames[] = array("submitdate", $clang->gT("Submission date"), $clang->gT("Completed"), "0", 'D','code'=>'submitdate');
             $fnames[] = array("completed", $clang->gT("Completed"), "0");
 
             foreach ($fieldmap as $field)
@@ -127,38 +126,35 @@ class responses extends Survey_Common_Action
                 if ($field['type'] == 'answer_time')
                     continue;
         
-                $question = $field['question'];
+                //$question = $field['question'];
+                $question = viewHelper::getFieldText($field);
+
                 if ($field['type'] != "|")
                 {
-                    if (isset($field['subquestion']) && $field['subquestion'] != '')
-                        $question .=' (' . $field['subquestion'] . ')';
-                    if (isset($field['subquestion1']) && isset($field['subquestion2']))
-                        $question .=' (' . $field['subquestion1'] . ':' . $field['subquestion2'] . ')';
-                    if (isset($field['scale_id']))
-                        $question .='[' . $field['scale'] . ']';
-                    $fnames[] = array($field['fieldname'], $question);
+                    $fnames[] = array($field['fieldname'], viewHelper::getFieldText($field),'code'=>viewHelper::getFieldCode($field,array('LEMcompat'=>true)));
+                }
+                elseif ($field['aid'] !== 'filecount')
+                {
+                    $qidattributes = getQuestionAttributeValues($field['qid']);
+
+                    for ($i = 0; $i < $qidattributes['max_num_of_files']; $i++)
+                    {
+                        $filenum=sprintf($clang->gT("File %s"),$i + 1);
+                        if ($qidattributes['show_title'] == 1)
+                            $fnames[] = array($field['fieldname'], "{$filenum} - {$question} (".$clang->gT('Title').")",'code'=>viewHelper::getFieldCode($field).'(title)', "type" => "|", "metadata" => "title", "index" => $i);
+
+                        if ($qidattributes['show_comment'] == 1)
+                            $fnames[] = array($field['fieldname'], "{$filenum} - {$question} (".$clang->gT('Comment').")",'code'=>viewHelper::getFieldCode($field).'(comment)', "type" => "|", "metadata" => "comment", "index" => $i);
+
+                        $fnames[] = array($field['fieldname'], "{$filenum} - {$question} (".$clang->gT('File name').")",'code'=>viewHelper::getFieldCode($field).'(name)', "type" => "|", "metadata" => "name", "index" => $i);
+                        $fnames[] = array($field['fieldname'], "{$filenum} - {$question} (".$clang->gT('File size').")",'code'=>viewHelper::getFieldCode($field).'(size)', "type" => "|", "metadata" => "size", "index" => $i);
+
+                        //$fnames[] = array($field['fieldname'], "File ".($i+1)." - ".$field['question']." (extension)", "type"=>"|", "metadata"=>"ext",     "index"=>$i);
+                    }
                 }
                 else
                 {
-                    if ($field['aid'] !== 'filecount')
-                    {
-                        $qidattributes = getQuestionAttributeValues($field['qid']);
-
-                        for ($i = 0; $i < $qidattributes['max_num_of_files']; $i++)
-                        {
-                            if ($qidattributes['show_title'] == 1)
-                                $fnames[] = array($field['fieldname'], "File " . ($i + 1) . " - " . $field['question'] . " (Title)", "type" => "|", "metadata" => "title", "index" => $i);
-
-                            if ($qidattributes['show_comment'] == 1)
-                                $fnames[] = array($field['fieldname'], "File " . ($i + 1) . " - " . $field['question'] . " (Comment)", "type" => "|", "metadata" => "comment", "index" => $i);
-
-                            $fnames[] = array($field['fieldname'], "File " . ($i + 1) . " - " . $field['question'] . " (File name)", "type" => "|", "metadata" => "name", "index" => $i);
-                            $fnames[] = array($field['fieldname'], "File " . ($i + 1) . " - " . $field['question'] . " (File size)", "type" => "|", "metadata" => "size", "index" => $i);
-                            //$fnames[] = array($field['fieldname'], "File ".($i+1)." - ".$field['question']." (extension)", "type"=>"|", "metadata"=>"ext",     "index"=>$i);
-                        }
-                    }
-                    else
-                        $fnames[] = array($field['fieldname'], "File count");
+                    $fnames[] = array($field['fieldname'], $clang->gT("File count"));
                 }
             }
 
@@ -168,9 +164,9 @@ class responses extends Survey_Common_Action
                 $iId = 1;
             }
 
-            $exist = Survey_dynamic::model($iSurveyID)->exist($iId);
-            $next = Survey_dynamic::model($iSurveyID)->next($iId,true);
-            $previous = Survey_dynamic::model($iSurveyID)->previous($iId,true);
+            $exist = SurveyDynamic::model($iSurveyID)->exist($iId);
+            $next = SurveyDynamic::model($iSurveyID)->next($iId,true);
+            $previous = SurveyDynamic::model($iSurveyID)->previous($iId,true);
             $aData['exist'] = $exist;
             $aData['next'] = $next;
             $aData['previous'] = $previous;
@@ -179,11 +175,12 @@ class responses extends Survey_Common_Action
             $aViewUrls[] = 'browseidheader_view';
             if($exist)
             {
+                $oPurifier=new CHtmlPurifier();
                 //SHOW INDIVIDUAL RECORD
                 $oCriteria = new CDbCriteria();
-                if ($aData['surveyinfo']['anonymized'] == 'N' && tableExists("{{tokens_$iSurveyID}}}") && hasSurveyPermission($iSurveyID,'tokens','read'))
+                if ($aData['surveyinfo']['anonymized'] == 'N' && tableExists("{{tokens_$iSurveyID}}}") && Permission::model()->hasSurveyPermission($iSurveyID,'tokens','read'))
                 {
-                    $oCriteria = Survey_dynamic::model($iSurveyID)->addTokenCriteria($oCriteria);
+                    $oCriteria = SurveyDynamic::model($iSurveyID)->addTokenCriteria($oCriteria);
                 }
                 // If admin ask an specific response, then show it
                 // Don't add incompleteAnsFilterState
@@ -192,14 +189,14 @@ class responses extends Survey_Common_Action
     #            elseif (incompleteAnsFilterState() == 'complete')
     #                $oCriteria->addCondition('submitdate >= ' . mktime(0, 0, 0, 1, 1, 1980));
                 $oCriteria->addCondition("id = {$iId}");
-                $iIdresult = Survey_dynamic::model($iSurveyID)->findAllAsArray($oCriteria);
+                $iIdresult = SurveyDynamic::model($iSurveyID)->findAllAsArray($oCriteria);
                 foreach ($iIdresult as $iIdrow)
                 {
                     $iId = $iIdrow['id'];
                     $rlanguage = $iIdrow['startlanguage'];
                 }
-                $next = Survey_dynamic::model($iSurveyID)->next($iId);
-                $previous = Survey_dynamic::model($iSurveyID)->previous($iId);
+                $next = SurveyDynamic::model($iSurveyID)->next($iId);
+                $previous = SurveyDynamic::model($iSurveyID)->previous($iId);
 
                 if (isset($rlanguage))
                 {
@@ -242,7 +239,7 @@ class responses extends Survey_Common_Action
                                     if ($metadata === "size")
                                         $answervalue = rawurldecode(((int) ($phparray[$index][$metadata])) . " KB");
                                     else if ($metadata === "name")
-                                        $answervalue = CHtml::link(rawurldecode($phparray[$index][$metadata]), $this->getController()->createUrl("/admin/responses/sa/browse/downloadindividualfile/{$phparray[$index][$metadata]}/fieldname/{$fnames[$i][0]}/id/{$iId}/surveyid/{$iSurveyID}"));
+                                        $answervalue = CHtml::link($oPurifier->purify(rawurldecode($phparray[$index][$metadata])), $this->getController()->createUrl("/admin/responses/sa/browse/fieldname/{$fnames[$i][0]}/id/{$iId}/surveyid/{$iSurveyID}",array('downloadindividualfile'=>$phparray[$index][$metadata])));
                                     else
                                         $answervalue = rawurldecode($phparray[$index][$metadata]);
                                 }
@@ -275,7 +272,7 @@ class responses extends Survey_Common_Action
         {
             $clang = $this->getController()->lang;
             $aData['surveyid'] = $iSurveyID;
-            $this->getController()->_css_admin_includes(Yii::app()->getConfig('adminstyleurl')."superfish.css");
+            App()->getClientScript()->registerPackage('jquery-superfish');
             $message['title']= $clang->gT('Access denied!');
             $message['message']= $clang->gT('You do not have sufficient rights to access this page.');
             $message['class']= "error";
@@ -295,18 +292,18 @@ class responses extends Survey_Common_Action
          * it containts
          *             $fnames[] = array(<dbfieldname>, <some strange title>, <questiontext>, <group_id>, <questiontype>);
          */
-        if (Yii::app()->session['response_filter_'.$iSurveyID])
+        if (Yii::app()->request->getPost('sql'))
         {
             $aViewUrls[] = 'browseallfiltered_view';
         }
 
             $clang = $aData['clang'];
-            $aData['num_total_answers'] = Survey_dynamic::model($iSurveyID)->count();
-            $aData['num_completed_answers'] = Survey_dynamic::model($iSurveyID)->count('submitdate IS NOT NULL');
-            if (tableExists('{{tokens_' . $iSurveyID . '}}') && hasSurveyPermission($iSurveyID,'tokens','read'))
+            $aData['num_total_answers'] = SurveyDynamic::model($iSurveyID)->count();
+            $aData['num_completed_answers'] = SurveyDynamic::model($iSurveyID)->count('submitdate IS NOT NULL');
+            if (tableExists('{{tokens_' . $iSurveyID . '}}') && Permission::model()->hasSurveyPermission($iSurveyID,'tokens','read'))
             {
                 $aData['with_token']= Yii::app()->db->schema->getTable('{{tokens_' . $iSurveyID . '}}');
-                $aData['tokeninfo'] = Tokens_dynamic::model($iSurveyID)->summary();
+				$aData['tokeninfo'] = Token::model($iSurveyID)->summary();
             }
 
             $aViewUrls[] = 'browseindex_view';
@@ -326,16 +323,16 @@ class responses extends Survey_Common_Action
         //Delete Individual answer using inrow delete buttons/links - checked
         if (Yii::app()->request->getPost('deleteanswer') && Yii::app()->request->getPost('deleteanswer') != '' && Yii::app()->request->getPost('deleteanswer') != 'marked')
         {
-            if(hasSurveyPermission($iSurveyID,'responses','delete'))
+            if(Permission::model()->hasSurveyPermission($iSurveyID,'responses','delete'))
             {
                 $iResponseID = (int) Yii::app()->request->getPost('deleteanswer'); // sanitize the value
                 // delete the files 
                 $this->_deleteFiles($iSurveyID,array($iResponseID),$aData['language']);
                 // delete the row
-                Survey_dynamic::model($iSurveyID)->deleteByPk($iResponseID);
+                SurveyDynamic::model($iSurveyID)->deleteByPk($iResponseID);
                 // delete timings if savetimings is set
                 if($aData['surveyinfo']['savetimings'] == "Y"){
-                    Survey_timings::model($iSurveyID)->deleteByPk($iResponseID);
+                    SurveyTimingDynamic::model($iSurveyID)->deleteByPk($iResponseID);
                 }
                 Yii::app()->session['flashmessage'] = sprintf($clang->gT("Response ID %s was successfully deleted."),$iResponseID);
             }
@@ -350,16 +347,16 @@ class responses extends Survey_Common_Action
             // Delete the marked responses - checked
             if (Yii::app()->request->getPost('deleteanswer') && Yii::app()->request->getPost('deleteanswer') === 'marked')
             {
-                if(hasSurveyPermission($iSurveyID,'responses','delete'))
+                if(Permission::model()->hasSurveyPermission($iSurveyID,'responses','delete'))
                 {
                     $this->_deleteFiles($iSurveyID,Yii::app()->request->getPost('markedresponses'),$aData['language']);
                     foreach (Yii::app()->request->getPost('markedresponses') as $iResponseID)
                     {
                         $iResponseID= (int) $iResponseID;
-                        Survey_dynamic::model($iSurveyID)->deleteByPk($iResponseID);
+                        SurveyDynamic::model($iSurveyID)->deleteByPk($iResponseID);
                         // delete timings if savetimings is set
                         if($aData['surveyinfo']['savetimings'] == "Y"){
-                            Survey_timings::model($iSurveyID)->deleteByPk($iResponseID);
+                            SurveyTimingDynamic::model($iSurveyID)->deleteByPk($iResponseID);
                         }
                     }
                     Yii::app()->session['flashmessage'] = sprintf($clang->ngT("%s response was successfully deleted.","%s responses were successfully deleted.",count(Yii::app()->request->getPost('markedresponses'))),count(Yii::app()->request->getPost('markedresponses')),'js');
@@ -372,7 +369,7 @@ class responses extends Survey_Common_Action
             // Download all files for all marked responses  - checked
             elseif (Yii::app()->request->getPost('downloadfile') && Yii::app()->request->getPost('downloadfile') === 'marked')
             {
-                if(hasSurveyPermission($iSurveyID,'responses','read'))
+                if(Permission::model()->hasSurveyPermission($iSurveyID,'responses','read'))
                 {
                     // Now, zip all the files in the filelist
                     $zipfilename = "Responses_for_survey_{$iSurveyID}.zip";
@@ -383,7 +380,7 @@ class responses extends Survey_Common_Action
         // Download all files for this entry - checked
         elseif (Yii::app()->request->getPost('downloadfile') && Yii::app()->request->getPost('downloadfile') != '' && Yii::app()->request->getPost('downloadfile') !== true)
         {
-            if(hasSurveyPermission($iSurveyID,'responses','read'))
+            if(Permission::model()->hasSurveyPermission($iSurveyID,'responses','read'))
             {
                 // Now, zip all the files in the filelist
                 $zipfilename = "Files_for_responses_" . Yii::app()->request->getPost('downloadfile') . ".zip";
@@ -392,18 +389,18 @@ class responses extends Survey_Common_Action
         }
         elseif (Yii::app()->request->getParam('downloadindividualfile') != '')
         {
-            if(hasSurveyPermission($iSurveyID,'responses','read'))
+            if(Permission::model()->hasSurveyPermission($iSurveyID,'responses','read'))
             {
                 $iId = (int) Yii::app()->request->getParam('id');
                 $downloadindividualfile = Yii::app()->request->getParam('downloadindividualfile');
                 $fieldname = Yii::app()->request->getParam('fieldname');
                 
-                $oRow = Survey_dynamic::model($iSurveyID)->findByAttributes(array('id' => $iId));
+                $oRow = SurveyDynamic::model($iSurveyID)->findByAttributes(array('id' => $iId));
                 $phparray = json_decode_ls($oRow->$fieldname);
 
                 for ($i = 0; $i < count($phparray); $i++)
                 {
-                    if ($phparray[$i]['name'] == $downloadindividualfile)
+                    if (rawurldecode($phparray[$i]['name']) == rawurldecode($downloadindividualfile))
                     {
                         $file = Yii::app()->getConfig('uploaddir') . "/surveys/" . $iSurveyID . "/files/" . $phparray[$i]['filename'];
                         
@@ -432,31 +429,21 @@ class responses extends Survey_Common_Action
          * it containts
          *             $fnames[] = array(<dbfieldname>, <some strange title>, <questiontext>, <group_id>, <questiontype>);
          */
-        if(hasSurveyPermission($iSurveyID,'responses','read'))
+        if(Permission::model()->hasSurveyPermission($iSurveyID,'responses','read'))
         {
-            if (Yii::app()->request->getPost('clearsqlfilter'))
-            {
-                unset(Yii::app()->session['response_filterview_'.$iSurveyID]);    
-                unset(Yii::app()->session['response_filter_'.$iSurveyID]);    
-            }
-            if(Yii::app()->request->getPost('sqlfilter')  && isset(Yii::app()->session['response_filterview_'.$iSurveyID]))
-            {
-                Yii::app()->session['response_filter_'.$iSurveyID]=Yii::app()->session['response_filterview_'.$iSurveyID];    
-            }
-            
-            if (Yii::app()->session['response_filter_'.$iSurveyID])
+            if (Yii::app()->request->getPost('sql'))
             {
                 $aViewUrls[] = 'browseallfiltered_view';
             }
             //add token to top of list if survey is not private
             if ($aData['surveyinfo']['anonymized'] == "N" && tableExists('tokens_' . $iSurveyID) ) //add token to top of list if survey is not private
             {
-                if(hasSurveyPermission($iSurveyID,'tokens','read'))
+                if(Permission::model()->hasSurveyPermission($iSurveyID,'tokens','read'))
                 {
-                    $fnames[] = array("token", "Token", $clang->gT("Token ID"), 0);
-                    $fnames[] = array("firstname", "First name", $clang->gT("First name"), 0);
-                    $fnames[] = array("lastname", "Last name", $clang->gT("Last name"), 0);
-                    $fnames[] = array("email", "Email", $clang->gT("Email"), 0);
+                    $fnames[] = array("token", $clang->gT("Token ID"), 'code'=>'token');
+                    $fnames[] = array("firstname", $clang->gT("First name"), 'code'=>'firstname');// or token:firstname ?
+                    $fnames[] = array("lastname", $clang->gT("Last name"), 'code'=>'lastname');
+                    $fnames[] = array("email", $clang->gT("Email"), 'code'=>'email');
                 }
             }
 
@@ -481,35 +468,28 @@ class responses extends Survey_Common_Action
                         continue;
                     if ($fielddetails['type'] == 'answer_time')
                         continue;
-                    if (isset($fielddetails['subquestion']) && $fielddetails['subquestion'] != '')
-                        $question .=' (' . $fielddetails['subquestion'] . ')';
-                    if (isset($fielddetails['subquestion1']) && isset($fielddetails['subquestion2']))
-                        $question .=' (' . $fielddetails['subquestion1'] . ':' . $fielddetails['subquestion2'] . ')';
-                    if (isset($fielddetails['scale_id']))
-                        $question .='[' . $fielddetails['scale'] . ']';
-                    $fnames[] = array($fielddetails['fieldname'], flattenText(stripJavaScript($question), true));
+                    $fnames[] = array($fielddetails['fieldname'], viewHelper::getFieldText($fielddetails),'code'=>viewHelper::getFieldCode($fielddetails,array('LEMcompat'=>true)));
+                }
+                elseif ($fielddetails['aid'] !== 'filecount')
+                {
+                    $qidattributes = getQuestionAttributeValues($fielddetails['qid']);
+                    for ($i = 0; $i < $qidattributes['max_num_of_files']; $i++)
+                    {
+                        $filenum=sprintf($clang->gT("File %s"),$i + 1);
+                        if ($qidattributes['show_title'] == 1)
+                            $fnames[] = array($fielddetails['fieldname'], "{$filenum} - {$question} (".$clang->gT('Title').")",'code'=>viewHelper::getFieldCode($fielddetails).'(title)', "type" => "|", "metadata" => "title", "index" => $i);
+                        if ($qidattributes['show_comment'] == 1)
+                            $fnames[] = array($fielddetails['fieldname'], "{$filenum} - {$question} (".$clang->gT('Comment').")",'code'=>viewHelper::getFieldCode($fielddetails).'(comment)', "type" => "|", "metadata" => "comment", "index" => $i);
+
+                        $fnames[] = array($fielddetails['fieldname'], "{$filenum} - {$question} (".$clang->gT('File name').")",'code'=>viewHelper::getFieldCode($fielddetails).'(name)', "type" => "|", "metadata" => "name", "index" => $i);
+                        $fnames[] = array($fielddetails['fieldname'], "{$filenum} - {$question} (".$clang->gT('File size').")",'code'=>viewHelper::getFieldCode($fielddetails).'(size)', "type" => "|", "metadata" => "size", "index" => $i);
+
+                        //$fnames[] = array($fielddetails['fieldname'], "File ".($i+1)." - ".$fielddetails['question']."(extension)", "type"=>"|", "metadata"=>"ext",     "index"=>$i);
+                    }
                 }
                 else
                 {
-                    if ($fielddetails['aid'] !== 'filecount')
-                    {
-                        $qidattributes = getQuestionAttributeValues($fielddetails['qid']);
-
-                        for ($i = 0; $i < $qidattributes['max_num_of_files']; $i++)
-                        {
-                            if ($qidattributes['show_title'] == 1)
-                                $fnames[] = array($fielddetails['fieldname'], "File " . ($i + 1) . " - " . $fielddetails['question'] . "(Title)", "type" => "|", "metadata" => "title", "index" => $i);
-
-                            if ($qidattributes['show_comment'] == 1)
-                                $fnames[] = array($fielddetails['fieldname'], "File " . ($i + 1) . " - " . $fielddetails['question'] . "(Comment)", "type" => "|", "metadata" => "comment", "index" => $i);
-
-                            $fnames[] = array($fielddetails['fieldname'], "File " . ($i + 1) . " - " . $fielddetails['question'] . "(File name)", "type" => "|", "metadata" => "name", "index" => $i);
-                            $fnames[] = array($fielddetails['fieldname'], "File " . ($i + 1) . " - " . $fielddetails['question'] . "(File size)", "type" => "|", "metadata" => "size", "index" => $i);
-                            //$fnames[] = array($fielddetails['fieldname'], "File ".($i+1)." - ".$fielddetails['question']."(extension)", "type"=>"|", "metadata"=>"ext",     "index"=>$i);
-                        }
-                    }
-                    else
-                        $fnames[] = array($fielddetails['fieldname'], "File count");
+                    $fnames[] = array($fielddetails['fieldname'], $clang->gT("File count"), 'code'=>viewHelper::getFieldCode($fielddetails));
                 }
             }
 
@@ -517,14 +497,13 @@ class responses extends Survey_Common_Action
 
             $start = Yii::app()->request->getParam('start', 0);
             $limit = Yii::app()->request->getParam('limit', 50);
-            $order = Yii::app()->request->getParam('order', 'asc');
-
+            $order =  Yii::app()->request->getParam('order', 'asc');
             if(!$limit){$limit=50;}
             $oCriteria = new CDbCriteria;
             //Create the query
-            if ($aData['surveyinfo']['anonymized'] == "N" && tableExists("{{tokens_{$iSurveyID}}}") && hasSurveyPermission($iSurveyID,'tokens','read'))
+            if ($aData['surveyinfo']['anonymized'] == "N" && tableExists("{{tokens_{$iSurveyID}}}") && Permission::model()->hasSurveyPermission($iSurveyID,'tokens','read'))
             {
-                $oCriteria = Survey_dynamic::model($iSurveyID)->addTokenCriteria($oCriteria);
+                $oCriteria = SurveyDynamic::model($iSurveyID)->addTokenCriteria($oCriteria);
             }
 
             if (incompleteAnsFilterState() == "incomplete")
@@ -536,15 +515,16 @@ class responses extends Survey_Common_Action
                 $oCriteria->addCondition("submitdate IS NOT NULL");
             }
 
-            $dtcount = Survey_dynamic::model($iSurveyID)->count($oCriteria);// or die("Couldn't get response data<br />");
+            $dtcount = SurveyDynamic::model($iSurveyID)->count($oCriteria);// or die("Couldn't get response data<br />");
 
             if ($limit > $dtcount)
             {
                 $limit = $dtcount;
             }
+
             //NOW LETS SHOW THE DATA
-            if (isset(Yii::app()->session['response_filter_'.$iSurveyID]) && trim(Yii::app()->session['response_filter_'.$iSurveyID]) !== "")
-                $oCriteria->addCondition(Yii::app()->session['response_filter_'.$iSurveyID]);
+            if (Yii::app()->request->getPost('sql') && stripcslashes(Yii::app()->request->getPost('sql')) !== "" && Yii::app()->request->getPost('sql') != "NULL")
+                $oCriteria->addCondition(stripcslashes(Yii::app()->request->getPost('sql')));
             
             if (!is_null($tokenRequest)) {
                 $oCriteria->addCondition('t.token = ' . Yii::app()->db->quoteValue($tokenRequest));
@@ -554,7 +534,7 @@ class responses extends Survey_Common_Action
             $oCriteria->offset = $start;
             $oCriteria->limit = $limit;
 
-            $dtresult = Survey_dynamic::model($iSurveyID)->findAllAsArray($oCriteria);
+            $dtresult = SurveyDynamic::model($iSurveyID)->findAllAsArray($oCriteria);
 
             $dtcount2 = count($dtresult);
             $cells = $fncount + 1;
@@ -595,6 +575,7 @@ class responses extends Survey_Common_Action
             $aData['end'] = $end;
             $aData['fncount'] = $fncount;
             $aData['fnames'] = $fnames;
+            $aData['bHasFileUploadQuestion'] = hasFileUploadQuestion($iSurveyID);
 
             $aViewUrls[] = 'browseallheader_view';
 
@@ -622,7 +603,7 @@ class responses extends Survey_Common_Action
         {
             $clang = $this->getController()->lang;
             $aData['surveyid'] = $iSurveyID;
-            $this->getController()->_css_admin_includes(Yii::app()->getConfig('adminstyleurl')."superfish.css");
+            App()->getClientScript()->registerPackage('jquery-superfish');
             $message['title']= $clang->gT('Access denied!');
             $message['message']= $clang->gT('You do not have sufficient rights to access this page.');
             $message['class']= "error";
@@ -640,23 +621,23 @@ class responses extends Survey_Common_Action
             die();
 
         if (Yii::app()->request->getPost('deleteanswer') && Yii::app()->request->getPost('deleteanswer') != '' && Yii::app()->request->getPost('deleteanswer') != 'marked' 
-            && hasSurveyPermission($iSurveyID, 'responses', 'delete'))
+            && Permission::model()->hasSurveyPermission($iSurveyID, 'responses', 'delete'))
         {
             $iResponseID=(int) Yii::app()->request->getPost('deleteanswer');
-            Survey_dynamic::model($iSurveyID)->deleteByPk($iResponseID);
-            Survey_timings::model($iSurveyID)->deleteByPk($iResponseID);
+            SurveyDynamic::model($iSurveyID)->deleteByPk($iResponseID);
+            SurveyTimingDynamic::model($iSurveyID)->deleteByPk($iResponseID);
         }
 
         if (Yii::app()->request->getPost('markedresponses') && count(Yii::app()->request->getPost('markedresponses')) > 0)
         {
             if (Yii::app()->request->getPost('deleteanswer') && Yii::app()->request->getPost('deleteanswer') === 'marked' && 
-                hasSurveyPermission($iSurveyID, 'responses', 'delete'))
+                Permission::model()->hasSurveyPermission($iSurveyID, 'responses', 'delete'))
             {
                 foreach (Yii::app()->request->getPost('markedresponses') as $iResponseID)
                 {
                     $iResponseID=(int) $iResponseID;
-                    Survey_dynamic::model($iSurveyID)->deleteByPk($iResponseID);
-                    Survey_timings::model($iSurveyID)->deleteByPk($iResponseID);
+                    SurveyDynamic::model($iSurveyID)->deleteByPk($iResponseID);
+                    SurveyTimingDynamic::model($iSurveyID)->deleteByPk($iResponseID);
                 }
             }
         }
@@ -708,7 +689,7 @@ class responses extends Survey_Common_Action
         $oCriteria->select = 'tid';
         $oCriteria->join = "INNER JOIN {{survey_{$iSurveyID}}} s ON t.id=s.id";
         $oCriteria->condition = 'submitdate IS NOT NULL';
-        $dtcount = Survey_timings::model($iSurveyID)->count($oCriteria); // or die("Couldn't get response data");
+        $dtcount = SurveyTimingDynamic::model($iSurveyID)->count($oCriteria); // or die("Couldn't get response data");
 
         if ($limit > $dtcount)
         {
@@ -723,7 +704,7 @@ class responses extends Survey_Common_Action
         $oCriteria->offset = $start;
         $oCriteria->limit = $limit;
 
-        $dtresult = Survey_timings::model($iSurveyID)->findAllAsArray($oCriteria);
+        $dtresult = SurveyTimingDynamic::model($iSurveyID)->findAllAsArray($oCriteria);
         $dtcount2 = count($dtresult);
         $cells = $fncount + 1;
 
@@ -791,9 +772,9 @@ class responses extends Survey_Common_Action
         }
 
         //interview Time statistics
-        $aData['statistics'] = Survey_timings::model($iSurveyId)->statistics();
-        $aData['num_total_answers'] = Survey_dynamic::model($iSurveyID)->count();
-        $aData['num_completed_answers'] = Survey_dynamic::model($iSurveyID)->count('submitdate IS NOT NULL');
+        $aData['statistics'] = SurveyTimingDynamic::model($iSurveyId)->statistics();
+        $aData['num_total_answers'] = SurveyDynamic::model($iSurveyID)->count();
+        $aData['num_completed_answers'] = SurveyDynamic::model($iSurveyID)->count('submitdate IS NOT NULL');
         $aViewUrls[] = 'browsetimefooter_view';
         $this->_renderWrappedTemplate('',$aViewUrls, $aData);
     }
@@ -823,7 +804,7 @@ class responses extends Survey_Common_Action
             if (!empty($fuqtquestions))
             {
                 // find all responses (filenames) to the fuqt questions
-                $filearray = Survey_dynamic::model($iSurveyID)->findAllByAttributes(array('id' => $responseId));
+                $filearray = SurveyDynamic::model($iSurveyID)->findAllByAttributes(array('id' => $responseId));
                 $filecount = 0;
                 foreach ($filearray as $metadata)
                 {
@@ -854,7 +835,7 @@ class responses extends Survey_Common_Action
     private function _zipFiles($iSurveyID, $responseIds, $zipfilename,$language)
     {
 
-        Yii::app()->loadLibrary('admin/pclzip/pclzip');
+        Yii::app()->loadLibrary('admin/pclzip');
         
         $tmpdir = Yii::app()->getConfig('uploaddir') . DIRECTORY_SEPARATOR."surveys". DIRECTORY_SEPARATOR . $iSurveyID . DIRECTORY_SEPARATOR."files".DIRECTORY_SEPARATOR;
 
@@ -873,7 +854,7 @@ class responses extends Survey_Common_Action
         {
             $responseId = (int) $responseId; // sanitize the value
 
-            $filearray = Survey_dynamic::model($iSurveyID)->findAllByAttributes(array('id' => $responseId)) or die('Could not download response');
+            $filearray = SurveyDynamic::model($iSurveyID)->findAllByAttributes(array('id' => $responseId)) or die('Could not download response');
             $metadata = array();
             $filecount = 0;
             foreach ($filearray as $metadata)
@@ -894,8 +875,11 @@ class responses extends Survey_Common_Action
                              * unique. This way we can have 234_1_image1.gif, 234_2_image1.gif as it could be
                              * files from a different source with the same name.
                              */
-                            $filelist[] = array(PCLZIP_ATT_FILE_NAME => $tmpdir . $file['filename'],
-                                PCLZIP_ATT_FILE_NEW_FULL_NAME => sprintf("%05s_%02s_%s", $file['responseid'], $file['index'], $file['name']));
+                             if (file_exists($tmpdir . $file['filename']))
+                             {
+                                $filelist[] = array(PCLZIP_ATT_FILE_NAME => $tmpdir . $file['filename'],
+                                    PCLZIP_ATT_FILE_NEW_FULL_NAME => sprintf("%05s_%02s_%s", $file['responseid'], $file['index'], $file['name']));
+                             }
                         }
                     }
                 }
@@ -937,7 +921,7 @@ class responses extends Survey_Common_Action
      */
     protected function _renderWrappedTemplate($sAction='', $aViewUrls = array(), $aData = array())
     {
-        $this->getController()->_js_admin_includes(Yii::app()->getConfig('adminscripts') . 'browse.js');
+        App()->getClientScript()->registerScriptFile(Yii::app()->getConfig('adminscripts') . 'browse.js');
 
         $aData['display']['menu_bars'] = false;
         $aData['display']['menu_bars']['browse'] = Yii::app()->lang->gT('Browse responses'); // browse is independent of the above

@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='freeserifbolditalic.z';
-$originalsize=608708;
+$originalsize=608676;
 // --- EOF ---

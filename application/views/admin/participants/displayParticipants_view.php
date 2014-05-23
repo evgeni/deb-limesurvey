@@ -63,7 +63,9 @@ else
     var sAddCaption = "<?php $clang->eT("Add participant", 'js') ?>";
     var sAddButtonCaption = "<?php $clang->eT("Add", 'js') ?>";
     var sDeleteButtonCaption = "<?php $clang->eT("Delete", 'js') ?>";
+    var sDeleteDialogCaption = "<?php $clang->eT("Delete one or more participants...", 'js') ?>";
     var sCancel = "<?php $clang->eT("Cancel", 'js') ?>";
+    var sSubmit = "<?php $clang->eT("Save", 'js') ?>";
     var fullSearchTitle = "<?php $clang->eT("Full search"); ?>";
     var selectTxt="<?php $clang->eT("Select...") ?>";
     var emailTxt="<?php $clang->eT("Email") ?>";
@@ -113,9 +115,10 @@ else
     var viewRecordTxt= '<?php $clang->eT("View {0} - {1} of {2}",'js');?>';
     var participantsTxt= '<?php $clang->eT("Participants",'js');?>';
     var emptyRecordsTxt= "<?php $clang->eT("No participants to view", 'js') ?>";
+    var sEditAttributeValueMsg = '<?php $clang->eT("Edit attribute value",'js');?>';
 
     var resetBtn = "<?php $clang->eT("Reset", 'js'); ?>";
-    var exportToCSVTitle = "<?php $clang->eT("Export to CSV", 'js'); ?>";
+    var exportToCSVTitle = "<?php $clang->eT("Export (filtered) participants to CSV", 'js'); ?>";
     var noSearchResultsTxt = "<?php $clang->eT("Your search returned no results", 'js'); ?>";
     var accessDeniedTxt = "<?php $clang->eT("Access denied", 'js'); ?>";
     var closeTxt = "<?php $clang->eT("Close", 'js'); ?>";
@@ -137,7 +140,6 @@ else
     var removecondition = "<?php $clang->eT("Remove condition", 'js') ?>";
     var selectSurvey = "<?php $clang->eT("You must select a survey from the list", 'js'); ?>";
     var cancelBtn = "<?php $clang->eT("Cancel", 'js') ?>";
-    var exportBtn = "<?php $clang->eT("Export", 'js') ?>";
     var okBtn = "<?php $clang->eT("OK", 'js') ?>";
     var deletefrompanelmsg = "<?php $clang->eT("Select one of the three options", 'js') ?>";
     var noRowSelected = "<?php $clang->eT("You have no row selected", 'js') ?>";
@@ -160,7 +162,6 @@ else
     var addbuttonTxt = "<?php $clang->eT("Add search condition", 'js') ?>";
     var delparticipantUrl = "<?php echo Yii::app()->getController()->createUrl("admin/participants/sa/delParticipant"); ?>";
     var getAttribute_json = "<?php echo Yii::app()->getController()->createUrl("admin/participants/sa/getAttribute_json/pid/"); ?>";
-    var exporttocsv = "<?php echo Yii::app()->getController()->createUrl("admin/participants/sa/exporttocsv/id"); ?>";
     var exporttocsvcount = "<?php echo Yii::app()->getController()->createUrl("admin/participants/sa/exporttocsvcount"); ?>";
     var getcpdbAttributes_json = "<?php echo Yii::app()->getController()->createUrl("admin/participants/sa/exporttocsvcount"); ?>";
     var attMapUrl = "<?php echo Yii::app()->getController()->createUrl("admin/participants/sa/attributeMap"); ?>";
@@ -171,6 +172,8 @@ else
     var ajaxUrl = "<?php echo Yii::app()->getConfig('adminimageurl') . "/ajax-loader.gif" ?>";
     var redUrl = "<?php echo Yii::app()->getController()->createUrl("admin/participants/sa/displayParticipants"); ?>";
     var searchconditions = "<?php echo $sSearchCondition; ?>";
+    var bEditPermission = <?php echo (Permission::model()->hasGlobalPermission('participantpanel','update'))? 'true' : 'false'; ?>;
+    var bDeletePermission = <?php echo (Permission::model()->hasGlobalPermission('participantpanel','delete'))? 'true' : 'false'; ?>;
     var colNames = '["participant_id","can_edit","<?php $clang->eT("First name") ?>","<?php $clang->eT("Last name") ?>","<?php $clang->eT("Email") ?>","<?php $clang->eT("Blacklisted") ?>","<?php $clang->eT("Surveys") ?>","<?php $clang->eT("Language") ?>","<?php $clang->eT("Owner name") ?>"<?php echo $columnNames; ?>]';
     var colModels = '[{ "name":"participant_id", "index":"participant_id", "width":100, "align":"center", "sorttype":"int", "sortable": true, "editable":false, "hidden":true},';
     colModels += '{ "name":"can_edit", "index":"can_edit", "width":10, "align":"center", "sorttype":"int", "sortable": true, "editable":false, "hidden":true},';
@@ -186,7 +189,7 @@ $colModels .= implode(",';\n colModels += '", $uidNames) . "]';";
 echo $colModels;
 ?>
 </script>
-<script src="<?php echo Yii::app()->getConfig('generalscripts') . "admin/displayParticipant.js" ?>" type="text/javascript"></script>
+<script src="<?php echo Yii::app()->getConfig('generalscripts') . "admin/participantdisplay.js" ?>" type="text/javascript"></script>
 <div id ="search" style="display:none">
     <?php
     $optionsearch = array('' => $clang->gT("Select..."),
@@ -212,8 +215,8 @@ echo $colModels;
         echo "<script type='text/javascript'> optionstring = '";
         foreach ($allattributes as $key => $value)
         {
-            $optionsearch[$value['attribute_id']] = $value['attribute_name'];
-            echo "<option value=" . $value['attribute_id'] . ">" . $value['attribute_name'] . "</option>";
+            $optionsearch[$value['attribute_id']] = $value['defaultname'];
+            echo "<option value=" . $value['attribute_id'] . ">" . $value['defaultname'] . "</option>";
         }
         echo "';</script>";
     }
@@ -231,10 +234,8 @@ echo $colModels;
 
 </div>
 <br/>
-<table id="displayparticipants"></table> <div id="pager"></div>
-<p><input type="button" name="addtosurvey" id="addtosurvey" value="<?php $clang->eT("Add to survey") ?>" />
-</p>
-
+<table id="displayparticipants"></table> 
+<div id="pager"></div>
 <div id="fieldnotselected" title="<?php $clang->eT("Error") ?>" style="display:none">
     <p>
 <?php $clang->eT("Please select a field"); ?>
@@ -333,21 +334,9 @@ echo CHtml::checkBox('can_edit', TRUE, $data);
 </div>
 <div id="notauthorised" title="notauthorised" style="display:none">
     <p>
-<?php $clang->eT("This is a shared participant and you are not authorised to edit it"); ?></p>
+<?php $clang->eT("You do not have the permission to edit this participant."); ?></p>
 
 </div>
-<fieldset id="exportcsv" title="exportcsv" style="display:none">
-        <legend><?php $clang->eT("Attributes to export:"); ?></legend>
-        <p>
-            <select id="attributes" name="attributes" multiple="multiple" style='width: 350px' size=7>
-                <?php
-                foreach ($allattributes as $value)
-                {
-                    echo "<option value=" . $value['attribute_id'] . ">" . $value['attribute_name'] . "</option>\n";
-                }
-                ?>
-            </select>
-        </p>
-</fieldset>
+
 
 

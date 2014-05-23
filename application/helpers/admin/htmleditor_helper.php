@@ -10,13 +10,13 @@
     * other free or open source software licenses.
     * See COPYRIGHT.php for copyright notices and details.
     *
-    *	$Id$
-    */
+       */
     //include_once("login_check.php");
     //Security Checked: POST/GET/SESSION/DB/returnGlobal
     function initKcfinder()
     {
-        Yii::app()->session['KCFINDER'] = array();
+     Yii::app()->session['KCFINDER'] = array();
+
         $sAllowedExtensions = implode(' ', array_map('trim', explode(',', Yii::app()->getConfig('allowedresourcesuploads'))));
         $_SESSION['KCFINDER']['types'] = array(
             'files' => $sAllowedExtensions,
@@ -38,12 +38,12 @@
                 $contextarray = explode(':', Yii::app()->session['FileManagerContext'], 3);
                 $surveyid = $contextarray[2];
 
-                if (hasSurveyPermission($surveyid, 'surveycontent', 'update'))
+                if (Permission::model()->hasSurveyPermission($surveyid, 'surveycontent', 'update'))
                 {
                     $_SESSION['KCFINDER']['disabled'] = false;
                     if (preg_match('/^edit:emailsettings/',$_SESSION['FileManagerContext']) != 0)
                     {
-                        // Validate uploadurl for link in email 
+                        // Uploadurl use public url or getBaseUrl(true);
                         // Maybe need external function
                         $sBaseAbsoluteUrl=Yii::app()->getBaseUrl(true);
                         $sPublicUrl=Yii::app()->getConfig("publicurl");
@@ -71,7 +71,7 @@
                 $contextarray = explode(':', Yii::app()->session['FileManagerContext'], 3);
                 $labelid = $contextarray[2];
                 // check if the user has label management right and labelid defined
-                if (Yii::app()->session['USER_RIGHT_MANAGE_LABEL'] == 1 && isset($labelid) && $labelid != '')
+                if (Permission::model()->hasGlobalPermission('labelsets','update') && isset($labelid) && $labelid != '')
                 {
                     $_SESSION['KCFINDER']['disabled'] = false;
                     $_SESSION['KCFINDER']['uploadURL'] = Yii::app()->getConfig('uploadurl')."/labels/{$labelid}/";
@@ -79,32 +79,40 @@
                 }
             }
         }
-
     } 
 
     function sTranslateLangCode2CK($sLanguageCode){
-
-        $aTranslationTable=array('de-informal'=>'de',
-        'nl-formal'=>'nl');
+        $aTranslationTable=array(
+        'ca-valencia'=>'ca',
+        'de-informal'=>'de',
+        'es-AR-informal'=>'es',
+        'es-AR'=>'es',
+        'es-CL'=>'es',
+        'es-MX'=>'es',
+        'it-informal'=>'it',
+        'nl-informal'=>'nl',
+        'nn'=>'no',
+        'zh-Hans'=>'zh-cn',
+        'zh-Hant-HK'=>'zh',
+        'zh-Hant-TW'=>'zh'
+        );
         if (isset($aTranslationTable[$sLanguageCode])) {
             $sResultCode=$aTranslationTable[$sLanguageCode];
         }
         else
         {
-            $sResultCode=$sLanguageCode;
+            $sResultCode=strtolower($sLanguageCode);
         }
         return $sResultCode;
-
     }
 
 
     function PrepareEditorScript($load=false, $controller = null)
     {
-        $js_admin_includes = Yii::app()->getConfig("js_admin_includes");
         $clang = Yii::app()->lang;
         $data['clang'] = $clang;
-        $js_admin_includes[]=Yii::app()->getConfig('sCKEditorURL').'/ckeditor.js';
-        Yii::app()->setConfig("js_admin_includes", $js_admin_includes);
+
+        App()->getClientScript()->registerCoreScript('ckeditor');
         if ($controller == null)
         {
             $controller = Yii::app()->getController();
@@ -113,11 +121,11 @@
         if ($load == false)
         {
 
-            return $controller->render('/admin/survey/prepareEditorScript_view',$data,true);
+            return $controller->renderPartial('/admin/survey/prepareEditorScript_view',$data,true);
         }
         else
         {
-            $controller->render('/admin/survey/prepareEditorScript_view',$data);
+            $controller->renderPartial('/admin/survey/prepareEditorScript_view',$data);
         }
     }
 
@@ -199,7 +207,7 @@
     }
 
     function getInlineEditor($fieldtype,$fieldname,$fieldtext, $surveyID=null,$gID=null,$qID=null,$action=null)
-    {
+    {                         
         $htmlcode = '';
         $imgopts = '';
         $toolbarname = 'inline';
@@ -250,7 +258,8 @@
         
         $htmlcode .= ""
         . "<script type=\"text/javascript\">\n"
-        . "$(document).ready(function(){ var $oCKeditorVarName = CKEDITOR.replace('$fieldname', {
+        . "$(document).ready(
+        function(){ var $oCKeditorVarName = CKEDITOR.replace('$fieldname', {
         customConfig : \"".Yii::app()->getConfig('adminscripts')."ckeditor-config.js\"
         ,LimeReplacementFieldsType : \"".$fieldtype."\"
         ,LimeReplacementFieldsSID : \"".$surveyID."\"

@@ -11,7 +11,6 @@ if ( !defined('BASEPATH')) exit('No direct script access allowed');
 * other free or open source software licenses.
 * See COPYRIGHT.php for copyright notices and details.
 *
-*	$Id$
 */
 
 /**
@@ -222,7 +221,7 @@ function createTable($sTableName, $aColumns, $sOptions=null)
     if (Yii::app()->db->driverName == 'mysql' || Yii::app()->db->driverName == 'mysqli')
     {
         if (is_null($sOptions))
-        $sOptions='ENGINE=MyISAM';
+        $sOptions='ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci';
     }
     Yii::app()->db->createCommand()->createTable($sTableName,$aColumns,$sOptions);
 }

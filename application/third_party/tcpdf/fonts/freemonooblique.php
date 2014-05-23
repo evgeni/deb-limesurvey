@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='freemonooblique.z';
-$originalsize=395184;
+$originalsize=395188;
 // --- EOF ---

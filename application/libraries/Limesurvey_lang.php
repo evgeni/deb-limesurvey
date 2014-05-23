@@ -10,8 +10,7 @@
     * other free or open source software licenses.
     * See COPYRIGHT.php for copyright notices and details.
     *
-    *	$Id$
-    *
+       *
 
 
     Wrapper to use phpgettext as a class and omit having an english translation
@@ -27,17 +26,25 @@
         var $gettextclass;
         var $langcode;
 
-        function limesurvey_lang($sLanguageCode){
+        function  __construct($sLanguageCode, $bForceRefresh=false){
             if(empty($sLanguageCode))
                 trigger_error('langcode param is undefined ', E_USER_WARNING);
 
+            static $aClassCache=array();
             Yii::app()->loadHelper('sanitize');
             $sLanguageCode=sanitize_languagecode($sLanguageCode);
-            $streamer = new FileReader(getcwd().DIRECTORY_SEPARATOR.'locale'.DIRECTORY_SEPARATOR.$sLanguageCode.DIRECTORY_SEPARATOR.'LC_MESSAGES'.DIRECTORY_SEPARATOR.$sLanguageCode.'.mo');
-            $this->gettextclass = new gettext_reader($streamer);
+            if (isset($aClassCache[$sLanguageCode]) && !$bForceRefresh)
+            {
+                $this->gettextclass = $aClassCache[$sLanguageCode];
+            }
+            else
+            {
+                $streamer = new FileReader(getcwd().DIRECTORY_SEPARATOR.'locale'.DIRECTORY_SEPARATOR.$sLanguageCode.DIRECTORY_SEPARATOR.'LC_MESSAGES'.DIRECTORY_SEPARATOR.$sLanguageCode.'.mo');
+                $this->gettextclass = $aClassCache[$sLanguageCode] = new gettext_reader($streamer);
+            }
             $this->langcode = $sLanguageCode;
         }
-
+        
         function getlangcode()
         {
             return $this->langcode;
@@ -111,13 +118,13 @@
         * @param mixed $escapemode Different uses require the string to be escaped accordinlgy. Possible values are 'html'(default),'js' and 'unescaped'
         * @return string Translated string
         */
-        function gT($string, $escapemode = 'html')
+        function gT($sText, $sEscapeMode = 'html')
         {
             if ($this->gettextclass)
             {
-                $basestring=str_replace('&lsquo;','\'',$this->gettextclass->translate($string));
+                $basestring=$this->gettextclass->translate($sText);
 
-                switch ($escapemode)
+                switch ($sEscapeMode)
                 {
                     case 'html':
                         return $this->HTMLEscape($basestring);
@@ -133,16 +140,16 @@
                         break;
                 }
             } else {
-                switch ($escapemode)
+                switch ($sEscapeMode)
                 {
                     case 'html':
-                        return $this->HTMLEscape($string);
+                        return $this->HTMLEscape($sText);
                         break;
                     case 'js':
-                        return $this->javascriptEscape($string);
+                        return $this->javascriptEscape($sText);
                         break;
                     case 'unescaped':
-                        return $string;
+                        return $sText;
                         break;
                     default:
                         return "Unsupported EscapeMode in gT method";

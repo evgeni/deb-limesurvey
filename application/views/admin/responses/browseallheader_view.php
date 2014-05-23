@@ -77,12 +77,12 @@ echo CHtml::form(array("admin/responses/sa/browse/surveyid/{$surveyid}/"), 'post
             {
                 if (!isset($currentgroup))
                 {
-                    $currentgroup = $fn[1];
+                    $currentgroup = $fn[0];
                     $gbc = "odd";
                 }
-                if ($currentgroup != $fn[1])
+                if ($currentgroup != $fn[0])
                 {
-                    $currentgroup = $fn[1];
+                    $currentgroup = $fn[0];
                     if ($gbc == "odd")
                     {
                         $gbc = "even";
@@ -94,7 +94,10 @@ echo CHtml::form(array("admin/responses/sa/browse/surveyid/{$surveyid}/"), 'post
                 }
             ?>
             <th class='<?php echo $gbc; ?>'>
-                <strong><?php echo $fn[1]; ?></strong>
+                <?php if(isset($fn['code'])){ ?>
+                    <strong class="qcode">[<?php echo $fn['code']; ?>]</strong>
+                <?php }?>
+                <span class="questiontext"><?php echo $fn[1]; ?></span> 
             </th>
             <?php } ?>
     </tr>
@@ -102,10 +105,10 @@ echo CHtml::form(array("admin/responses/sa/browse/surveyid/{$surveyid}/"), 'post
 <tfoot>
     <tr>
         <td colspan=<?php echo $fncount + 2; ?>>
-<?php if (hasSurveyPermission($iSurveyId, 'responses', 'delete')) { ?>
+<?php if (Permission::model()->hasSurveyPermission($iSurveyId, 'responses', 'delete')) { ?>
 <img id='imgDeleteMarkedResponses' src='<?php echo $sImageURL; ?>token_delete.png' alt='<?php $clang->eT('Delete marked responses'); ?>' />
 <?php } ?>
-<?php if (hasFileUploadQuestion($iSurveyId)) { ?>
+<?php if ($bHasFileUploadQuestion) { ?>
 <img id='imgDownloadMarkedFiles' src='<?php echo $sImageURL; ?>down_all.png' alt='<?php $clang->eT('Download marked files'); ?>' />
 <?php } ?>
 </td>

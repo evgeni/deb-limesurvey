@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='freeserifitalic.z';
-$originalsize=922088;
+$originalsize=922104;
 // --- EOF ---

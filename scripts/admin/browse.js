@@ -9,86 +9,39 @@
 * other free or open source software licenses.
 * See COPYRIGHT.php for copyright notices and details.
 *
-* $Id: browse.js 10251 2011-06-10 17:33:49Z tpartner $
 */
+
+/* Tooltip only on mouseenter and only if there are no title
+ * This allow to set tooltip only when needed
+ */
+$(document).on("mouseenter",".browsetable thead th:not([title])",function(){
+  $(this).attr('title',$(this).find(".questiontext").text());
+  $(this).tooltip({ tooltipClass: "tooltip-text" });//,track: true allow to update always tooltip, but seems really annoying
+});
+$(document).on("mouseenter",".browsetable tbody td:not([title])",function(){
+  if($(this).text().length>20)// 20 seem a good value, maybe less (10 ?)
+  {
+    $(this).attr('title',$(this).text());
+    $(this).tooltip({ tooltipClass: "tooltip-text" });
+  }
+  else
+  {
+    $(this).attr('title',"");// Don't do this again
+  }
+});
 $(document).ready(function(){
     $('ul.sf-menu').superfish({
         speed:'fast'
     }); 
     $("#selectall").click(function(){
-        $('.cbResponseMarker').attr('checked',$(this).attr('checked'));
+        $('.cbResponseMarker').attr('checked',$(this).is(':checked'));
     });
     // Update the responses table if completionstate change
     $("#browseresults #completionstate").change(function(){
         $("#limit").val('');
         $("#browseresults").submit();
     });
-    
-    $('#browseresponses').qtip({
-        content:{
-            text:$('#browselangpopup')
-        },
-        style: { name: 'cream',
-            tip:true,
-            color:'#111111',
-            border: {
-                width: 1,
-                radius: 5,
-                color: '#EADF95'}
-        },
-        position: { adjust: {
-            screen: true, scroll:true },
-            corner: {
-                target: 'bottomMiddle',
-                tooltip: 'topMiddle'}
-        },
-        show: {effect: { length:50},
-            when: {
-                event:'click'
-        }},
-        hide: {fixed:true,
-            when: {
-                event:'unfocus'
-        }}
-    });
 
-    // Fix the heigh of the cell
-    $('.browsetable td').each(function(){
-        if ($.trim($(this).text()).length > 30){
-            $(this).html("<span class=\"content\" title=\""+htmlspecialchars(htmlspecialchars($(this).text(),'ENT_HTML_QUOTE_DOUBLE'),'ENT_QUOTES')+"\">"+$(this).html()+"</span>");
-        }
-    });
-    $('.browsetable th strong').each(function(){
-        if ($.trim($(this).text()).length > 30){
-            $(this).addClass("content");
-            $(this).attr("title",$(this).text());
-        }
-    });
-
-    $('.browsetable td span.content').qtip({
-        hide: {
-            fixed: true,
-            delay: 500
-        },
-        position: {
-            corner: {
-                target: 'leftMiddle',
-                tooltip: 'topRight'
-            }
-        }
-    });
-    $('.browsetable th strong.content').qtip({
-        hide: {
-            fixed: true,
-            delay: 500
-        },
-        position: {
-            corner: {
-                target: 'leftMiddle',
-                tooltip: 'topRight'
-            }
-        }
-    });
     // Delete individual file
     $(".deleteresponse").click(function(){
         thisid=removechars($(this).attr('id'));
@@ -198,27 +151,28 @@ sendPost(siteURL + "/admin/responses/" + surveyID + "/grid", {
 }
 })  */
 
+/* Deprecated : use admin_core.js function */
+///**
+//Send a post request to the server to download a file
 
-/**
-Send a post request to the server to download a file
+//@param myaction     post action
+//@param data         parameters for $_POST
 
-@param myaction     post action
-@param data         parameters for $_POST
+//*/
+//function sendPost(myaction, checkcode, arrayparam, arrayval)
+//{
+//    var myform = document.createElement('form');
+//    document.body.appendChild(myform);
+//    myform.action =myaction;
+//    myform.method = 'POST';
+//    for (i=0;i<arrayparam.length;i++)
+//    {
+//        addHiddenElement(myform,arrayparam[i],arrayval[i])
+//    }
 
-*/
-function sendPost(myaction, checkcode, arrayparam, arrayval)
-{
-    var myform = document.createElement('form');
-    document.body.appendChild(myform);
-    myform.action =myaction;
-    myform.method = 'POST';
-    for (i=0;i<arrayparam.length;i++)
-    {
-        addHiddenElement(myform,arrayparam[i],arrayval[i])
-    }
-    addHiddenElement(myform,'checksessionbypost',checkcode)
-    myform.submit();
-}
+//    addHiddenElement(myform,'YII_CSRF_TOKEN',LS.data.csrfToken)
+//    myform.submit();
+//}
 
 
 

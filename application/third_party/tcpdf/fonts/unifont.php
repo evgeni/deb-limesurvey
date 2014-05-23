@@ -1,6 +1,6 @@
 <?php
 $type='TrueType';
-$name='unifont';
+$name='UnifontMedium';
 $desc=array('Ascent'=>875,'Descent'=>-125,'CapHeight'=>875,'Flags'=>32,'FontBBox'=>'[0 -125 1000 875]','ItalicAngle'=>0,'StemV'=>70,'MissingWidth'=>365);
 $up=-117;
 $ut=39;
@@ -1235,5 +1235,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='unifont.z';
-$originalsize=12155368;
+$originalsize=12155716;
 // --- EOF ---

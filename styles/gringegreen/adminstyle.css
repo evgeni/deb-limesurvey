@@ -39,10 +39,12 @@ hr{
 
 /* Wrapper */
 .wrapper {
+    /*
     min-height: 100%;
     height: auto !important;
     height: 100%;
     margin: 0 auto -40px;
+    */
     background-color:#fefefe;
     width:100%;
 }
@@ -50,7 +52,6 @@ hr{
 /* Administration footer box */
 .footer {
     text-align: center;
-    height: 30px;
     margin: 0 auto;
     padding-top:0.4em;
     border-top: 1px solid #eee;
@@ -126,8 +127,9 @@ div.menubar {
     background-color: #fefefe;
     clear:left;
     padding:0;
-    margin:0 auto 58px auto !important;
+    margin:0 auto !important;
     width: 99%;
+    display:inline-block;
 }
 
 div.menubar .ui-widget-header
@@ -193,9 +195,8 @@ div.menubar .ui-widget-header
 }
 
 .menubar-left img{
-    float:left;
     border:0;
-    padding:3px 1px;
+    padding:3px 0;
 }
 
 .menubar-right > img{
@@ -214,9 +215,11 @@ div.menubar .ui-widget-header
 }
 .menubar select {
     color: #333;
-    width: 200px;
+    width: 250px;
 }
-
+.menubar option.emphasis{
+    font-weight:700
+}
 .menubar-right .arrow-wrapper {
     display: inline; /* For IE */
     position: relative;
@@ -249,23 +252,9 @@ html>body .menubar-right .arrow-wrapper { /* For real browsers */
     clear:left;
 }
 
-#surveydetails td:first-child,
-#groupdetails td:first-child,
-#questiondetails td:first-child {
-    width:25%;
-    font-weight:bold;
-    text-align:right;
-
-}
-
-#surveydetails td+td,
-#groupdetails td+td,
-#questiondetails td+td {
-    text-align:left;
-}
-#questionactioncopy{
+.extra-action{
     float: right;
-    margin-top: -60px
+    margin: -73px 0.5% 0 0;
 }
 .outlinetable {
     border: 1px solid #111;
@@ -312,7 +301,6 @@ td {
 
 input, select, button {
     color: #000;
-    font: 10px verdana, arial, sans-serif;
 }
 
 /* Uncomment these styles if you are using a system theme with a dark background
@@ -355,8 +343,6 @@ textarea {
 }
 
 .listboxtemplates {
-    margin-top: 10px;
-    height: 20px;
     color: #333;
     width: 180px;
 }
@@ -585,7 +571,6 @@ a.optoutemail {
     clear:left;
 }
 
-.ui-jqgrid-btable tr:hover td,
 .browsetable tr:hover {
     background-color: #C5D0F2;
 }
@@ -608,12 +593,16 @@ a.optoutemail {
 .edituser,
 .users,
 .assessmentlist,
-.listsurveys,
+.listtokenattributes,
 .surveysecurity {
     text-align:center;
     margin:0 auto;
 }
 
+.listtokenattributes td{
+    text-align:center;
+   
+}
 
 .conditionlist table,
 #filterchoices
@@ -704,7 +693,7 @@ ul.assessmentscope li label:first-child {
     width:80%;
 }
 
-.listsurveys
+.listtokenattributes
 {
     width:70%;
 }
@@ -723,7 +712,7 @@ ul.assessmentscope li label:first-child {
 .edituser th,
 .surveysecurity th,
 .users th,
-.listsurveys th {
+.listtokenattributes th {
     background-color: #fff;
     text-align: center;
     font-size:0.8em;
@@ -750,9 +739,14 @@ ul.assessmentscope li label:first-child {
     padding:4px;
 }
 
+.users
+{
+    max-width:1200px;
+}
+
 .users td,
 .surveysecurity td,
-.listsurveys td {
+.listtokenattributes td {
     font-size:0.8em;
     padding:2px 6px;
 }
@@ -761,7 +755,10 @@ ul.assessmentscope li label:first-child {
 {
     margin-left:2px;
 }
-
+.users td:first-child
+{
+    text-align: left;
+}
 .assessmentlist td form,
 #users td form {
     display:inline;
@@ -918,32 +915,33 @@ table.templatecontrol select
 }
 
 /* Added by evan to help usability on the user template rights form in useradmin/userrighthandling.php */
-table#user-template-rights
+table#user-template-permissions
 {
     width: 50%;
     border: none;
     border-collapse: collapse
 }
 
-table#user-template-rights thead{
+table#user-template-permissions th{
+    font-size:0.8em;
 }
 
-table#user-template-rights tr.row_odd
+table#user-template-permissions tr.row_odd
 {
     background-color: #EBF2FA;
 }
-table#user-template-rights tr:hover
+table#user-template-permissions tr:hover
 {
     background-color: #D1D1DF;
 }
-table#user-template-rights tr td
-,table#user-template-rights tr th
-,table#user-template-rights tfoot tr td
+table#user-template-permissions tr td
+,table#user-template-permissions tr th
+,table#user-template-permissions tfoot tr td
 {
     border: none;
     text-align: center;
 }
-table#user-template-rights tbody tr td:first-child
+table#user-template-permissions tbody tr td:first-child
 {
     text-align: left;
 }
@@ -956,6 +954,7 @@ table.statisticstable, table.statisticssummary {
     border-style: none;
     margin: 0 auto;
     margin-bottom:20px;
+    min-width:270px;
 }
 
 .statisticssummary thead th
@@ -1346,16 +1345,16 @@ thead tr .headerSortDown, thead tr .headerSortUp {
 div.left
 {
     float:left;
-    width:300px;
+    width:400px;
 }
 
 div.right {
     float:right;
-    width:300px;
+    width:400px;
 }
 
 .wrap2columns {
-    width:600px;
+    width:800px;
     margin:0 auto;
 }
 
@@ -1373,13 +1372,13 @@ div.right {
 }
 
 #advancedquestionsettings fieldset {
-    width:600px;
-    margin:0 auto;
+    width:49%;
+    margin:0 15%;
     display: block;
 }
 
 #advancedquestionsettings textarea{
-    width:200px;
+    width:380px;
 }
 
 .statistics-tbl-separator td {
@@ -1455,26 +1454,6 @@ div.right {
     width:210px;
 }
 
-.limebutton
-{
-    outline: 0;
-    margin:1px 4px 1px 0;
-    padding: 1px 1em;
-    text-decoration:none !important;
-    cursor:pointer;
-    text-align: center;
-    zoom: 1;
-    border: 1px solid #CDF078;
-    background: #EFFBDB url(images/ui-bg_glass_100_effbdb_1x400.png) 50% 50%
-    repeat-x;
-}
-
-.limebutton.ui-state-hover
-{
-    border: 1px solid #94D200;
-}
-
-
 #emailtemplates .ui-tabs-panel .limebutton {
     margin: 3px 20% 10px 30.5%;
 }
@@ -1512,13 +1491,22 @@ table.limetable tbody tr.highlight {
 thead th
 {
 }
-
+.userpermissions,
 .usersurveypermissions {
     text-align:center;
 }
-
+.userpermissions th,
 .usersurveypermissions th{
     padding:0 2em;
+}
+.userpermissions td,
+.usersurveypermissions td {
+    padding: 0.2em 0.5em;
+    text-align:center;
+}
+.userpermissions input[type="checkbox"],
+.usersurveypermissions [type="checkbox"] {
+	margin: 0;
 }
 
 #responsedetail td{
@@ -1602,7 +1590,7 @@ ol.organizer {
 
 
 .organizer li div  {
-    background-color:#85BD00;
+    background: none repeat scroll 0 0 #85BD00;
     color:#fff;
     padding: 3px;
     margin: 0;
@@ -1641,15 +1629,42 @@ ol.organizer {
     font-size: 0.8em;
 }
 .labelsets-update label{display:block}
-.button-list{text-align:left}
+
+.button-list{
+	margin-top: 1em;
+	text-align:left
+}
+
+#saveaslabel p {
+	padding: 0;
+    text-align:left
+}
+
+#saveaslabel p.label-name-wrapper {
+	margin-top: -10px;
+}
+
 #gbox_displaysurveys{ margin:0 auto;}
 
-.ui-jqgrid tr.jqgrow {
-    background-color:#fff;
+
+
+.ui-jqgrid .ui-jqgrid-htable th div {
+    height: 22px;
+}
+
+.ui-jqgrid .ui-icon-asc {
+    margin-left: 1px;
 }
 
 .ui-jqgrid tr.ui-row-ltr td {
-    border:none !important;
+}
+
+ui-jqgrid-btable table, .ui-pg-table table{
+    border-collapse: separate;
+}
+
+.ui-jqgrid .ui-pg-selbox {
+    height: auto;
 }
 
 .separator{
@@ -1697,7 +1712,7 @@ ol.organizer {
 
 #templateleft select
 {
-    width:140px;
+   width:160px;
 }
 
 legend{
@@ -1819,5 +1834,20 @@ td.LEMerror  {
     font-weight:bold;
 }
 
+.sf-menu ul a > .sf-sub-indicator {
+    top: 0.7em;
+}
+.ui-pager-control,.ui-search-toolbar > th.ui-th-column{
+    background: #F4FFDB !important;
+}
 
-.browsetable thead td span
+/* Edit answer and sub-question action buttons */
+
+.ui-tabs .action-buttons {
+	margin: 1em 0 0 0;
+	text-align: center;
+}
+
+.ui-tabs .action-buttons button {
+	margin: 0 0.5em;
+}

@@ -3,47 +3,52 @@ $(document).ready(function(){
 
     var old_owner = '';
 
-    $(".ownername_edit").live('click',function(){
+    $(document).on('click', ".ownername_edit", function(){
         var oldThis = this;
         var ownername_edit_id = $(this).attr('id');
         var survey_id = ownername_edit_id.slice(15);
         var translate_to = $(this).attr('translate_to');
         var initial_text = $(this).html();
-        $.getJSON(getuserurl,'',function(oData)
-        {
-            old_owner =  $($(oldThis).parent()).html();
-
-            old_owner = (old_owner.split("("))[0];
-            $($(oldThis).parent()).html('<select class="ownername_select" id="ownername_select_'+survey_id+'"></select>'
-            + '<input class="ownername_button" id="ownername_button_'+survey_id+'" type="button" initial_text="'+initial_text+'" value="'+delBtnCaption+'">');
-            $(oData).each(function(key,value){
-                $('#ownername_select_'+survey_id).
-                append($("<option id='opt_"+value[1]+"'></option>").
-                attr("value",value[0]).
-                text(value[1]));
-            });
-            $("#ownername_select_"+survey_id+ " option[id=opt_"+old_owner+"]").attr("selected","selected");
+        $.post( getuserurl,function( oData ) {
+            if(typeof oData=="object")
+            {
+                old_owner =  $($(oldThis).parent()).html();
+                old_owner = (old_owner.split("("))[0];
+                $($(oldThis).parent()).html('<select class="ownername_select" id="ownername_select_'+survey_id+'"></select>\n'
+                + '<input class="ownername_button" id="ownername_button_'+survey_id+'" type="button" initial_text="'+initial_text+'" value="'+delBtnCaption+'">');
+                $(oData).each(function(key,value){
+                    $('#ownername_select_'+survey_id).
+                    append($("<option id='opt_"+value[1]+"'></option>").
+                    attr("value",value[0]).
+                    text(value[1]));
+                });
+                $("#ownername_select_"+survey_id+ " option[id=opt_"+old_owner+"]").attr("selected","selected");
+            }
+            //else
+        }).fail(function() {
+            //$notifycontainer.notify("create", 'error-notify', { message:"An error was occured"});// To set in language or in extension (something like lsalert(text, type="default");
         });
     });
 
-    $(".ownername_button").live('click',function(){
+    $(document).on('click',".ownername_button", function(){
         var oldThis = this;
         var initial_text = $(this).attr('initial_text');
         var ownername_select_id = $(this).attr('id');
         var survey_id = ownername_select_id.slice(17);
         var newowner = $("#ownername_select_"+survey_id).val();
         var translate_to = $(this).attr('value');
-
-        $.getJSON(ownerediturl+'/newowner/' + newowner + '/surveyid/' + survey_id,'', function (data){
-
-            var objToUpdate = $($(oldThis).parent());
-
-            if (data.record_count>0)
-                $(objToUpdate).html(data.newowner);
-            else
-                $(objToUpdate).html(old_owner);
-
-            $(objToUpdate).html($(objToUpdate).html() + ' (<a id="ownername_edit_69173" translate_to='+translate_to+' class="ownername_edit" href="#">'+initial_text+'</a>)' );
+        $.post( ownerediturl,{"newowner":newowner,"surveyid":survey_id},function( oData ) {
+            if(typeof oData=="object")// To test json
+            {
+                var objToUpdate = $($(oldThis).parent());
+                if (oData.record_count>0)
+                    $(objToUpdate).html(oData.newowner);
+                else
+                    $(objToUpdate).html(old_owner);
+                $(objToUpdate).html($(objToUpdate).html() + ' (<a id="ownername_edit_69173" translate_to='+translate_to+' class="ownername_edit" href="#">'+initial_text+'</a>)' );
+            }
+        }).fail(function() {
+            //$notifycontainer.notify("create", 'error-notify', { message:"An error was occured"});// To set in language
         });
     });
 
@@ -80,7 +85,6 @@ $(document).ready(function(){
     $('#searchbutton').click(function(){
 
     });
-    var lastSel,lastSel2;
     function returnColModel() {
         if($.cookie("detailedsurveycolumns")) {
             hidden=$.cookie("detailedsurveycolumns").split('|');
@@ -90,6 +94,8 @@ $(document).ready(function(){
         return colModels;
     }
     jQuery("#displaysurveys").jqGrid({
+        autoencode: false,// autoencode to false is really a bad idea. Need JS system for link and update
+        direction: $('html').attr('dir'),
         recordtext: sRecordText,
         emptyrecords: sEmptyRecords,
         pgtext: sPageText,
@@ -119,49 +125,69 @@ $(document).ready(function(){
         loadonce : true,
         pager: "#pager",
         caption: sCaption,
+        beforeProcessing: function(data){
+            $('#displaysurveys tbody').hide();
+        },
         loadComplete: function(data){
             // Need this for vertical scrollbar 
 			$('#displaysurveys').setGridWidth($(window).width()-4);
             $('.wrapper').width($('#displaysurveys').width()+4);
             $('.footer').outerWidth($('#displaysurveys').outerWidth()+4).css({ 'margin':'0 auto' });
+            if (jQuery("#displaysurveys").jqGrid('getGridParam','datatype') === "json") {
+                setTimeout(function(){
+                    jQuery("#displaysurveys").trigger("reloadGrid");
+					$('#displaysurveys tbody').show();
+                },100);
+            }
         }
     });
-    jQuery("#displaysurveys").jqGrid('navGrid','#pager',{ deltitle: sDelTitle, 
-                                                          searchtitle: sSearchTitle,
-                                                          refreshtitle: sRefreshTitle,
-                                                          alertcap: sWarningMsg,
-                                                          alerttext: sSelectRowMsg,
-                                                          add:false,
-                                                          del:true,
-                                                          edit:false,
-                                                          refresh: true,
-                                                          search: true
-                                                        },{},{},{ msg:delmsg, 
-                                                                  bSubmit: sDelCaption,
-                                                                  caption: sDelCaption,
-                                                                  bCancel: sCancel,
-                                                                  width : 450,
-                                                                  afterShowForm: function(form) {
-                                                                    form.closest('div.ui-jqdialog').center();
-                                                                  },
-                                                          afterSubmit: function(response, postdata) {
-                                                              if (postdata.oper=='del')
-                                                              {
-                                                                  // Remove surveys from dropdown, too
-                                                                    aSurveyIDs=postdata.id.split(",");
-                                                                    $.each(aSurveyIDs,function(iIndex, iSurveyID){
-                                                                        $("#surveylist option[value='"+iSurveyID+"']").remove();   
-                                                                    })
-                                                              };
-                                                              return [true];
-                                                          }
-                                                                },
-                                                                {
-                                                                      caption: sSearchCaption,
-                                                                      Find : sFind,
-                                                                      odata : [ sOperator1, sOperator2, sOperator3, sOperator4, sOperator5, sOperator6, sOperator7, sOperator8, sOperator9, sOperator10, sOperator11, sOperator12, sOperator13, sOperator14 ],
-                                                                      Reset: sReset
-                                                                });
+    
+    // Inject the translations into jqGrid
+    $.extend($.jgrid,{ 
+        del:{
+            msg:delmsg, 
+            bSubmit: sDelCaption,
+            caption: sDelCaption,
+            bCancel: sCancel
+        },
+        search : {
+            odata : [ sOperator1, sOperator2, sOperator3, sOperator4, sOperator5, sOperator6, sOperator7, sOperator8, sOperator9, sOperator10, sOperator11, sOperator12, sOperator13, sOperator14, sOperator15, sOperator16 ],
+            caption: sSearchCaption,
+            Find : sFind,
+            Reset: sReset,
+        }
+    });    
+    
+    jQuery("#displaysurveys").jqGrid('navGrid','#pager',{ 
+        deltitle: sDelTitle, 
+        searchtitle: sSearchTitle,
+        refreshtitle: sRefreshTitle,
+        alertcap: sWarningMsg,        alerttext: sSelectRowMsg,
+        add:false,
+        del:true,
+        edit:false,
+        refresh: true,
+        search: true
+        },{},{},{ 
+            width : 450,
+            afterShowForm: function(form) {
+                form.closest('div.ui-jqdialog').center();
+            },
+            afterSubmit: function(response, postdata) {
+                if (postdata.oper=='del')
+                {
+                    // Remove surveys from dropdown, too
+                    aSurveyIDs=postdata.id.split(",");
+                    $.each(aSurveyIDs,function(iIndex, iSurveyID){
+                        $("#surveylist option[value='"+iSurveyID+"']").remove();   
+                    })
+                };
+                return [true];
+            }
+        },
+        {
+            width:600
+    });
     jQuery("#displaysurveys").jqGrid('filterToolbar', {searchOnEnter : false,defaultSearch: 'cn'});
     jQuery("#displaysurveys").jqGrid('navButtonAdd','#pager',{
         buttonicon:"ui-icon-calculator",

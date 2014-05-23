@@ -1,6 +1,27 @@
-//$Id: admin_core.js 10154 2011-05-31 11:45:24Z c_schmitz $
+/*
+ * JavaScript functions for LimeSurvey administrator
+ *
+ * This file is part of LimeSurvey
+ * Copyright (C) 2007-2013 The LimeSurvey Project Team / Carsten Schmitz
+ * All rights reserved.
+ * License: GNU/GPL License v2 or later, see LICENSE.php
+ * LimeSurvey is free software. This version may have been modified pursuant
+ * to the GNU General Public License, and as distributed it includes or
+ * is derivative of works licensed under the GNU General Public License or
+ * other free or open source software licenses.
+ * See COPYRIGHT.php for copyright notices and details.
+ */
+
+// @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&dn=gpl-2.0.txt  GNU/GPL License v2 or later
+
+/* Set a variable to test if browser have HTML5 form ability
+ * Need to be replaced by some polyfills see #8009
+ */
+hasFormValidation= typeof document.createElement( 'input' ).checkValidity == 'function';
 
 $(document).ready(function(){
+    initializeAjaxProgress();
+    tableCellAdapters();
     if(typeof(userdateformat) !== 'undefined')
         {
         $(".popupdate").each(function(i,e) {
@@ -20,41 +41,10 @@ $(document).ready(function(){
             duration: 'fast'
         }, $.datepicker.regional[userlanguage]);
     }
-
-    $('button,input[type=submit],input[type=button],input[type=reset],.button').addClass("limebutton ui-state-default ui-corner-all");
-    $('button,input[type=submit],input[type=button],input[type=reset],.button').hover(
-    function(){
-        $(this).addClass("ui-state-hover");
-    },
-    function(){
-        $(this).removeClass("ui-state-hover");
-    }
-    )
-
-
-    // Loads the tooltips for the toolbars  except the surveybar
-    $('img[alt],input[src]').not('.surveybar img').each(function() {
-        if($(this).attr('alt') != '')
-            {
-            $(this).qtip({
-                style: {name: 'light',
-                    tip:true,
-                    border: {
-                        width: 1,
-                        radius: 5
-                    }
-                },
-                position: {adjust: {
-                        screen: true, scroll:true},
-                    corner: {
-                        target: 'bottomRight'}
-                },
-                show: {effect: {length:50}},
-                hide: {when: 'mouseout'}
-
-            });
-        }
-    });
+    $(".sf-menu").superfish({speed: 'fast'});
+    doToolTip();
+    $('button,input[type=submit],input[type=button],input[type=reset],.button').button();
+    $('button,input[type=submit],input[type=button],input[type=reset],.button').addClass("limebutton");
 
     $(".progressbar").each(function(){
         var pValue = parseInt($(this).attr('name'));
@@ -68,111 +58,6 @@ $(document).ready(function(){
         }
 
         $("div",this).html(pValue + "%");
-    });
-
-
-
-    $('label[title]').each(function() {
-        if($(this).attr('title') != '')
-            {
-            $(this).qtip({
-                style: {name: 'cream',
-                    tip:true,
-                    color:'#1D2D45',
-                    border: {
-                        width: 1,
-                        radius: 5,
-                        color: '#EADF95'}
-                },
-                position: {adjust: {
-                        screen: true, scroll:true},
-                    corner: {
-                        target: 'bottomRight'}
-                },
-                show: {effect: {length:50}}
-            });
-        }
-    });
-
-    $('.dosurvey').qtip({
-        content:{
-            text:$('#dosurveylangpopup')
-        },
-        style: {name: 'cream',
-            tip:true,
-            color:'#1D2D45',
-            border: {
-                width: 1,
-                radius: 5,
-                color: '#EADF95'}
-        },
-        position: {adjust: {
-                screen: true, scroll:true},
-            corner: {
-                target: 'bottomMiddle',
-                tooltip: 'topMiddle'}
-        },
-        show: {effect: {length:50},
-            when: {
-                event:'click'
-        }},
-        hide: {fixed:true,
-            when: {
-                event:'unfocus'
-        }}
-    });
-
-    $('#previewquestion').qtip({
-        content:{
-            text:$('#previewquestionpopup')
-        },
-        style: {name: 'cream',
-            tip:true,
-            color:'#111111',
-            border: {
-                width: 1,
-                radius: 5,
-                color: '#EADF95'}
-        },
-        position: {adjust: {
-                screen: true, scroll:true},
-            corner: {
-                target: 'bottomMiddle',
-                tooltip: 'topMiddle'}
-        },
-        show: {effect: {length:50},
-            when: {
-                event:'click'
-        }},
-        hide: {fixed:true,
-            when: {
-                event:'unfocus'
-        }}
-    });
-
-    $('.tipme').each(function() {
-        if($(this).attr('alt') != '')
-            {
-            $(this).qtip({
-                style: {name: 'cream',
-                    tip:true,
-                    color:'#111111',
-                    border: {
-                        width: 1,
-                        radius: 5,
-                        color: '#EADF95'}
-                },
-                position: {adjust: {
-                        screen: true, scroll:true},
-                    corner: {
-                        target: 'topRight',
-                        tooltip: 'bottomLeft'
-                    }
-                },
-                show: {effect: {length:100}}
-
-            });
-        }
     });
 
 
@@ -203,60 +88,80 @@ $(document).ready(function(){
         $('#groupdetails').show();
     });
     $('#tabs').tabs();
-    $("#flashmessage").notify().notify('create','themeroller',{},{custom:true,
+    $('.tab-nav').tabs();
+    $(".flashmessage").each(function() {
+        $(this).notify().notify('create','themeroller',{},{custom:true,
         speed: 500,
         expires: 5000
-    });
-
-    if ($("#question_type").not('.none').length > 0 && $("#question_type").attr('type')!='hidden'){
-        $("#question_type").msDropDown({onInit:qTypeDropdownInit});
-
-        $("#question_type").change(function(event){
-            var selected_value = qDescToCode[''+$("#question_type_child .selected").text()];
-            OtherSelection(selected_value);
         });
-    }
-    $("#question_type.none").change(function(event){
-        var selected_value = $("#question_type").val();
-        OtherSelection(selected_value);
     });
+    if ($("#question_type").not('.none').length > 0 && $("#question_type").attr('type')!='hidden'){
 
-
-
+        /*
+        $("#question_type").msDropDown({
+            'on' : {
+                'create' :qTypeDropdownInit
+            }
+        });
+        */
+       qTypeDropdownInit();
+        $("#question_type").change(function(event){
+            OtherSelection(this.value);
+        });
+        $("#question_type").change();
+    }
+    else
+    {
+        $("#question_type.none").change(function(event){
+            OtherSelection(this.value);
+        });
+        $("#question_type.none").change();
+    }
 });
 
 function qTypeDropdownInit()
 {
-    $("#question_type_child a").each(function(index,element){
-
-        $(element).qtip({
-            style: {
-                margin: 15,
-                width: 450,
-                height: 'auto',
-                border: {
-                    width: 4,
-                    radius: 2
-                }
-            },
-            content: getToolTip($(element).text()),
-            position: {
-                corner:{
-                    target: 'leftMiddle',
-                    tooltip:'rightMiddle'
+    $(document).ready(function () {
+        $("#question_type option").each(function(index,element){
+            $(element).qtip({
+                style: {
+                    classes: 'qtip-questiontype'
                 },
-                adjust:{
-                    screen: true
-                }
-            },
-            show: 'mouseover'
-            //hide: 'mouseout'
-        });
+                content: getToolTip($(element).text()),
+                position: {
+                    my : 'top left',
+                    at: 'top right',
+                    target: $('label[for=question_type]'),
+                    viewport: $(window),
+                    adjust: {
+                        x: 20
+                    }
 
+                }
+            });
+
+        });
+    });
+    $(document).ready(function() {
+        $('body').on('mouseenter mouseleave', 'li.questionType', function(e) {
+            if (e.type == 'mouseenter')
+            {
+				// Hide all others if we show a new one.
+                $('#question_type option').qtip('hide');
+                $($(e.currentTarget).data().select2Data.element).qtip('option', 'position.target', $(e.currentTarget)).qtip('show');
+            }
+            else
+            {
+                $($(e.currentTarget).data().select2Data.element).qtip('hide');
+            }
+            
+            
+        });
+        $('#question_type').on('close', function(e) {
+            $('#question_type option').qtip('hide');
+        });
     });
 }
-
-
 
 
 var aToolTipData = {
@@ -330,7 +235,135 @@ function validatefilename (form, strmessage )
     return true ;
 }
 
+function doToolTip()
+{
+    // ToolTip on menu
+    $(".sf-menu li").each(function() {
+        tipcontent=$(this).children("a").children("img").attr('alt');
+        if(tipcontent && tipcontent!=""){
+            $(this).qtip({
+                content: {
+                    text: tipcontent
+                },
+                style: {
+                    classes: "qtip-light qtip-rounded"
+                },
+                position: {
+                    my: 'bottom left',
+                    at: "top right"
+                }
+            });
+        }
+    });
+    $(".sf-menu a > img[alt]").removeAttr("alt");
+    $("a").each(function() {
+        tipcontent=$(this).children("img").attr('alt');
+        if(!tipcontent){tipcontent=htmlEncode($(this).attr('title'));}
+        if(tipcontent && tipcontent!=""){
+            $(this).qtip({
+                content: {
+                    text: tipcontent
+                },
+                style: {
+                    classes: "qtip-light qtip-rounded"
+                },
+                position: {
+                    viewport: $(window),
+                    at: 'bottom right'
+                }
+            });
+        }
+    });
+    $("a > img[alt]").removeAttr("alt");
+    
+    // Call the popuptip hover rel attribute
+    $('.popuptip').each(function(){
+        if($(this).attr('rel')){
+            htmlcontent=$(this).html();
+            tiptarget=$("#"+$(this).attr('rel'));
+            //if($("#"+$(this).attr('rel')).find('img').length==1){ tiptarget=$("#"+$(this).attr('rel')).find('img');}
+            tiptarget.qtip({
+                content: {
+                    text: htmlcontent
+                },
+                style: {
+                    classes: "qtip-light qtip-rounded"
+                },
+                position: {
+                    at: "bottom center",
+                    my: "top center"
+                },
+                hide: {
+                    fixed: true,
+                    delay: 500,
+                    event: "mouseout"
+                }
+            });
+            $("#"+$(this).attr('rel')).find("img").removeAttr("alt"); // Remove children img attr alt, the  default tooltip can apply.
+        }
+    });
+    // On label
+    $('label[title]').each(function() {
+        if($(this).attr('title') != '')
+            {
+            $(this).qtip({
+                style: {
+                    classes: "qtip-cream qtip-rounded"
+                },
+                position: {
+                    viewport: $(window),
+                    at: "bottom right"
+                }
+            });
+        }
+    });
+    // Loads the tooltips on image
+    $('img[alt],input[src]').each(function() {
+        if($(this).attr('alt') != ''){
+            $(this).qtip({
+                content: {
+                    attr: "alt"
+                },
+                style: {
+                    classes: "qtip-light qtip-rounded"
+                },
+                position: {
+                    viewport: $(window),
+                    at: "bottom right"
+                },
+                hide: {
+                    event: "mouseout"
+                }
+            });
+        }
+    });
 
+    //Still used ?
+    $('.tipme').each(function() {
+        if($(this).attr('alt') != '')
+            {
+            $(this).qtip(
+            {
+                content: {
+                    attr: 'alt'
+                },
+                style: {
+                    classes: "qtip-cream qtip-rounded"
+                },
+                position: {
+                        viewport: $(window),
+                        at: 'top right',
+                        tooltip: 'bottom left'
+                    }
+            });
+        }
+    });
+
+}
+// A function to encode any HTML for qtip
+function htmlEncode(html){
+  return $('<div/>').text(html).html();
+}
 // If the length of the element's string is 0 then display helper message
 function isEmpty(elem, helperMsg)
 {
@@ -367,6 +400,7 @@ function ev_gecko_select_keyup_ev(Ev) {
 }
 
 function init_gecko_select_hack() {
+    return true;
     var selects = document.getElementsByTagName("SELECT");
     for(i=0; i<selects.length; i++)
         selects.item(i).addEventListener("keyup", ev_gecko_select_keyup_ev, false);
@@ -600,6 +634,11 @@ function htmlspecialchars (string, quote_style, charset, double_encode) {
     if (typeof quote_style === 'undefined' || quote_style === null) {
         quote_style = 2;
     }
+    // Not form phpjs: added because in some condition : subquestion can send null for string
+    // subquestion js use inline javascript function
+    if (typeof string === 'undefined' || string === null) {
+        string="";
+    }
     string = string.toString();    if (double_encode !== false) { // Put this first to avoid double-encoding
         string = string.replace(/&/g, '&amp;');
     }
@@ -641,6 +680,7 @@ jQuery.fn.center = function () {
 }
 
 // Fix broken substr function with negative start value (in older IE)
+// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substr
 if ('ab'.substr(-1) != 'b') {
 	String.prototype.substr = function(substr) {
 		return function(start, length) {
@@ -653,14 +693,88 @@ if ('ab'.substr(-1) != 'b') {
 /**
 * Yii CSRF protection divs breaks this script so this function moves the 
 * hidden CSRF field out of the div and remove it if needed
-* 
+* 140207 : Why this function is needed ? Where is the script broken ?
 */
 function removeCSRFDivs()
 {
     $('input[name=YII_CSRF_TOKEN]').each(function(){
-       parent = $(this).parent();
-       grandfather = $(parent).parent();
-       grandfather.append(this);
-       parent.remove();
+       var parent = $(this).parent();
+       var grandfather = $(parent).parent();
+       $(grandfather).append(this);
+       $(parent).remove();
     });
 }
+
+function initializeAjaxProgress()
+{
+    $('#ajaxprogress').dialog({
+            'modal' : true,
+            'closeOnEscape' : false,
+            'title' : $('#ajaxprogress').attr('title'),
+            'autoOpen' : false,
+            'minHeight': 0,
+            'resizable': false
+        });
+    $('#ajaxprogress').bind('ajaxStart', function()
+    {
+        $(this).dialog('open');
+    });
+    $('#ajaxprogress').bind('ajaxStop', function()
+    {
+        
+        $(this).dialog('close');
+    });
+}
+
+/**
+ * Adapt cell to have a click on cell do a click on input:radio or input:checkbox (if unique)
+ * Using delegate the can be outside document.ready
+ */
+function tableCellAdapters()
+{
+    $('table.activecell').delegate('tbody td input:checkbox,tbody td input:radio,tbody td label,tbody th input:checkbox,tbody th input:radio,tbody th label',"click", function(e) {
+        e.stopPropagation();
+    });
+    $('table.activecell').delegate('tbody td,tbody th',"click", function() {
+        if($(this).find("input:radio,input:checkbox").length==1)
+        {
+          $(this).find("input:radio").click();
+          $(this).find("input:radio").triggerHandler("click");
+          $(this).find("input:checkbox").click();
+          $(this).find("input:checkbox").triggerHandler("click");
+        }
+    });
+}
+
+/**
+ * sendPost : create a form, fill with param and submit
+ *
+ * @param {string} action
+ * @param {} checkcode : deprecated
+ * @param {array} arrayparam
+ * @param {array} arrayval
+ *
+ */
+function sendPost(myaction,checkcode,arrayparam,arrayval)
+{
+    var $form = $("<form method='POST'>").attr("action", myaction);
+    for (var i = 0; i < arrayparam.length; i++)
+        $("<input type='hidden'>").attr("name", arrayparam[i]).attr("value", arrayval[i]).appendTo($form);
+    $("<input type='hidden'>").attr("name", 'YII_CSRF_TOKEN').attr("value", LS.data.csrfToken).appendTo($form);
+    $form.appendTo("body");
+    $form.submit();
+}
+function addHiddenElement(theform,thename,thevalue)
+{
+    var myel = document.createElement('input');
+    myel.type = 'hidden';
+    myel.name = thename;
+    theform.appendChild(myel);
+    myel.value = thevalue;
+    return myel;
+}
+function onlyUnique(value, index, self) { 
+    return self.indexOf(value) === index;
+}
+
+// @license-end

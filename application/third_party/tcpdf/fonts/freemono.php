@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='freemono.z';
-$originalsize=592752;
+$originalsize=592632;
 // --- EOF ---

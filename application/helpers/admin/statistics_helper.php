@@ -30,7 +30,11 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
     /* This is a lazy solution to bug #6389. A better solution would be to find out how
        the "T" gets passed to this function from the statistics.js file in the first place! */
     if(substr($iSurveyID,0,1)=="T") {$iSurveyID=substr($iSurveyID,1);}
+    static $bErrorGenerate=false;
 
+    if($bErrorGenerate){
+        return false;
+    }
     $rootdir = Yii::app()->getConfig("rootdir");
     $homedir = Yii::app()->getConfig("homedir");
     $homeurl = Yii::app()->getConfig("homeurl");
@@ -42,7 +46,7 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
     $language = $oLanguage->langcode;
     $clang = $oLanguage;
     $cachefilename = "";
-
+    
     /* Set the fonts for the chart */
     if ($chartfontfile=='auto')
     {
@@ -58,16 +62,17 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
             }
             else
             {
-                Yii::app()->session['flashmessage'] = sprintf($clang->gT('The fonts file %s was not found in <limesurvey root folder>/fonts directory. Please, see the txt file for your language in fonts directory.'),$neededfontfile);
+                Yii::app()->setFlashMessage(sprintf($clang->gT('The fonts file %s was not found in <limesurvey root folder>/fonts directory. Please, see the txt file for your language in fonts directory to generate the charts.'),$neededfontfile),'error');
+                $bErrorGenerate=true;// Don't do a graph again.
+                return false;
             }
         }
     }
-
     if (count($lbl)>72)
     {
         $DataSet = array(1=>array(1=>1));
-        if ($cache->IsInCache("graph".$language.$iSurveyID,$DataSet) && Yii::app()->getConfig('debug')<2) {
-            $cachefilename=basename($cache->GetFileFromCache("graph".$language.$iSurveyID,$DataSet));
+        if ($cache->IsInCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet) && Yii::app()->getConfig('debug')<2) {
+            $cachefilename=basename($cache->GetFileFromCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet));
         }
         else
         {
@@ -76,8 +81,8 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
             $graph->setFontProperties($rootdir.DIRECTORY_SEPARATOR.'fonts'.DIRECTORY_SEPARATOR.$chartfontfile,$chartfontsize);
             $graph->setFontProperties($rootdir.DIRECTORY_SEPARATOR.'fonts'.DIRECTORY_SEPARATOR.$chartfontfile,$chartfontsize);
             $graph->drawTitle(0,0,$clang->gT('Sorry, but this question has too many answer options to be shown properly in a graph.','unescaped'),30,30,30,690,200);
-            $cache->WriteToCache("graph".$language.$iSurveyID,$DataSet,$graph);
-            $cachefilename=basename($cache->GetFileFromCache("graph".$language.$iSurveyID,$DataSet));
+            $cache->WriteToCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet,$graph);
+            $cachefilename=basename($cache->GetFileFromCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet));
             unset($graph);
         }
         return  $cachefilename;
@@ -85,8 +90,8 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
     if (array_sum($gdata ) == 0)
     {
         $DataSet = array(1=>array(1=>1));
-        if ($cache->IsInCache("graph".$language.$iSurveyID,$DataSet) && Yii::app()->getConfig('debug')<2) {
-            $cachefilename=basename($cache->GetFileFromCache("graph".$language.$iSurveyID,$DataSet));
+        if ($cache->IsInCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet) && Yii::app()->getConfig('debug')<2) {
+            $cachefilename=basename($cache->GetFileFromCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet));
         }
         else
         {
@@ -95,8 +100,8 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
             $graph->setFontProperties($rootdir.DIRECTORY_SEPARATOR.'fonts'.DIRECTORY_SEPARATOR.$chartfontfile,$chartfontsize);
             $graph->setFontProperties($rootdir.DIRECTORY_SEPARATOR.'fonts'.DIRECTORY_SEPARATOR.$chartfontfile,$chartfontsize);
             $graph->drawTitle(0,0,$clang->gT('Sorry, but this question has no responses yet so a graph cannot be shown.','unescaped'),30,30,30,690,200);
-            $cache->WriteToCache("graph".$language.$iSurveyID,$DataSet,$graph);
-            $cachefilename=basename($cache->GetFileFromCache("graph".$language.$iSurveyID,$DataSet));
+            $cache->WriteToCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet,$graph);
+            $cachefilename=basename($cache->GetFileFromCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet));
             unset($graph);
         }
         return  $cachefilename;
@@ -184,8 +189,8 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
                 $counter++;
             }
 
-            if ($cache->IsInCache("graph".$language.$iSurveyID,$DataSet->GetData()) && Yii::app()->getConfig('debug')<2) {
-                $cachefilename=basename($cache->GetFileFromCache("graph".$language.$iSurveyID,$DataSet->GetData()));
+            if ($cache->IsInCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet->GetData()) && Yii::app()->getConfig('debug')<2) {
+                $cachefilename=basename($cache->GetFileFromCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet->GetData()));
             }
             else
             {
@@ -214,8 +219,8 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
                 $graph->setFontProperties($rootdir.DIRECTORY_SEPARATOR.'fonts'.DIRECTORY_SEPARATOR.$chartfontfile, $chartfontsize);
                 $graph->drawLegend(510,30,$DataSet->GetDataDescription(),255,255,255);
 
-                $cache->WriteToCache("graph".$language.$iSurveyID,$DataSet->GetData(),$graph);
-                $cachefilename=basename($cache->GetFileFromCache("graph".$language.$iSurveyID,$DataSet->GetData()));
+                $cache->WriteToCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet->GetData(),$graph);
+                $cachefilename=basename($cache->GetFileFromCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet->GetData()));
                 unset($graph);
             }
         }	//end if (bar chart)
@@ -279,8 +284,8 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
             $DataSet->AddAllSeries();
             $DataSet->SetAbsciseLabelSerie("Serie2");
 
-            if ($cache->IsInCache("graph".$language.$iSurveyID, $DataSet->GetData()) && Yii::app()->getConfig('debug')<2) {
-                $cachefilename=basename($cache->GetFileFromCache("graph".$language.$iSurveyID,$DataSet->GetData()));
+            if ($cache->IsInCache("graph".$iSurveyID.$language.$iQuestionID, $DataSet->GetData()) && Yii::app()->getConfig('debug')<2) {
+                $cachefilename=basename($cache->GetFileFromCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet->GetData()));
             }
             else
             {
@@ -296,8 +301,8 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
                 $graph->drawPieGraph($DataSet->GetData(),$DataSet->GetDataDescription(),225,round($gheight/2),170,PIE_PERCENTAGE,TRUE,50,20,5);
                 $graph->setFontProperties($rootdir."/fonts/".$chartfontfile,$chartfontsize);
                 $graph->drawPieLegend(430,12,$DataSet->GetData(),$DataSet->GetDataDescription(),250,250,250);
-                $cache->WriteToCache("graph".$language.$iSurveyID,$DataSet->GetData(),$graph);
-                $cachefilename=basename($cache->GetFileFromCache("graph".$language.$iSurveyID,$DataSet->GetData()));
+                $cache->WriteToCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet->GetData(),$graph);
+                $cachefilename=basename($cache->GetFileFromCache("graph".$iSurveyID.$language.$iQuestionID,$DataSet->GetData()));
                 unset($graph);
             }
         }	//end else -> pie charts
@@ -315,7 +320,7 @@ function createChart($iQuestionID, $iSurveyID, $type=null, $lbl, $gdata, $grawda
 */
 function getQuestionMapData($sField, $qsid)
 {
-    $aresult = Survey_dynamic::model($qsid)->findAll();
+    $aresult = SurveyDynamic::model($qsid)->findAll();
 
     $d = array ();
 
@@ -423,7 +428,7 @@ function buildSelects($allfields, $surveyid, $language) {
                     //create a list out of the $pv array
                     list($lsid, $lgid, $lqid) = explode("X", $pv);
 
-                    $aresult=Questions::model()->findAll(array('order'=>'question_order', 'condition'=>'parent_qid=:parent_qid AND scale_id=0', 'params'=>array(":parent_qid"=>$lqid)));
+                    $aresult=Question::model()->findAll(array('order'=>'question_order', 'condition'=>'parent_qid=:parent_qid AND scale_id=0', 'params'=>array(":parent_qid"=>$lqid)));
                     foreach ($aresult as $arow)
                     {
                         // only add condition if answer has been chosen
@@ -488,7 +493,7 @@ function buildSelects($allfields, $surveyid, $language) {
                 elseif (($firstletter == "T" || $firstletter == "Q" ) && $_POST[$pv] != "")
                 {
                     $selectSubs = array();
-                    //We intepret and * and % as wildcard matches, and use ' OR ' and , as the seperators
+                    //We intepret and * and % as wildcard matches, and use ' OR ' and , as the separators
                     $pvParts = explode(",",str_replace('*','%', str_replace(' OR ',',',$_POST[$pv])));
                     if(is_array($pvParts) AND count($pvParts)){
                         foreach($pvParts AS $pvPart){
@@ -660,7 +665,7 @@ class statistics_helper {
             list($qsid, $qgid, $qqid) = explode("X", substr($rt, 1, strlen($rt)), 3);
 
             //select details for this question
-            $nresult = Questions::model()->find('language=:language AND parent_qid=0 AND qid=:qid', array(':language'=>$language, ':qid'=>$qqid));
+            $nresult = Question::model()->find('language=:language AND parent_qid=0 AND qid=:qid', array(':language'=>$language, ':qid'=>$qqid));
             $qtitle=$nresult->title;
             $qtype=$nresult->type;
             $qquestion=flattenText($nresult->question);
@@ -668,7 +673,7 @@ class statistics_helper {
             $qother=$nresult->other;
 
             //1. Get list of answers
-            $result=Questions::model()->findAll(array('order'=>'question_order',
+            $result=Question::model()->findAll(array('order'=>'question_order',
                                                       'condition'=>'language=:language AND parent_qid=:qid AND scale_id=0',
                                                       'params'=>array(':language'=>$language, ':qid'=>$qqid)
                                                       ));
@@ -696,7 +701,7 @@ class statistics_helper {
             list($qanswer, $qlid)=!empty($fielddata['aid']) ? explode("_", $fielddata['aid']) : array("", "");
 
             //get question data
-            $nresult = Questions::model()->find('language=:language AND parent_qid=0 AND qid=:qid', array(':language'=>$language, ':qid'=>$fielddata['qid']));
+            $nresult = Question::model()->find('language=:language AND parent_qid=0 AND qid=:qid', array(':language'=>$language, ':qid'=>$fielddata['qid']));
             $qtitle=$nresult->title;
             $qtype=$nresult->type;
             $qquestion=flattenText($nresult->question);
@@ -708,7 +713,7 @@ class statistics_helper {
             // So, instead of building an array of predefined answers like we do with lists & other types,
             // we instead create two "types" of possible answer - either there is a response.. or there isn't.
             // This question type then can provide a % of the question answered in the summary.
-            $alist[]=array("Answers", $statlang->gT("Answer"), $mfield);
+            $alist[]=array("Answer", $statlang->gT("Answer"), $mfield);
             $alist[]=array("NoAnswer", $statlang->gT("No answer"), $mfield);
         }
 
@@ -723,7 +728,7 @@ class statistics_helper {
             $qaid=$aQuestionInfo['aid'];
 
             //get question data
-            $nresult = Questions::model()->find('language=:language AND parent_qid=0 AND qid=:qid', array(':language'=>$language, ':qid'=>$qqid));
+            $nresult = Question::model()->find('language=:language AND parent_qid=0 AND qid=:qid', array(':language'=>$language, ':qid'=>$qqid));
             $qtitle=$nresult->title;
             $qtype=$nresult->type;
             $qquestion=flattenText($nresult->question);
@@ -732,7 +737,7 @@ class statistics_helper {
             $count = substr($qqid, strlen($qqid)-1);
 
             //get answers / subquestion text
-            $nresult = Questions::model()->find(array('order'=>'question_order',
+            $nresult = Question::model()->find(array('order'=>'question_order',
                                                       'condition'=>'language=:language AND parent_qid=:parent_qid AND title=:title',
                                                       'params'=>array(':language'=>$language, ':parent_qid'=>$qqid, ':title'=>$qaid)
                                                       ));
@@ -747,7 +752,7 @@ class statistics_helper {
             // So, instead of building an array of predefined answers like we do with lists & other types,
             // we instead create two "types" of possible answer - either there is a response.. or there isn't.
             // This question type then can provide a % of the question answered in the summary.
-            $alist[]=array("Answers", $statlang->gT("Answer"), $mfield);
+            $alist[]=array("Answer", $statlang->gT("Answer"), $mfield);
             $alist[]=array("NoAnswer", $statlang->gT("No answer"), $mfield);
         }
 
@@ -792,7 +797,7 @@ class statistics_helper {
             list($qsid, $qgid, $qqid) = explode("X", substr($rt, 1, strlen($rt)), 3);
 
             //select details for this question
-            $nresult = Questions::model()->find('language=:language AND parent_qid=0 AND qid=:qid', array(':language'=>$language, ':qid'=>substr($qqid, 0, $iQuestionIDlength)));
+            $nresult = Question::model()->find('language=:language AND parent_qid=0 AND qid=:qid', array(':language'=>$language, ':qid'=>substr($qqid, 0, $iQuestionIDlength)));
             $qtitle=$nresult->title;
             $qtype=$nresult->type;
             $qquestion=flattenText($nresult->question);
@@ -1464,8 +1469,6 @@ class statistics_helper {
 
                 case "I": //Language
                     // Using previously defined $surveylanguagecodes array of language codes
-                    $surveylanguagecodes = Survey::model()->findByPk($surveyid)->additionalLanguages;
-                    $surveylanguagecodes[] = Survey::model()->findByPk($surveyid)->language;
                     foreach ($surveylanguagecodes as $availlang)
                     {
                         $alist[]=array($availlang, getLanguageNameFromCode($availlang,false));
@@ -1709,7 +1712,7 @@ class statistics_helper {
                     $sDatabaseType = Yii::app()->db->getDriverName();
 
                     //free text answers
-                    if($al[0]=="Answers")
+                    if($al[0]=="Answer")
                     {
                         $query = "SELECT count(*) FROM {{survey_$surveyid}} WHERE ";
                         $query .= ($sDatabaseType == "mysql")?  Yii::app()->db->quoteColumnName($al[2])." != ''" : "NOT (".Yii::app()->db->quoteColumnName($al[2])." LIKE '')";
@@ -1808,8 +1811,8 @@ class statistics_helper {
                 {$fname=$statlang->gT("No answer");}
 
             //"other" handling
-            //"Answers" means that we show an option to list answer to "other" text field
-            elseif ($al[0] === $statlang->gT("Other") || $al[0] === "Answers" || ($outputs['qtype'] === "O" && $al[0] === $statlang->gT("Comments")) || $outputs['qtype'] === "P")
+            //"Answer" means that we show an option to list answer to "other" text field
+            elseif ($al[0] === $statlang->gT("Other") || $al[0] === "Answer" || ($outputs['qtype'] === "O" && $al[0] === $statlang->gT("Comments")) || $outputs['qtype'] === "P")
             {
                 if ($outputs['qtype'] == "P") $sColumnName = $al[2]."comment";
                 else  $sColumnName = $al[2];
@@ -1864,7 +1867,7 @@ class statistics_helper {
                 $headPDF[] = array($statlang->gT("Answer"),$statlang->gT("Count"),$statlang->gT("Percentage"));
 
                 //show free text answers
-                if ($al[0] == "Answers")
+                if ($al[0] == "Answer")
                 {
                     $fname= "$al[1]";
                     if ($browse===true) $fname .= " <input type='button'  class='statisticsbrowsebutton' value='"
@@ -2155,7 +2158,7 @@ class statistics_helper {
             }
             if (incompleteAnsFilterState() == "incomplete") {$criteria->addCondition("submitdate IS NULL");}
             elseif (incompleteAnsFilterState() == "complete") {$criteria->addCondition("submitdate IS NOT NULL");}
-            $multiNotDisplayed=Survey_dynamic::model($surveyid)->count($criteria);
+            $multiNotDisplayed=SurveyDynamic::model($surveyid)->count($criteria);
             if (isset($_POST['noncompleted']) and ($_POST['noncompleted'] == "on") )
             {
                 //counter
@@ -2721,49 +2724,49 @@ class statistics_helper {
             if ($bShowGraph == true)
             {
                 $cachefilename = createChart($qqid, $qsid, $bShowPieChart, $lbl, $gdata, $grawdata, $MyCache, $statlang, $outputs['qtype']);
-                //introduce new counter
-                if (!isset($ci)) {$ci=0;}
-
-                //increase counter, start value -> 1
-                $ci++;
-                switch($outputType)
+                if($cachefilename) // Add the image only if constructed
                 {
-                    case 'xls':
+                    //introduce new counter
+                    if (!isset($ci)) {$ci=0;}
 
-                        /**
-                        * No Image for Excel...
-                        */
+                    //increase counter, start value -> 1
+                    $ci++;
+                    switch($outputType)
+                    {
+                        case 'xls':
 
-                        break;
-                    case 'pdf':
+                            /**
+                            * No Image for Excel...
+                            */
 
-                        $this->pdf->AddPage('P','A4');
+                            break;
+                        case 'pdf':
 
-                        $this->pdf->titleintopdf($pdfTitle,$titleDesc);
-                        $this->pdf->Image($tempdir."/".$cachefilename, 0, 70, 180, 0, '', Yii::app()->getController()->createUrl("admin/survey/sa/view/surveyid/".$surveyid), 'B', true, 150,'C',false,false,0,true);
+                            $this->pdf->AddPage('P','A4');
 
-                        break;
-                    case 'html':
-                        $statisticsoutput .= "<img src=\"$tempurl/".$cachefilename."\" border='1' />";
+                            $this->pdf->titleintopdf($pdfTitle,$titleDesc);
+                            $this->pdf->Image($tempdir."/".$cachefilename, 0, 70, 180, 0, '', Yii::app()->getController()->createUrl("admin/survey/sa/view/surveyid/".$surveyid), 'B', true, 150,'C',false,false,0,true);
 
-                        $aattr = getQuestionAttributeValues($qqid, $firstletter);
-                        if ($bShowMap) {
-                            $statisticsoutput .= "<div id=\"statisticsmap_$rt\" class=\"statisticsmap\"></div>";
+                            break;
+                        case 'html':
+                            $statisticsoutput .= "<img src=\"$tempurl/".$cachefilename."\" border='1' />";
 
-                            $agmapdata[$rt] = array (
-                            "coord" => getQuestionMapData(substr($rt, 1), $qsid),
-                            "zoom" => $aattr['location_mapzoom'],
-                            "width" => $aattr['location_mapwidth'],
-                            "height" => $aattr['location_mapheight']
-                            );
-                        }
-                        break;
-                    default:
+                            $aattr = getQuestionAttributeValues($qqid, $firstletter);
+                            if ($bShowMap) {
+                                $statisticsoutput .= "<div id=\"statisticsmap_$rt\" class=\"statisticsmap\"></div>";
 
-
-                        break;
+                                $agmapdata[$rt] = array (
+                                "coord" => getQuestionMapData(substr($rt, 1), $qsid),
+                                "zoom" => $aattr['location_mapzoom'],
+                                "width" => $aattr['location_mapwidth'],
+                                "height" => $aattr['location_mapheight']
+                                );
+                            }
+                            break;
+                        default:
+                            break;
+                    }
                 }
-
             }
         }
 
@@ -2930,6 +2933,7 @@ class statistics_helper {
             Yii::import('application.helpers.pdfHelper');
             $aPdfLanguageSettings=pdfHelper::getPdfLanguageSettings($language);
 
+            // create new PDF document
             $this->pdf = new pdf();
 
             $surveyInfo = getSurveyInfo($surveyid,$language);
@@ -3098,20 +3102,22 @@ class statistics_helper {
 
         elseif (!empty($newsql)) {$sql = $newsql;}
 
-        if (!isset($sql) || !$sql) {$sql="";}
-        Yii::app()->session['response_filterview_'.$surveyid]=$sql;
+        if (!isset($sql) || !$sql) 
+        {
+            $sql= null;            
+        }
 
         //only continue if we have something to output
         if ($results > 0)
         {
-            if($outputType=='html' && $browse === true && hasSurveyPermission($surveyid,'responses','read'))
+            if($outputType=='html' && $browse === true && Permission::model()->hasSurveyPermission($surveyid,'responses','read'))
             {
                 //add a buttons to browse results
                 $statisticsoutput .= CHtml::form(array("admin/responses/sa/browse/surveyid/{$surveyid}"), 'post',array('target'=>'_blank'))."\n"
                 ."\t\t<p>"
                 ."\t\t\t<input type='submit' value='".$statlang->gT("Browse")."'  />\n"
                 ."\t\t\t<input type='hidden' name='sid' value='$surveyid' />\n"
-                ."\t\t\t<input type='hidden' name='sqlfilter' value='1' />\n"
+                ."\t\t\t<input type='hidden' name='sql' value=\"$sql\" />\n"
                 ."\t\t\t<input type='hidden' name='subaction' value='all' />\n"
                 ."\t\t</p>"
                 ."\t\t</form>\n";
@@ -3135,7 +3141,7 @@ class statistics_helper {
             {
 
                 //Step 1: Get information about this response field (SGQA) for the summary
-                $outputs=$this->buildOutputList($rt, $language, $surveyid, $outputType, $sql, $statlang,$browse);
+                $outputs=$this->buildOutputList($rt, $language, $surveyid, $outputType, $sql, $statlang);
                 $statisticsoutput .= $outputs['statisticsoutput'];
                 //2. Collect and Display results #######################################################################
                 if (isset($outputs['alist']) && $outputs['alist']) //Make sure there really is an answerlist, and if so:
@@ -3235,6 +3241,7 @@ class statistics_helper {
         static $recordCount = 0;
         static $field = null;
         static $allRows = null;
+        
         if ($surveyid !== $sid || $fieldname !== $field) {
             //get data
             $query =" FROM {{survey_$surveyid}} WHERE ".Yii::app()->db->quoteColumnName($fieldname)." IS NOT null";
@@ -3281,13 +3288,15 @@ class statistics_helper {
                 // Need at least 2 records
                 if ($recordCount<2) return;
                 break;
+                
             case 0:
                 return $recordCount;
+                
             default:
                 return;
                 break;
         }        
-
+        
         $q1 = $quartile/4 * ($recordCount+1);
         $row = $q1-1; // -1 since we start counting at 0
         if ($q1 === (int) $q1) {
@@ -3336,7 +3345,7 @@ class statistics_helper {
             if($sorttype=='N') {$sortby = "($sortby * 1)";} //Converts text sorting into numerical sorting
             $search['order']=$sortby.' '.$sortmethod;
         }
-        $results=Survey_dynamic::model($surveyid)->findAll($search);
+        $results=SurveyDynamic::model($surveyid)->findAll($search);
         $output=array();
         foreach($results as $row) {
             $output[]=array("id"=>$row['id'], "value"=>$row[$column]);

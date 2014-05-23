@@ -35,5 +35,5 @@ $cw=array(
 $enc='cp1252';
 $diff='';
 $file='freesansboldoblique.z';
-$originalsize=342488;
+$originalsize=342492;
 // --- EOF ---

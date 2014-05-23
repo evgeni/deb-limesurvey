@@ -15,6 +15,7 @@ $(document).ready(function(){
                    {name:'targetsqid',index:'targetsqid', hidden:true},
                    {name:'title',index:'title', width:400}
                    ],
+        direction: $('html').attr('dir'),
         sortname: 'parameter',
         pager: '#pagerurlparams',
         loadonce: true,
@@ -52,8 +53,8 @@ $(document).ready(function(){
 
     $('#btnSaveParams').click(saveParameter);
     $('#addnewsurvey').submit(PostParameterGrid);
-    $( "#tabs" ).bind( "tabsselect", function(event, ui) {
-        if (ui.index>4)    // Hide on import and copy tab, otherwise show
+    $( "#tabs" ).bind( "tabsactivate", function(event, ui) {
+        if (ui.newTab.index()>4)    // Hide on import and copy tab, otherwise show
         {$('#btnSave').hide();}
         else
         {$('#btnSave').show();}

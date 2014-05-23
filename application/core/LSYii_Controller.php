@@ -10,11 +10,15 @@
  * other free or open source software licenses.
  * See COPYRIGHT.php for copyright notices and details.
  *
- *	$Id$
  */
 
 abstract class LSYii_Controller extends CController
 {
+    /**
+     * This array contains the survey / group / question id used by the menu widget.
+     * @var array
+     */
+    public $navData = array();
 	/**
 	 * Basic initialiser to the base controller class
 	 *
@@ -30,7 +34,7 @@ abstract class LSYii_Controller extends CController
 
         Yii::app()->session->init();
 		$this->loadLibrary('LS.LS');
-		$this->loadHelper('globalsettings');
+        $this->loadHelper('globalsettings');
 		$this->loadHelper('common');
 		$this->loadHelper('expressions.em_manager');
 		$this->loadHelper('replacements');
@@ -49,7 +53,7 @@ abstract class LSYii_Controller extends CController
 		$file_name = Yii::app()->getConfig('rootdir').'/application/config/config.php';
 		if (!file_exists($file_name))
         {
-			$this->redirect($this->createUrl('/installer'));
+			$this->redirect(array('/installer'));
         }
 	}
 
@@ -84,8 +88,8 @@ abstract class LSYii_Controller extends CController
 		// Do not localize/translate this!
 
 		$dieoutput='';
-		if (version_compare(PHP_VERSION, '5.1.6', '<'))
-			$dieoutput .= 'This script can only be run on PHP version 5.1.6 or later! Your version: '.PHP_VERSION.'<br />';
+		if (version_compare(PHP_VERSION, '5.3.0', '<'))
+			$dieoutput .= 'This script can only be run on PHP version 5.3.0 or later! Your version: '.PHP_VERSION.'<br />';
 
 		if (!function_exists('mb_convert_encoding'))
 			$dieoutput .= "This script needs the PHP Multibyte String Functions library installed: See <a href='http://manual.limesurvey.org/wiki/Installation_FAQ'>FAQ</a> and <a href='http://de.php.net/manual/en/ref.mbstring.php'>PHP documentation</a><br />";
@@ -98,10 +102,6 @@ abstract class LSYii_Controller extends CController
 
 		// The following function (when called) includes FireBug Lite if true
 		defined('FIREBUG') or define('FIREBUG' , Yii::app()->getConfig('use_firebug_lite'));
-
-		// Deal with server systems having not set a default time zone
-		if(function_exists("date_default_timezone_set") and function_exists("date_default_timezone_get"))
-			@date_default_timezone_set(@date_default_timezone_get());
 
 		//Every 50th time clean up the temp directory of old files (older than 1 day)
 		//depending on the load the  probability might be set higher or lower
@@ -128,15 +128,17 @@ abstract class LSYii_Controller extends CController
             error_reporting(0);
         }
         
-        //SET LOCAL TIME
-        $timeadjust = Yii::app()->getConfig("timeadjust");
-        if (substr($timeadjust,0,1)!='-' && substr($timeadjust,0,1)!='+') {$timeadjust='+'.$timeadjust;}
-        if (strpos($timeadjust,'hours')===false && strpos($timeadjust,'minutes')===false && strpos($timeadjust,'days')===false)
-        {
-            Yii::app()->setConfig("timeadjust",$timeadjust.' hours');
-        }
-
-    }
+		//SET LOCAL TIME
+		$timeadjust = Yii::app()->getConfig("timeadjust");
+		if (substr($timeadjust,0,1)!='-' && substr($timeadjust,0,1)!='+') {$timeadjust='+'.$timeadjust;}
+		if (strpos($timeadjust,'hours')===false && strpos($timeadjust,'minutes')===false && strpos($timeadjust,'days')===false)
+		{
+			Yii::app()->setConfig("timeadjust",$timeadjust.' hours');
+		}
+        
+        Yii::app()->setConfig('adminimageurl', Yii::app()->getConfig('styleurl').Yii::app()->getConfig('admintheme').'/images/');
+        Yii::app()->setConfig('adminstyleurl', Yii::app()->getConfig('styleurl').Yii::app()->getConfig('admintheme').'/');
+	}
 
     /**
      * Creates an absolute URL based on the given controller and action information.
@@ -150,7 +152,7 @@ abstract class LSYii_Controller extends CController
     {
         $sPublicUrl=Yii::app()->getConfig("publicurl");
         // Control if public url are really public : need scheme and host
-        // If yes: replace actual baseurl for publicurl
+        // If yes: use it 
         $aPublicUrl=parse_url($sPublicUrl);
         if(isset($aPublicUrl['scheme']) && isset($aPublicUrl['host']))
         {

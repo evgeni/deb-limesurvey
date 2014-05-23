@@ -5,8 +5,8 @@
 # export DH_VERBOSE=1
 
 PACKAGE = limesurvey
-FILE = limesurvey200plus-build131206.tar.gz
-VERSION = 2.00plus-build131206
+FILE = limesurvey205plus-build140520.tar.bz2
+VERSION = 2.05plus-build140520
 
 build:
 
@@ -135,7 +135,7 @@ get-orig-source:
 	cd get-orig-source && tar xaf ../${FILE} && mv limesurvey limesurvey-${VERSION}
 	
 	# remove non-free Duality font
-	rm get-orig-source/limesurvey-${VERSION}/framework/web/widgets/captcha/Duality.ttf
+	rm -f get-orig-source/limesurvey-${VERSION}/framework/web/widgets/captcha/Duality.ttf
 	cp /usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf get-orig-source/limesurvey-${VERSION}/framework/web/widgets/captcha/Duality.ttf
 
 	# remove gartergrey admin style, contains non-free images

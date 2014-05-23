@@ -39,14 +39,9 @@ install: build
 	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/json/LICENSE.txt
 	rm debian/limesurvey/usr/share/limesurvey/framework/LICENSE
 	rm debian/limesurvey/usr/share/limesurvey/application/third_party/phpmailer/LICENSE
-	rm debian/limesurvey/usr/share/limesurvey/application/third_party/simpletest/LICENSE
 	rm debian/limesurvey/usr/share/limesurvey/application/third_party/tcpdf/LICENSE.TXT
 	rm debian/limesurvey/usr/share/limesurvey/application/libraries/admin/http/LICENSE.txt
-	rm debian/limesurvey/usr/share/limesurvey/scripts/admin/codemirror_ui/LICENSE
-	rm debian/limesurvey/usr/share/limesurvey/scripts/admin/codemirror_ui/lib/CodeMirror-2.0/LICENSE
-	rm debian/limesurvey/usr/share/limesurvey/scripts/jquery/jquery.actual/LICENSE.txt
 	rm debian/limesurvey/usr/share/limesurvey/framework/vendors/jqueryui/MIT-LICENSE.txt
-	rm debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jui/MIT-LICENSE.txt
 	rm debian/limesurvey/usr/share/limesurvey/application/third_party/php-gettext/COPYING
 	rm debian/limesurvey/usr/share/limesurvey/application/libraries/admin/gtranslate/COPYING
 	#Remove fonts
@@ -69,7 +64,7 @@ install: build
 		ln -s /etc/limesurvey/$$file $(CURDIR)/debian/limesurvey/usr/share/limesurvey/application/config/$$file; \
 	done
 	# use Debian's jQuery
-	for file in framework/web/js/source/jquery.min.js third_party/kcfinder/js/jquery.js framework/web/js/source/jquery.js scripts/jquery/jquery.js; do \
+	for file in framework/web/js/source/jquery.min.js third_party/kcfinder/js/jquery.js framework/web/js/source/jquery.js; do \
 		rm debian/limesurvey/usr/share/limesurvey/$$file; \
 		ln -s /usr/share/javascript/jquery/jquery.js debian/limesurvey/usr/share/limesurvey/$$file; \
 	done
@@ -77,8 +72,8 @@ install: build
 	ln -s /usr/share/javascript/jquery-metadata/jquery.metadata.js debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jquery.metadata.js
 	rm debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jquery.cookie.js
 	ln -s /usr/share/javascript/jquery-cookie/jquery.cookie.js debian/limesurvey/usr/share/limesurvey/framework/web/js/source/jquery.cookie.js
-	rm debian/limesurvey/usr/share/limesurvey/scripts/jquery/jquery.tablesorter.min.js
-	ln -s /usr/share/javascript/jquery-tablesorter/jquery.tablesorter.min.js debian/limesurvey/usr/share/limesurvey/scripts/jquery/jquery.tablesorter.min.js
+	rm debian/limesurvey/usr/share/limesurvey/third_party/jquery-tablesorter/jquery.tablesorter.min.js
+	ln -s /usr/share/javascript/jquery-tablesorter/jquery.tablesorter.min.js debian/limesurvey/usr/share/limesurvey/third_party/jquery-tablesorter/jquery.tablesorter.min.js
 	# use Debian's PHP libs
 	rm -rf debian/limesurvey/usr/share/limesurvey/application/third_party/phpmailer/
 	ln -s /usr/share/php/libphp-phpmailer debian/limesurvey/usr/share/limesurvey/application/third_party/phpmailer
